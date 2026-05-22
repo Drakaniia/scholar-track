@@ -17,7 +17,7 @@
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio --schema=prisma/schema.prisma",
+    "db:studio": "prisma studio",
     "db:add-indexes": "npx tsx scripts/add-indexes.ts",
     "erd:generate": "PRISMA_SCHEMA=prisma/schema-with-erd.prisma prisma generate",
     "erd:view": "start docs/index.html",
