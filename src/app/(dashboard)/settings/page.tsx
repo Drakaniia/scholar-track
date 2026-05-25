@@ -15,6 +15,7 @@ import {
   Lock,
   Monitor,
   Pencil,
+  RotateCcw,
   Save,
   Search,
   Shield,
@@ -279,6 +280,7 @@ export default function SettingsPage() {
   const [academicYearPage] = useState(1);
   const [isSubmittingAcademicYear, setIsSubmittingAcademicYear] = useState(false);
   const [isAutoPromoting, setIsAutoPromoting] = useState(false);
+  const [isUndoingPromotion, setIsUndoingPromotion] = useState(false);
   const [promotionPreview, setPromotionPreview] = useState<PromotionPreview | null>(null);
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
   const [activeAcademicYearId, setActiveAcademicYearId] = useState<number | null>(null);
@@ -1254,6 +1256,42 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUndoPromotion = async () => {
+    if (
+      !confirm(
+        'This will restore students from the last promotion backup and allow this academic year to be promoted again. Continue?'
+      )
+    ) {
+      return;
+    }
+
+    setIsUndoingPromotion(true);
+    try {
+      const res = await fetch('/api/academic-years/auto-promote', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        toast.success(result.message || 'Last promotion undone successfully');
+        setPromotionPreview(null);
+        fetchAcademicYears(academicYearPage);
+      } else {
+        toast.error(result.error || 'Failed to undo promotion');
+      }
+    } catch (error) {
+      console.error('Error undoing promotion:', error);
+      toast.error('Failed to undo promotion');
+    } finally {
+      setIsUndoingPromotion(false);
+    }
+  };
+
+  const activeAcademicYear = academicYears.find((academicYear) => academicYear.isActive) || null;
+  const canUndoPromotion = Boolean(activeAcademicYear?.promotionProcessedAt);
+
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -2178,6 +2216,17 @@ export default function SettingsPage() {
                   Academic Year Settings
                 </CardTitle>
                 <div className="flex gap-2">
+                  {canUndoPromotion && (
+                    <Button
+                      onClick={handleUndoPromotion}
+                      variant="outline"
+                      className="text-xs"
+                      disabled={isUndoingPromotion}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      {isUndoingPromotion ? 'Undoing...' : 'Undo Last Promotion'}
+                    </Button>
+                  )}
                   <Button onClick={handleOpenPromotionDialog} variant="outline" className="text-xs">
                     <Activity className="h-4 w-4 mr-2" />
                     Run Promotion Now

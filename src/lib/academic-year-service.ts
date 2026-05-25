@@ -48,6 +48,16 @@ interface PromotionRunResult {
   errors?: Array<{ studentId?: number; error: string }>;
 }
 
+interface PromotionUndoResult {
+  success: boolean;
+  error?: string;
+  academicYearId?: number;
+  academicYear?: string;
+  restoredCount: number;
+  restoredScholarshipCount: number;
+  restoredDisbursementCount: number;
+}
+
 interface AcademicYearPromotionResult extends PromotionRunResult {
   academicYearId: number;
   academicYear: string;
@@ -192,6 +202,10 @@ export async function getActiveAcademicYear() {
   });
 }
 
+function getPromotionBackupContext(academicYearId: number) {
+  return `ACADEMIC_YEAR_PROMOTION:${academicYearId}`;
+}
+
 function toJsonSafe(details: Record<string, unknown>) {
   return JSON.parse(JSON.stringify(details));
 }
@@ -233,6 +247,43 @@ function buildPromotionUpdate(target: Extract<PromotionTarget, { action: 'PROMOT
   }
 
   return data;
+}
+
+async function backupStudentBeforePromotion(
+  tx: Prisma.TransactionClient,
+  params: {
+    academicYearId: number;
+    userId?: number;
+    operation: 'AUTO_PROMOTE_STUDENT' | 'AUTO_GRADUATE_STUDENT';
+    student: {
+      id: number;
+      gradeLevel: string;
+      yearLevel: string;
+      program: string;
+      termType: string;
+      status: string;
+      graduationStatus: string | null;
+      graduatedAt: Date | null;
+      isArchived: boolean;
+    };
+    scholarships?: Array<Record<string, unknown>>;
+    disbursements?: Array<Record<string, unknown>>;
+  }
+) {
+  await tx.backup.create({
+    data: {
+      tableName: 'students',
+      recordId: params.student.id,
+      operation: params.operation,
+      operationContext: getPromotionBackupContext(params.academicYearId),
+      performedBy: params.userId || null,
+      oldValue: toJsonSafe({
+        student: params.student,
+        scholarships: params.scholarships || [],
+        disbursements: params.disbursements || [],
+      }),
+    },
+  });
 }
 
 async function processAcademicYearPromotion(
@@ -277,6 +328,10 @@ async function processAcademicYearPromotion(
         yearLevel: true,
         program: true,
         termType: true,
+        status: true,
+        graduationStatus: true,
+        graduatedAt: true,
+        isArchived: true,
       },
     });
 
@@ -311,6 +366,54 @@ async function processAcademicYearPromotion(
         }
 
         if (target.action === 'GRADUATE') {
+          const [activeScholarships, futureDisbursements] = await Promise.all([
+            tx.studentScholarship.findMany({
+              where: {
+                studentId: student.id,
+                scholarshipStatus: 'Active',
+              },
+              select: {
+                studentId: true,
+                scholarshipId: true,
+                awardDate: true,
+                startTerm: true,
+                endTerm: true,
+                grantAmount: true,
+                scholarshipStatus: true,
+                grantType: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            }),
+            tx.disbursement.findMany({
+              where: {
+                studentId: student.id,
+                disbursementDate: { gte: options.now },
+              },
+              select: {
+                disbursementDate: true,
+                amount: true,
+                term: true,
+                method: true,
+                remarks: true,
+                scholarshipId: true,
+                studentId: true,
+                academicYearId: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            }),
+          ]);
+
+          await backupStudentBeforePromotion(tx, {
+            academicYearId: academicYear.id,
+            userId: options.userId,
+            operation: 'AUTO_GRADUATE_STUDENT',
+            student,
+            scholarships: activeScholarships,
+            disbursements: futureDisbursements,
+          });
+
           await tx.student.update({
             where: { id: student.id },
             data: {
@@ -353,6 +456,13 @@ async function processAcademicYearPromotion(
           graduatedCount++;
           continue;
         }
+
+        await backupStudentBeforePromotion(tx, {
+          academicYearId: academicYear.id,
+          userId: options.userId,
+          operation: 'AUTO_PROMOTE_STUDENT',
+          student,
+        });
 
         await tx.student.update({
           where: { id: student.id },
@@ -434,6 +544,165 @@ function getDatePartsInManila(date: Date) {
   }
 
   return { year, month, day };
+}
+
+function normalizeStudentRestoreData(student: Record<string, unknown>) {
+  return {
+    gradeLevel: String(student.gradeLevel),
+    yearLevel: String(student.yearLevel),
+    program: String(student.program),
+    termType: String(student.termType),
+    status: String(student.status),
+    graduationStatus: student.graduationStatus ? String(student.graduationStatus) : null,
+    graduatedAt: student.graduatedAt ? new Date(String(student.graduatedAt)) : null,
+    isArchived: Boolean(student.isArchived),
+  };
+}
+
+function requiredDate(value: unknown) {
+  return new Date(String(value));
+}
+
+function optionalDate(value: unknown) {
+  return value ? new Date(String(value)) : undefined;
+}
+
+function restoreScholarshipData(
+  scholarship: Record<string, unknown>
+): Prisma.StudentScholarshipCreateManyInput {
+  return {
+    studentId: Number(scholarship.studentId),
+    scholarshipId: Number(scholarship.scholarshipId),
+    awardDate: requiredDate(scholarship.awardDate),
+    startTerm: String(scholarship.startTerm),
+    endTerm: String(scholarship.endTerm),
+    grantAmount: String(scholarship.grantAmount),
+    scholarshipStatus: String(scholarship.scholarshipStatus),
+    grantType: String(scholarship.grantType || 'FULL'),
+    createdAt: optionalDate(scholarship.createdAt),
+    updatedAt: optionalDate(scholarship.updatedAt),
+  };
+}
+
+function restoreDisbursementData(
+  disbursement: Record<string, unknown>
+): Prisma.DisbursementCreateManyInput {
+  return {
+    disbursementDate: requiredDate(disbursement.disbursementDate),
+    amount: String(disbursement.amount),
+    term: String(disbursement.term),
+    method: String(disbursement.method),
+    remarks: disbursement.remarks ? String(disbursement.remarks) : null,
+    scholarshipId: Number(disbursement.scholarshipId),
+    studentId: Number(disbursement.studentId),
+    academicYearId:
+      disbursement.academicYearId === null || disbursement.academicYearId === undefined
+        ? null
+        : Number(disbursement.academicYearId),
+    createdAt: optionalDate(disbursement.createdAt),
+    updatedAt: optionalDate(disbursement.updatedAt),
+  };
+}
+
+export async function undoLastAcademicYearPromotion(userId?: number): Promise<PromotionUndoResult> {
+  const activeAcademicYear = await prisma.academicYear.findFirst({
+    where: {
+      isActive: true,
+      promotionProcessedAt: { not: null },
+    },
+    orderBy: {
+      promotionProcessedAt: 'desc',
+    },
+  });
+
+  if (!activeAcademicYear) {
+    return {
+      success: false,
+      error: 'No processed active academic year promotion found to undo.',
+      restoredCount: 0,
+      restoredScholarshipCount: 0,
+      restoredDisbursementCount: 0,
+    };
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const operationContext = getPromotionBackupContext(activeAcademicYear.id);
+    const backups = await tx.backup.findMany({
+      where: { operationContext },
+      orderBy: { id: 'asc' },
+    });
+
+    if (backups.length === 0) {
+      return {
+        success: false,
+        error: 'No promotion backup records found for the active academic year.',
+        academicYearId: activeAcademicYear.id,
+        academicYear: activeAcademicYear.year,
+        restoredCount: 0,
+        restoredScholarshipCount: 0,
+        restoredDisbursementCount: 0,
+      };
+    }
+
+    let restoredScholarshipCount = 0;
+    let restoredDisbursementCount = 0;
+
+    for (const backup of backups) {
+      const oldValue = backup.oldValue as Record<string, unknown>;
+      const student = oldValue.student as Record<string, unknown>;
+      const scholarships =
+        (oldValue.scholarships as Array<Record<string, unknown>> | undefined) || [];
+      const disbursements =
+        (oldValue.disbursements as Array<Record<string, unknown>> | undefined) || [];
+
+      await tx.student.update({
+        where: { id: Number(student.id || backup.recordId) },
+        data: normalizeStudentRestoreData(student),
+      });
+
+      if (scholarships.length > 0) {
+        await tx.studentScholarship.createMany({
+          data: scholarships.map((scholarship) => restoreScholarshipData(scholarship)),
+          skipDuplicates: true,
+        });
+        restoredScholarshipCount += scholarships.length;
+      }
+
+      if (disbursements.length > 0) {
+        await tx.disbursement.createMany({
+          data: disbursements.map((disbursement) => restoreDisbursementData(disbursement)),
+          skipDuplicates: true,
+        });
+        restoredDisbursementCount += disbursements.length;
+      }
+    }
+
+    await tx.academicYear.update({
+      where: { id: activeAcademicYear.id },
+      data: { promotionProcessedAt: null },
+    });
+
+    await tx.backup.deleteMany({
+      where: { operationContext },
+    });
+
+    await createAudit(tx, userId || null, 'UNDO_AUTO_PROMOTE_STUDENTS', 'SYSTEM', undefined, {
+      academicYear: activeAcademicYear.year,
+      academicYearId: activeAcademicYear.id,
+      restoredCount: backups.length,
+      restoredScholarshipCount,
+      restoredDisbursementCount,
+    });
+
+    return {
+      success: true,
+      academicYearId: activeAcademicYear.id,
+      academicYear: activeAcademicYear.year,
+      restoredCount: backups.length,
+      restoredScholarshipCount,
+      restoredDisbursementCount,
+    };
+  });
 }
 
 export function getPromotionDueCutoff(now = new Date()) {

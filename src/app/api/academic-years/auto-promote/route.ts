@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { autoPromoteStudents } from '@/lib/academic-year-service';
+import { autoPromoteStudents, undoLastAcademicYearPromotion } from '@/lib/academic-year-service';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST() {
@@ -49,6 +49,46 @@ export async function POST() {
       {
         success: false,
         error: 'Failed to promote students',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token')?.value;
+    if (!token) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (payload.role !== 'ADMIN') {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const result = await undoLastAcademicYearPromotion(payload.id);
+
+    if (!result.success) {
+      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Restored ${result.restoredCount} students from the last promotion run`,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error undoing auto-promote students:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to undo student promotion',
       },
       { status: 500 }
     );
