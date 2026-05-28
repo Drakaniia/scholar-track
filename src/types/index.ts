@@ -73,6 +73,7 @@ export type UpdateStudentInput = Partial<CreateStudentInput>;
 export type ScholarshipType = 'PAEB' | 'CHED' | 'LGU';
 export type ScholarshipSource = 'INTERNAL' | 'EXTERNAL';
 export type GrantType = 'FULL' | 'TUITION_ONLY' | 'MISC_ONLY' | 'LAB_ONLY' | 'NONE';
+export type ScholarshipTerm = '1ST' | '2ND' | '3RD';
 
 export const GRANT_TYPES: GrantType[] = [
   'FULL',
@@ -88,6 +89,14 @@ export const GRANT_TYPE_LABELS: Record<GrantType, string> = {
   MISC_ONLY: 'Miscellaneous Fees Only',
   LAB_ONLY: 'Laboratory Fees Only',
   NONE: 'None (Honorific Only)',
+};
+
+export const SCHOLARSHIP_TERMS: ScholarshipTerm[] = ['1ST', '2ND', '3RD'] as const;
+
+export const SCHOLARSHIP_TERM_LABELS: Record<ScholarshipTerm, string> = {
+  '1ST': '1st Semester',
+  '2ND': '2nd Semester',
+  '3RD': '3rd Semester',
 };
 
 export interface Scholarship {
@@ -114,6 +123,7 @@ export interface Scholarship {
   otherFee: number;
   amountSubsidy: number;
   percentSubsidy: number;
+  coveredTerms: string; // Comma-separated term codes: 1ST,2ND,3RD
   students?: StudentScholarship[];
   disbursements?: Disbursement[];
 }
@@ -140,6 +150,7 @@ export interface CreateScholarshipInput {
   otherFee?: number;
   amountSubsidy?: number;
   percentSubsidy?: number;
+  coveredTerms?: string;
 }
 
 export type UpdateScholarshipInput = Partial<CreateScholarshipInput>;
@@ -251,7 +262,7 @@ export const TERM_TYPES: TermType[] = ['SEMESTER', 'TRIMESTER'] as const;
 
 export const TERM_TYPE_LABELS: Record<TermType, string> = {
   SEMESTER: 'Semester (2 terms/year)',
-  TRIMESTER: 'Trimester (3 terms/year)',
+  TRIMESTER: 'Trimester (3 semesters/year)',
 };
 
 export const TERM_FORMATS = {
@@ -261,7 +272,7 @@ export const TERM_FORMATS = {
     labels: ['1st', '2nd'] as const,
   },
   TRIMESTER: {
-    prefix: 'Trimester',
+    prefix: 'Semester',
     termsPerYear: 3,
     labels: ['1st', '2nd', '3rd'] as const,
   },
