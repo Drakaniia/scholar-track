@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getCoveredTermsLabel } from '@/lib/terms';
 import { isScholarshipEligibleForStudent } from '@/lib/validations';
 import {
   CreateStudentInput,
@@ -95,6 +96,7 @@ interface ScholarshipFormData {
   coversTuition: boolean;
   coversMiscellaneous: boolean;
   coversLaboratory: boolean;
+  coveredTerms: string;
 }
 
 interface SelectedScholarship {
@@ -935,6 +937,9 @@ export function StudentForm({
                               Honorific
                             </Badge>
                           )}
+                          <Badge variant="outline" className="text-xs">
+                            {getCoveredTermsLabel(scholarshipDetails?.coveredTerms)}
+                          </Badge>
                         </div>
                       </div>
                       <Button
@@ -1032,6 +1037,9 @@ export function StudentForm({
                       >
                         {source === 'INTERNAL' ? 'Internal' : 'External'}
                       </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {getCoveredTermsLabel(scholarshipDetails?.coveredTerms)}
+                      </Badge>
                     </div>
                   </Card>
                 );
@@ -1114,7 +1122,12 @@ export function StudentForm({
                     >
                       <div>
                         <p className="font-medium text-base">{scholarship.scholarshipName}</p>
-                        <p className="text-sm text-muted-foreground">{scholarship.type}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <p className="text-sm text-muted-foreground">{scholarship.type}</p>
+                          <Badge variant="outline" className="text-xs">
+                            {getCoveredTermsLabel(scholarship.coveredTerms)}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
