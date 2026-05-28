@@ -127,6 +127,7 @@ model Scholarship {
   grantType            String               @default("FULL") @map("grant_type")
   amountSubsidy        Decimal              @default(0) @map("amount_subsidy") @db.Decimal(10, 2)
   percentSubsidy       Decimal              @default(0) @map("percent_subsidy") @db.Decimal(5, 2)
+  coveredTerms         String               @default("1ST,2ND") @map("covered_terms")
   coversOther          Boolean              @default(false) @map("covers_other")
   laboratoryFee        Decimal              @default(0) @map("laboratory_fee") @db.Decimal(10, 2)
   miscellaneousFee     Decimal              @default(0) @map("miscellaneous_fee") @db.Decimal(10, 2)

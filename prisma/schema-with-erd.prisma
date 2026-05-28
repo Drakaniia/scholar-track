@@ -32,14 +32,14 @@ model User {
   passwordChangedAt   DateTime  @default(now()) @map("password_changed_at")
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
-  
+
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  sessions   Session[]
-  auditLogs  AuditLog[]
+  sessions  Session[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -53,7 +53,7 @@ model Session {
   expiresAt DateTime @map("expires_at")
   ipAddress String?  @map("ip_address")
   userAgent String?  @map("user_agent")
-  
+
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -67,15 +67,15 @@ model Session {
 // AUDIT LOG MODEL
 // ============================================
 model AuditLog {
-  id           Int      @id @default(autoincrement()) @map("log_id")
-  userId       Int?     @map("user_id")
+  id           Int     @id @default(autoincrement()) @map("log_id")
+  userId       Int?    @map("user_id")
   action       String
-  resourceType String?  @map("resource_type")
-  resourceId   Int?     @map("resource_id")
+  resourceType String? @map("resource_type")
+  resourceId   Int?    @map("resource_id")
   details      Json?
-  ipAddress    String?  @map("ip_address")
-  userAgent    String?  @map("user_agent")
-  
+  ipAddress    String? @map("ip_address")
+  userAgent    String? @map("user_agent")
+
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -89,36 +89,36 @@ model AuditLog {
 // STUDENT MODEL
 // ============================================
 model Student {
-  id           Int    @id @default(autoincrement()) @map("student_id")
-  studentNo    String @unique @map("student_no")
-  
+  id        Int    @id @default(autoincrement()) @map("student_id")
+  studentNo String @unique @map("student_no")
+
   // Separated Name Fields
-  lastName     String @map("last_name")
-  firstName    String @map("first_name")
+  lastName      String  @map("last_name")
+  firstName     String  @map("first_name")
   middleInitial String? @map("middle_initial")
-  
-  program      String
-  
+
+  program String
+
   // Grade Level: GRADE_SCHOOL, JUNIOR_HIGH, SENIOR_HIGH, COLLEGE
-  gradeLevel   String @map("grade_level")
-  yearLevel    String @map("year_level")
-  
+  gradeLevel String @map("grade_level")
+  yearLevel  String @map("year_level")
+
   // Scholarship Assignment (can be null if no scholarship)
-  scholarshipId Int?    @map("scholarship_id")
-  awardDate     DateTime? @map("award_date")
-  startTerm     String?   @map("start_term")
-  endTerm       String?   @map("end_term")
-  grantAmount   Decimal?  @map("grant_amount") @db.Decimal(10, 2)
-  scholarshipStatus String? @map("scholarship_status") // Active, Completed, Suspended
-  
-  status       String
+  scholarshipId     Int?      @map("scholarship_id")
+  awardDate         DateTime? @map("award_date")
+  startTerm         String?   @map("start_term")
+  endTerm           String?   @map("end_term")
+  grantAmount       Decimal?  @map("grant_amount") @db.Decimal(10, 2)
+  scholarshipStatus String?   @map("scholarship_status") // Active, Completed, Suspended
+
+  status String
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  scholarship   Scholarship? @relation(fields: [scholarshipId], references: [id], onDelete: SetNull)
+  scholarship   Scholarship?   @relation(fields: [scholarshipId], references: [id], onDelete: SetNull)
   fees          StudentFees[]
   disbursements Disbursement[]
 
@@ -129,16 +129,17 @@ model Student {
 // SCHOLARSHIP MODEL
 // ============================================
 model Scholarship {
-  id               Int     @id @default(autoincrement()) @map("scholarship_id")
-  scholarshipName  String  @map("scholarship_name")
-  sponsor          String
-  
+  id              Int    @id @default(autoincrement()) @map("scholarship_id")
+  scholarshipName String @map("scholarship_name")
+  sponsor         String
+
   // Scholarship Type: PAEB, CHED, LGU
-  type             String
-  
-  amount           Decimal @db.Decimal(10, 2)
-  requirements     String?
-  status           String
+  type String
+
+  amount       Decimal @db.Decimal(10, 2)
+  coveredTerms String  @default("1ST,2ND") @map("covered_terms")
+  requirements String?
+  status       String
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -156,10 +157,10 @@ model Scholarship {
 // Direct payment tracking for students
 // ============================================
 model Disbursement {
-  id               Int      @id @default(autoincrement()) @map("disbursement_id")
-  studentId        Int      @map("student_id")
-  scholarshipId    Int      @map("scholarship_id")
-  
+  id            Int @id @default(autoincrement()) @map("disbursement_id")
+  studentId     Int @map("student_id")
+  scholarshipId Int @map("scholarship_id")
+
   disbursementDate DateTime @map("disbursement_date")
   amount           Decimal  @db.Decimal(10, 2)
   term             String
@@ -181,22 +182,22 @@ model Disbursement {
 // STUDENT FEES MODEL
 // ============================================
 model StudentFees {
-  id        Int     @id @default(autoincrement()) @map("fees_id")
-  studentId Int     @map("student_id")
-  
+  id        Int @id @default(autoincrement()) @map("fees_id")
+  studentId Int @map("student_id")
+
   // Fee Breakdown
   tuitionFee       Decimal @map("tuition_fee") @db.Decimal(10, 2)
   otherFee         Decimal @map("other_fee") @db.Decimal(10, 2)
   miscellaneousFee Decimal @map("miscellaneous_fee") @db.Decimal(10, 2)
   laboratoryFee    Decimal @map("laboratory_fee") @db.Decimal(10, 2)
-  
+
   // Subsidy Information
-  amountSubsidy    Decimal @map("amount_subsidy") @db.Decimal(10, 2)
-  percentSubsidy   Decimal @map("percent_subsidy") @db.Decimal(5, 2) // Calculated: (amountSubsidy / totalAmount) * 100
-  
+  amountSubsidy  Decimal @map("amount_subsidy") @db.Decimal(10, 2)
+  percentSubsidy Decimal @map("percent_subsidy") @db.Decimal(5, 2) // Calculated: (amountSubsidy / totalAmount) * 100
+
   // Academic Period
-  term             String
-  academicYear     String  @map("academic_year")
+  term         String
+  academicYear String @map("academic_year")
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
