@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { isScholarshipEligibleForStudent } from '@/lib/validations';
 import {
   CreateStudentInput,
   GRADE_LEVELS,
@@ -89,6 +90,7 @@ interface ScholarshipFormData {
   source: string;
   amount: number;
   eligibleGradeLevels?: string; // Comma-separated grade levels
+  eligiblePrograms?: string | null; // Comma-separated programs
   grantType: string;
   coversTuition: boolean;
   coversMiscellaneous: boolean;
@@ -180,6 +182,8 @@ export function StudentForm({
       ...defaultValues,
     },
   });
+  const currentGradeLevel = form.watch('gradeLevel') || selectedGradeLevel;
+  const currentProgram = form.watch('program') || '';
 
   // Fetch scholarships on component mount
   useEffect(() => {
@@ -203,6 +207,28 @@ export function StudentForm({
       );
     }
   }, [scholarships]);
+
+  useEffect(() => {
+    if (!currentGradeLevel || scholarships.length === 0) {
+      return;
+    }
+
+    setSelectedScholarships((prev) => {
+      const eligibleScholarships = prev.filter((selected) => {
+        const scholarship = scholarships.find((s) => s.id === selected.scholarshipId);
+
+        return (
+          !scholarship ||
+          isScholarshipEligibleForStudent(
+            { gradeLevel: currentGradeLevel, program: currentProgram },
+            scholarship
+          )
+        );
+      });
+
+      return eligibleScholarships.length === prev.length ? prev : eligibleScholarships;
+    });
+  }, [currentGradeLevel, currentProgram, scholarships]);
 
   useEffect(() => {
     // Populate fees from defaultValues when editing - only run once when editing mode changes
@@ -271,13 +297,21 @@ export function StudentForm({
   const addScholarship = (scholarship: ScholarshipFormData) => {
     const alreadySelected = selectedScholarships.some((s) => s.scholarshipId === scholarship.id);
     if (alreadySelected) return;
+    if (
+      !isScholarshipEligibleForStudent(
+        { gradeLevel: currentGradeLevel, program: currentProgram },
+        scholarship
+      )
+    ) {
+      return;
+    }
 
     // Calculate startTerm and endTerm based on student's grade level and term type
     let startTerm = '';
     let endTerm = '';
 
     // Calculate based on student's grade level
-    if (selectedGradeLevel) {
+    if (currentGradeLevel) {
       const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth(); // 0-11
 
@@ -291,7 +325,7 @@ export function StudentForm({
       // Calculate end year based on grade level
       let endYear = academicYearEnd;
 
-      if (selectedGradeLevel === 'GRADE_SCHOOL') {
+      if (currentGradeLevel === 'GRADE_SCHOOL') {
         // Grade school: assume until they complete grade school (Grade 6)
         if (form.getValues('yearLevel')) {
           const yearLevelValue = form.getValues('yearLevel');
@@ -300,7 +334,7 @@ export function StudentForm({
         } else {
           endYear = academicYearEnd + 5; // Default to 6 years from now if grade level is unknown
         }
-      } else if (selectedGradeLevel === 'JUNIOR_HIGH') {
+      } else if (currentGradeLevel === 'JUNIOR_HIGH') {
         // Junior high: assume until they complete senior high (Grade 10 to Grade 12)
         if (form.getValues('yearLevel')) {
           const yearLevelValue = form.getValues('yearLevel');
@@ -314,7 +348,7 @@ export function StudentForm({
         } else {
           endYear = academicYearEnd + 4; // Default to 4 years for JHS
         }
-      } else if (selectedGradeLevel === 'SENIOR_HIGH') {
+      } else if (currentGradeLevel === 'SENIOR_HIGH') {
         // Senior high: assume until they complete SHS (Grade 11-12)
         if (form.getValues('yearLevel')) {
           const yearLevelValue = form.getValues('yearLevel');
@@ -328,7 +362,7 @@ export function StudentForm({
         } else {
           endYear = academicYearEnd + 2; // Default to 2 years for SHS
         }
-      } else if (selectedGradeLevel === 'COLLEGE') {
+      } else if (currentGradeLevel === 'COLLEGE') {
         // College: assume 4-5 years for semester, 3-4 years for trimester
         if (form.getValues('yearLevel')) {
           const yearLevelValue = form.getValues('yearLevel');
@@ -391,14 +425,12 @@ export function StudentForm({
         scholarshipSourceFilter === 'all' || scholarship.source === scholarshipSourceFilter;
       const notSelected = !selectedScholarships.some((s) => s.scholarshipId === scholarship.id);
 
-      // Filter by student's grade level
-      const eligibleLevels = scholarship.eligibleGradeLevels
-        ? scholarship.eligibleGradeLevels.split(',').map((l) => l.trim())
-        : [];
-      const matchesGradeLevel =
-        eligibleLevels.length === 0 || eligibleLevels.includes(selectedGradeLevel as string);
+      const matchesStudentEligibility = isScholarshipEligibleForStudent(
+        { gradeLevel: currentGradeLevel, program: currentProgram },
+        scholarship
+      );
 
-      return matchesSearch && matchesSource && notSelected && matchesGradeLevel;
+      return matchesSearch && matchesSource && notSelected && matchesStudentEligibility;
     })
     .sort((a, b) => {
       const sourceOrder =
@@ -866,6 +898,7 @@ export function StudentForm({
             variant="outline"
             size="sm"
             onClick={() => setShowScholarshipSelector(!showScholarshipSelector)}
+            disabled={!currentGradeLevel}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -1066,9 +1099,11 @@ export function StudentForm({
                 </div>
               ) : filteredScholarships.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">
-                  {scholarshipSearch || scholarshipSourceFilter !== 'all'
-                    ? 'No scholarships match your filters'
-                    : 'All scholarships have been added'}
+                  {!currentGradeLevel
+                    ? 'Select a grade level before adding a scholarship'
+                    : scholarshipSearch || scholarshipSourceFilter !== 'all'
+                      ? 'No scholarships match your filters'
+                      : 'All scholarships have been added'}
                 </p>
               ) : (
                 filteredScholarships.map((scholarship) => {
