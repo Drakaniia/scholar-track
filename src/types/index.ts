@@ -70,7 +70,7 @@ export type UpdateStudentInput = Partial<CreateStudentInput>;
 // ============================================
 // SCHOLARSHIP TYPES
 // ============================================
-export type ScholarshipType = 'PAED' | 'CHED' | 'LGU';
+export type ScholarshipType = 'PAEB' | 'CHED' | 'LGU';
 export type ScholarshipSource = 'INTERNAL' | 'EXTERNAL';
 export type GrantType = 'FULL' | 'TUITION_ONLY' | 'MISC_ONLY' | 'LAB_ONLY' | 'NONE';
 
@@ -241,7 +241,7 @@ export const YEAR_LEVELS: Record<GradeLevel, string[]> = {
   GRADE_SCHOOL: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
   JUNIOR_HIGH: ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
   SENIOR_HIGH: ['Grade 11', 'Grade 12'],
-  COLLEGE: ['1st Year', '2nd Year', '3rd Year'],
+  COLLEGE: ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year'],
 };
 
 // Term Type for academic calendar
@@ -267,10 +267,10 @@ export const TERM_FORMATS = {
   },
 } as const;
 
-export const SCHOLARSHIP_TYPES: ScholarshipType[] = ['PAED', 'CHED', 'LGU'] as const;
+export const SCHOLARSHIP_TYPES: ScholarshipType[] = ['PAEB', 'CHED', 'LGU'] as const;
 
 export const SCHOLARSHIP_TYPE_LABELS: Record<ScholarshipType, string> = {
-  PAED: 'PAED Scholarship',
+  PAEB: 'PAEB Scholarship',
   CHED: 'CHED Scholarship',
   LGU: 'LGU Scholarship',
 };
@@ -313,7 +313,7 @@ export interface StudentFilterOptions {
   scholarshipCounts: Record<string, number>;
   studentsWithoutScholarship: number;
   total: number;
-  scholarships?: Array<{ id: number; scholarshipName: string }>;
+  scholarships?: Array<{ id: number; scholarshipName: string; source: string }>;
   filteredTotal?: number;
   dynamicScholarshipCounts?: Record<string, number>;
 }

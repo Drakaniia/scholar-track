@@ -362,8 +362,8 @@ async function main() {
     // ============================================
     prisma.scholarship.create({
       data: {
-        scholarshipName: 'Private Education Assistance for Basic Education (PAEB) (GS/JHS)',
-        sponsor: 'Private Education Assistance Committee',
+        scholarshipName: 'Parents Association Executive Board (PAEB) (GS/JHS)',
+        sponsor: 'Parents Association Executive Board',
         type: 'PAEB',
         source: 'EXTERNAL',
         eligibleGradeLevels: 'GRADE_SCHOOL,JUNIOR_HIGH',

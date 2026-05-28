@@ -133,7 +133,7 @@ model Scholarship {
   scholarshipName  String  @map("scholarship_name")
   sponsor          String
   
-  // Scholarship Type: PAED, CHED, LGU
+  // Scholarship Type: PAEB, CHED, LGU
   type             String
   
   amount           Decimal @db.Decimal(10, 2)

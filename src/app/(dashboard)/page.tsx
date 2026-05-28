@@ -128,7 +128,6 @@ const GRADE_LEVEL_LABELS: Record<string, string> = {
 
 const SCHOLARSHIP_TYPE_LABELS: Record<string, string> = {
   PAEB: 'PAEB',
-  PAED: 'PAED',
   CHED: 'CHED',
   LGU: 'LGU',
   SCHOOL_GRANT: 'School Grant',
