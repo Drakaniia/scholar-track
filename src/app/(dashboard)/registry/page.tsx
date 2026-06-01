@@ -82,6 +82,13 @@ const LANE_LABELS: Record<RegistryRow['lane'], string> = {
   separated: 'Separated Registry',
   other: 'Other',
 };
+const OUTCOME_LABELS: Record<string, string> = {
+  COMPLETED_JHS: 'Completed JHS',
+  GRADUATED_SHS: 'Graduated SHS',
+  GRADUATED_COLLEGE: 'Graduated College',
+  TRANSFERRED_OUT: 'Transferred Out',
+  PENDING_DECISION: 'Pending Decision',
+};
 
 function formatDate(value: string | null) {
   if (!value) return '-';
@@ -92,6 +99,7 @@ function formatDate(value: string | null) {
 }
 
 function formatOutcome(outcome: string) {
+  if (OUTCOME_LABELS[outcome]) return OUTCOME_LABELS[outcome];
   return outcome
     .replace(/_/g, ' ')
     .toLowerCase()
@@ -99,6 +107,7 @@ function formatOutcome(outcome: string) {
 }
 
 function outcomeClassName(outcome: string) {
+  if (outcome === 'PENDING_DECISION') return 'border-amber-200 bg-amber-50 text-amber-800';
   if (outcome === 'PROMOTED') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
   if (outcome === 'RETAINED') return 'border-amber-200 bg-amber-50 text-amber-800';
   if (outcome === 'TRANSFERRED_OUT') return 'border-sky-200 bg-sky-50 text-sky-700';
@@ -123,6 +132,7 @@ export default function RegistryPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
@@ -132,6 +142,7 @@ export default function RegistryPage() {
   useEffect(() => {
     const fetchRegistry = async () => {
       setLoading(true);
+      setErrorMessage(null);
       try {
         const params = new URLSearchParams({
           page: String(page),
@@ -155,7 +166,12 @@ export default function RegistryPage() {
         setTotal(result.total);
         setTotalPages(result.totalPages);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to load registry');
+        const message = error instanceof Error ? error.message : 'Failed to load registry';
+        setRows([]);
+        setTotal(0);
+        setTotalPages(1);
+        setErrorMessage(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -267,6 +283,7 @@ export default function RegistryPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Outcomes</SelectItem>
+                <SelectItem value="PENDING_DECISION">Pending Decision</SelectItem>
                 <SelectItem value="PROMOTED">Promoted</SelectItem>
                 <SelectItem value="COMPLETED_JHS">Completed JHS</SelectItem>
                 <SelectItem value="GRADUATED_SHS">Graduated SHS</SelectItem>
@@ -322,6 +339,12 @@ export default function RegistryPage() {
                     </TableCell>
                   </TableRow>
                 ))
+              ) : errorMessage ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center text-sm text-rose-600">
+                    Registry could not load: {errorMessage}
+                  </TableCell>
+                </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-32 text-center text-sm text-slate-500">

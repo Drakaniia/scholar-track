@@ -15,6 +15,13 @@ const SEPARATED_OUTCOMES = [
   'TRANSFERRED_OUT',
   'WITHDRAWN',
 ];
+const OUTCOME_LABELS: Record<string, string> = {
+  COMPLETED_JHS: 'Completed JHS',
+  GRADUATED_SHS: 'Graduated SHS',
+  GRADUATED_COLLEGE: 'Graduated College',
+  TRANSFERRED_OUT: 'Transferred Out',
+  PENDING_DECISION: 'Pending Decision',
+};
 
 function formatDecision(decision?: string | null) {
   if (!decision) return 'No decision recorded';
@@ -22,6 +29,14 @@ function formatDecision(decision?: string | null) {
     STUDENT_TRANSITION_DECISION_LABELS[decision as StudentTransitionDecision] ||
     decision.replace(/_/g, ' ')
   );
+}
+
+function formatOutcome(outcome: string) {
+  if (OUTCOME_LABELS[outcome]) return OUTCOME_LABELS[outcome];
+  return outcome
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function normalizeText(value: string) {
@@ -44,6 +59,32 @@ function matchesSearch(row: RegistryRow, search: string) {
 
 function isSeparatedOutcome(outcome?: string | null) {
   return !!outcome && SEPARATED_OUTCOMES.includes(outcome);
+}
+
+function isSeparatedStatus(status?: string | null) {
+  return !!status && (SEPARATED_STUDENT_STATUSES as readonly string[]).includes(status);
+}
+
+function getSeparatedOutcome(student: {
+  status: string;
+  graduationStatus?: string | null;
+  gradeLevel: string;
+  yearLevel: string;
+}) {
+  const status = isSeparatedStatus(student.status)
+    ? student.status
+    : isSeparatedStatus(student.graduationStatus)
+      ? student.graduationStatus!
+      : student.status;
+
+  if (status === 'Completed JHS') return 'COMPLETED_JHS';
+  if (status === 'Graduated SHS') return 'GRADUATED_SHS';
+  if (status === 'Transferred Out') return 'TRANSFERRED_OUT';
+  if (status === 'Withdrawn') return 'WITHDRAWN';
+  if (status === 'Graduated' && student.yearLevel === 'Grade 10') return 'COMPLETED_JHS';
+  if (status === 'Graduated' && student.yearLevel === 'Grade 12') return 'GRADUATED_SHS';
+  if (status === 'Graduated' && student.gradeLevel === 'COLLEGE') return 'GRADUATED_COLLEGE';
+  return status;
 }
 
 type RegistryRow = {
@@ -74,7 +115,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const skip = (page - 1) * limit;
 
-    const [records, separatedStudents] = await Promise.all([
+    const [records, separatedStudents, currentBoundaryStudents] = await Promise.all([
       prisma.studentAcademicRecord.findMany({
         where: {
           OR: [
@@ -111,6 +152,25 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: [{ separatedAt: 'desc' }, { updatedAt: 'desc' }],
+      }),
+      prisma.student.findMany({
+        where: {
+          isArchived: false,
+          yearLevel: { in: BOUNDARY_YEAR_LEVELS },
+          NOT: {
+            OR: [
+              { status: { in: [...SEPARATED_STUDENT_STATUSES] } },
+              { graduationStatus: { in: [...SEPARATED_STUDENT_STATUSES] } },
+            ],
+          },
+        },
+        include: {
+          academicRecords: {
+            orderBy: [{ endedAt: 'desc' }, { createdAt: 'desc' }],
+            take: 1,
+          },
+        },
+        orderBy: [{ yearLevel: 'asc' }, { lastName: 'asc' }, { firstName: 'asc' }],
       }),
     ]);
 
@@ -151,11 +211,39 @@ export async function GET(request: NextRequest) {
         .filter((record) => isSeparatedOutcome(record.outcome))
         .map((record) => record.studentId)
     );
+    const studentsWithRegistryRows = new Set(records.map((record) => record.studentId));
+
+    const currentBoundaryRows: RegistryRow[] = currentBoundaryStudents
+      .filter((student) => !studentsWithRegistryRows.has(student.id))
+      .map((student) => {
+        const latestRecord = student.academicRecords[0];
+        const laneFromStudent = student.yearLevel === 'Grade 10' ? 'jhs-to-shs' : 'shs-to-college';
+
+        return {
+          id: `current-${student.id}`,
+          studentId: student.id,
+          studentName: `${student.lastName}, ${student.firstName}`,
+          program: student.program,
+          academicYear: latestRecord?.academicYear || 'Current record',
+          fromLevel: `${student.gradeLevel} - ${student.yearLevel}`,
+          toLevel: student.transitionDecision
+            ? formatDecision(student.transitionDecision)
+            : 'Pending decision',
+          outcome: 'PENDING_DECISION',
+          decision: student.transitionDecision,
+          decisionLabel: formatDecision(student.transitionDecision),
+          status: student.status,
+          separatedAt: student.separatedAt,
+          recordedAt: student.transitionDecisionAt || latestRecord?.createdAt || student.updatedAt,
+          lane: laneFromStudent,
+        };
+      });
 
     const fallbackSeparatedRows: RegistryRow[] = separatedStudents
       .filter((student) => !studentsWithSeparatedRecords.has(student.id))
       .map((student) => {
         const latestRecord = student.academicRecords[0];
+        const outcome = getSeparatedOutcome(student);
         return {
           id: `student-${student.id}`,
           studentId: student.id,
@@ -163,22 +251,24 @@ export async function GET(request: NextRequest) {
           program: student.program,
           academicYear: latestRecord?.academicYear || 'Current record',
           fromLevel: `${student.gradeLevel} - ${student.yearLevel}`,
-          toLevel: student.status,
-          outcome: student.status,
+          toLevel: formatOutcome(outcome),
+          outcome,
           decision: student.transitionDecision,
           decisionLabel: formatDecision(student.transitionDecision),
-          status: student.status,
+          status: outcome,
           separatedAt: student.separatedAt,
           recordedAt: student.separatedAt || student.updatedAt,
           lane: 'separated',
         };
       });
 
-    const allRows = [...rowsFromRecords, ...fallbackSeparatedRows].sort((a, b) => {
-      const aTime = a.recordedAt ? new Date(a.recordedAt).getTime() : 0;
-      const bTime = b.recordedAt ? new Date(b.recordedAt).getTime() : 0;
-      return bTime - aTime || a.studentName.localeCompare(b.studentName);
-    });
+    const allRows = [...rowsFromRecords, ...currentBoundaryRows, ...fallbackSeparatedRows].sort(
+      (a, b) => {
+        const aTime = a.recordedAt ? new Date(a.recordedAt).getTime() : 0;
+        const bTime = b.recordedAt ? new Date(b.recordedAt).getTime() : 0;
+        return bTime - aTime || a.studentName.localeCompare(b.studentName);
+      }
+    );
 
     const stats = {
       total: allRows.length,
@@ -206,9 +296,14 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching registry:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch registry' },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error &&
+      (error.message.includes('student_academic_records') ||
+        error.message.includes('transition_decision') ||
+        error.message.includes('separated_at'))
+        ? 'Registry database migration is pending. Run prisma migrate deploy to enable the registry.'
+        : 'Failed to fetch registry';
+
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
