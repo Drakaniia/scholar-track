@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -112,7 +113,7 @@ interface ScholarshipCounts {
 }
 
 function ScholarshipTableLoading({ isAdmin }: { isAdmin: boolean }) {
-  const columns = isAdmin ? 10 : 9;
+  const columns = isAdmin ? 9 : 8;
 
   return (
     <div className="overflow-x-auto">
@@ -135,13 +136,13 @@ function ScholarshipTableLoading({ isAdmin }: { isAdmin: boolean }) {
             <TableRow key={rowIndex}>
               {[...Array(columns)].map((_, columnIndex) => (
                 <TableCell key={columnIndex}>
-                  <div
+                  <Skeleton
                     className={`h-4 animate-pulse rounded bg-muted ${
                       columnIndex === 0
                         ? 'w-36'
                         : columnIndex === 5
                           ? 'ml-auto w-20'
-                          : columnIndex === columns - 1
+                          : isAdmin && columnIndex === columns - 1
                             ? 'ml-auto w-16'
                             : 'w-24'
                     }`}
@@ -152,6 +153,77 @@ function ScholarshipTableLoading({ isAdmin }: { isAdmin: boolean }) {
           ))}
         </TableBody>
       </Table>
+    </div>
+  );
+}
+
+function ScholarshipDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Skeleton className="mb-4 h-7 w-48" />
+        <Card className="border-2">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(10)].map((_, index) => (
+                <div key={index} className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className={index === 6 ? 'h-8 w-36' : 'h-6 w-44'} />
+                </div>
+              ))}
+              <div className="col-span-2 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-16 w-full rounded-lg" />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {[...Array(4)].map((_, feeIndex) => (
+                    <Skeleton key={feeIndex} className="h-20 rounded-lg" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="border-t border-gray-200 pt-4">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton className="h-7 w-44" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+        <div className="space-y-3">
+          {[...Array(3)].map((_, index) => (
+            <Card key={index} className="border">
+              <CardContent className="p-4">
+                <div className="mb-3 flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-md" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-60" />
+                      <Skeleton className="h-4 w-40" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {[...Array(4)].map((__, itemIndex) => (
+                    <div key={itemIndex} className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-5 w-28" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -664,9 +736,7 @@ export default function ScholarshipsPage() {
             </DialogDescription>
           </DialogHeader>
           {loadingDetail ? (
-            <div className="flex h-48 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
+            <ScholarshipDetailSkeleton />
           ) : selectedScholarship ? (
             <div className="space-y-6">
               {/* Scholarship Information */}

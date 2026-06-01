@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -357,6 +358,119 @@ function TypeBars({ data }: { data: ScholarshipFlowData }) {
   );
 }
 
+function ScholarshipFlowSkeleton() {
+  return (
+    <>
+      <section className="overflow-hidden rounded-lg border border-emerald-200 bg-white shadow-sm">
+        <div className="grid gap-0 lg:grid-cols-[1fr_0.72fr]">
+          <div className="bg-[linear-gradient(135deg,#ecfdf5_0%,#f0f9ff_58%,#fff7ed_100%)] p-5 lg:p-6">
+            <Skeleton className="mb-3 h-7 w-44 rounded-md bg-white/80" />
+            <Skeleton className="h-9 w-full max-w-lg bg-white/80" />
+            <Skeleton className="mt-3 h-5 w-full max-w-2xl bg-white/70" />
+            <Skeleton className="mt-2 h-5 w-full max-w-xl bg-white/70" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 border-t border-emerald-100 bg-slate-950 p-5 lg:border-l lg:border-t-0">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="space-y-2">
+                <Skeleton className="h-3 w-20 bg-slate-700" />
+                <Skeleton className="h-7 w-28 bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[...Array(4)].map((_, index) => (
+          <div key={index} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-9 w-9 rounded-md" />
+            </div>
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="mt-2 h-3 w-40" />
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-3">
+        <Card className="rounded-lg border-slate-200 bg-white shadow-sm lg:col-span-2">
+          <CardHeader className="border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-56" />
+                <Skeleton className="h-4 w-72" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-5">
+            <Skeleton className="h-[360px] w-full" />
+          </CardContent>
+        </Card>
+        <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-44" />
+                <Skeleton className="h-4 w-56" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-5">
+            <Skeleton className="h-[104px] w-full rounded-lg" />
+            <div className="space-y-4">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between gap-3">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-3 w-full rounded-full" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-5">
+        {[...Array(5)].map((_, index) => (
+          <div key={index} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <Skeleton className="h-7 w-20" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+            <div className="space-y-3">
+              {[...Array(3)].map((__, rowIndex) => (
+                <div key={rowIndex} className="space-y-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="mt-4 h-2 w-full rounded-full" />
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-2">
+        {[...Array(2)].map((_, index) => (
+          <Card key={index} className="rounded-lg border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-200">
+              <Skeleton className="h-6 w-64" />
+            </CardHeader>
+            <CardContent className="pt-5">
+              <Skeleton className="h-[280px] w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+    </>
+  );
+}
+
 export default function ScholarshipFlowPage() {
   const [sourceFilter, setSourceFilter] = useState('all');
   const {
@@ -397,12 +511,7 @@ export default function ScholarshipFlowPage() {
       </PageHeader>
 
       {isLoading || !data ? (
-        <div className="flex h-[55vh] items-center justify-center rounded-lg border border-slate-200 bg-white">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-            <p className="text-sm text-slate-500">Loading scholarship flow...</p>
-          </div>
-        </div>
+        <ScholarshipFlowSkeleton />
       ) : (
         <>
           <section className="overflow-hidden rounded-lg border border-emerald-200 bg-white shadow-sm">

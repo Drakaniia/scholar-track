@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -672,13 +673,57 @@ function DetailedView({
   );
 }
 
+function DashboardHeroSkeleton() {
+  return (
+    <section className="relative overflow-hidden rounded-lg border border-[#dce6e1] bg-white bg-gradient-to-br from-[hsl(var(--pastel-green))]/26 via-[hsl(var(--pastel-blue))]/16 to-[hsl(var(--pastel-orange))]/18 shadow-[0_18px_55px_rgba(15,23,42,0.08)]">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.55),rgba(255,255,255,0)_48%)]" />
+      <div className="relative grid gap-5 p-5 lg:grid-cols-[1fr_0.95fr] lg:p-6">
+        <div className="flex flex-col justify-between gap-5">
+          <div className="space-y-3">
+            <Skeleton className="h-7 w-28 rounded-md bg-white/80" />
+            <Skeleton className="h-10 w-full max-w-xl bg-white/80" />
+            <Skeleton className="h-5 w-full max-w-2xl bg-white/70" />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Skeleton className="h-10 w-[230px] rounded-lg bg-white/80" />
+            <Skeleton className="h-10 w-36 rounded-lg bg-white/80" />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[...Array(4)].map((_, index) => (
+            <div
+              key={index}
+              className="rounded-lg border border-white/70 bg-white/70 p-4 shadow-sm"
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+              <Skeleton className="h-6 w-28" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LoadingState() {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="rounded-lg border border-[#dce6e1] bg-white p-6 text-center shadow-sm">
-        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-        <p className="text-sm text-slate-600">Loading dashboard...</p>
+    <div className="space-y-5">
+      <DashboardHeroSkeleton />
+      <StatsGridSkeleton />
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ChartCardSkeleton />
+        </div>
+        <ChartCardSkeleton />
       </div>
+      <div className="grid gap-5 lg:grid-cols-3">
+        <PieChartSkeleton />
+        <RecentAwardsSkeleton />
+      </div>
+      <TabsSkeleton />
     </div>
   );
 }

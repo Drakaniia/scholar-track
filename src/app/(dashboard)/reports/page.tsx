@@ -6,7 +6,7 @@ import { FileSpreadsheet, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { PageHeader } from '@/components/layout';
-import { ExportButton } from '@/components/shared';
+import { ExportButton, PageHeaderSkeleton } from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -74,6 +75,84 @@ const SCHOLARSHIP_ACRONYMS = new Set([
   'TES',
   'UTFI',
 ]);
+
+function ReportsPageSkeleton() {
+  return (
+    <div>
+      <PageHeaderSkeleton actionWidths={['w-24', 'w-36']} />
+
+      <Card className="border-gray-200">
+        <CardHeader>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded-md" />
+                  <Skeleton className="h-6 w-72" />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[...Array(4)].map((_, index) => (
+                    <Skeleton key={index} className="h-6 w-24 rounded-full" />
+                  ))}
+                </div>
+              </div>
+              <Skeleton className="h-10 w-[220px] rounded-md" />
+            </div>
+            <Skeleton className="h-11 w-full rounded-md" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-8">
+            {[...Array(2)].map((_, gradeIndex) => (
+              <div key={gradeIndex} className="space-y-4">
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <div className="space-y-6 pl-4">
+                  {[...Array(2)].map((_, groupIndex) => (
+                    <div key={groupIndex} className="space-y-2">
+                      <div className="rounded-md bg-muted px-4 py-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="space-y-2">
+                            <Skeleton className="h-6 w-56" />
+                            <Skeleton className="h-4 w-80 max-w-full" />
+                          </div>
+                          <Skeleton className="h-6 w-24 rounded-full" />
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto rounded-lg border border-gray-200">
+                        <Table className="table-fixed min-w-[1000px] text-xs">
+                          <TableHeader>
+                            <TableRow className="bg-muted/50">
+                              {[...Array(13)].map((_, columnIndex) => (
+                                <TableHead key={columnIndex}>
+                                  <Skeleton className="h-4 w-full" />
+                                </TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {[...Array(4)].map((_, rowIndex) => (
+                              <TableRow key={rowIndex}>
+                                {[...Array(13)].map((__, columnIndex) => (
+                                  <TableCell key={columnIndex}>
+                                    <Skeleton className="h-4 w-full" />
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 function formatScholarshipType(type: string) {
   if (type === 'No Scholarship') return type;
@@ -341,11 +420,7 @@ export default function ReportsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+    return <ReportsPageSkeleton />;
   }
 
   return (

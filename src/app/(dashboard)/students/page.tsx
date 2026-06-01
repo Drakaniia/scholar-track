@@ -44,6 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -306,6 +307,100 @@ function ScholarshipPortfolioCell({
 
 interface StudentWithScholarships extends Student {
   scholarships: StudentScholarship[];
+}
+
+function StudentsTableLoading({ isAdmin }: { isAdmin: boolean }) {
+  const bodyColumns = isAdmin ? 7 : 6;
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Grade Level</TableHead>
+            <TableHead>Year Level</TableHead>
+            <TableHead>Program</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Scholarships</TableHead>
+            {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[...Array(6)].map((_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {[...Array(bodyColumns)].map((__, columnIndex) => (
+                <TableCell key={columnIndex}>
+                  <Skeleton
+                    className={cn(
+                      'h-5',
+                      columnIndex === 0 && 'w-44',
+                      columnIndex === 1 && 'w-28 rounded-full',
+                      columnIndex === 2 && 'w-24',
+                      columnIndex === 3 && 'w-36',
+                      columnIndex === 4 && 'w-20 rounded-full',
+                      columnIndex === 5 && 'h-16 w-[300px] rounded-lg',
+                      columnIndex === bodyColumns - 1 && isAdmin && 'ml-auto w-20'
+                    )}
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function StudentDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Skeleton className="mb-4 h-7 w-32" />
+        <div className="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-3">
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="space-y-2">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-7 w-36" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-4">
+          {[...Array(2)].map((_, index) => (
+            <Card key={index} className="border-2">
+              <CardContent className="p-4">
+                <div className="mb-3 flex items-start justify-between gap-4">
+                  <div className="flex gap-3">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-6 w-72" />
+                      <Skeleton className="h-4 w-28" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {[...Array(3)].map((__, badgeIndex) => (
+                      <Skeleton key={badgeIndex} className="h-6 w-20 rounded-full" />
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {[...Array(4)].map((__, itemIndex) => (
+                    <div key={itemIndex} className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-5 w-36" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </div>
+      </div>
+      <Skeleton className="h-10 w-full rounded-md" />
+    </div>
+  );
 }
 
 interface StudentDetail extends Student {
@@ -821,9 +916,7 @@ export default function StudentsPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex h-48 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
+            <StudentsTableLoading isAdmin={isAdmin} />
           ) : students.length === 0 ? (
             <div className="flex h-48 flex-col items-center justify-center text-muted-foreground">
               <p>No students found</p>
@@ -991,9 +1084,7 @@ export default function StudentsPage() {
             <DialogDescription>View scholarship information and student details</DialogDescription>
           </DialogHeader>
           {loadingDetail ? (
-            <div className="flex h-48 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
+            <StudentDetailSkeleton />
           ) : selectedStudent ? (
             <div className="space-y-6">
               {/* Scholarships Section - PRIMARY VIEW */}

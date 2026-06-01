@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -115,6 +116,42 @@ function outcomeClassName(outcome: string) {
   return 'border-stone-200 bg-stone-50 text-stone-700';
 }
 
+function RegistryTableLoading() {
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <TableRow key={index}>
+          <TableCell>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell>
+            <div className="flex min-w-[260px] items-center gap-2">
+              <Skeleton className="h-7 w-24 rounded-md" />
+              <Skeleton className="h-4 w-4 rounded-full" />
+              <Skeleton className="h-7 w-24 rounded-md" />
+            </div>
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-32" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-6 w-32 rounded-full" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-28" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+}
+
 export default function RegistryPage() {
   const [rows, setRows] = useState<RegistryRow[]>([]);
   const [stats, setStats] = useState<RegistryStats>({
@@ -202,29 +239,49 @@ export default function RegistryPage() {
               </div>
               <div className="rounded-md border border-white/70 bg-white/80 px-4 py-3 text-right shadow-sm">
                 <p className="text-xs font-medium uppercase text-slate-500">Current View</p>
-                <p className="mt-1 text-sm font-semibold text-slate-950">{selectedLaneLabel}</p>
+                {loading ? (
+                  <Skeleton className="mt-1 h-5 w-32" />
+                ) : (
+                  <p className="mt-1 text-sm font-semibold text-slate-950">{selectedLaneLabel}</p>
+                )}
               </div>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-md border border-white/80 bg-white/85 p-4 shadow-sm">
                 <UsersRound className="h-4 w-4 text-emerald-700" />
-                <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.total}</p>
+                {loading ? (
+                  <Skeleton className="mt-3 h-8 w-12" />
+                ) : (
+                  <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.total}</p>
+                )}
                 <p className="text-xs font-medium text-slate-500">Registry Records</p>
               </div>
               <div className="rounded-md border border-white/80 bg-white/85 p-4 shadow-sm">
                 <BookOpenCheck className="h-4 w-4 text-cyan-700" />
-                <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.jhsToShs}</p>
+                {loading ? (
+                  <Skeleton className="mt-3 h-8 w-12" />
+                ) : (
+                  <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.jhsToShs}</p>
+                )}
                 <p className="text-xs font-medium text-slate-500">Grade 10 Decisions</p>
               </div>
               <div className="rounded-md border border-white/80 bg-white/85 p-4 shadow-sm">
                 <GraduationCap className="h-4 w-4 text-orange-700" />
-                <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.shsToCollege}</p>
+                {loading ? (
+                  <Skeleton className="mt-3 h-8 w-12" />
+                ) : (
+                  <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.shsToCollege}</p>
+                )}
                 <p className="text-xs font-medium text-slate-500">Grade 12 Decisions</p>
               </div>
               <div className="rounded-md border border-white/80 bg-white/85 p-4 shadow-sm">
                 <UserRoundX className="h-4 w-4 text-rose-700" />
-                <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.separated}</p>
+                {loading ? (
+                  <Skeleton className="mt-3 h-8 w-12" />
+                ) : (
+                  <p className="mt-3 text-2xl font-semibold text-slate-950">{stats.separated}</p>
+                )}
                 <p className="text-xs font-medium text-slate-500">Separated Students</p>
               </div>
             </div>
@@ -243,11 +300,19 @@ export default function RegistryPage() {
             <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-md border border-white/10 bg-white/10 p-3">
                 <p className="text-slate-400">Transferred</p>
-                <p className="mt-1 text-lg font-semibold">{stats.transferred}</p>
+                {loading ? (
+                  <Skeleton className="mt-1 h-6 w-10 bg-slate-700" />
+                ) : (
+                  <p className="mt-1 text-lg font-semibold">{stats.transferred}</p>
+                )}
               </div>
               <div className="rounded-md border border-white/10 bg-white/10 p-3">
                 <p className="text-slate-400">Withdrawn</p>
-                <p className="mt-1 text-lg font-semibold">{stats.withdrawn}</p>
+                {loading ? (
+                  <Skeleton className="mt-1 h-6 w-10 bg-slate-700" />
+                ) : (
+                  <p className="mt-1 text-lg font-semibold">{stats.withdrawn}</p>
+                )}
               </div>
             </div>
           </div>
@@ -332,13 +397,7 @@ export default function RegistryPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                Array.from({ length: 6 }).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell colSpan={6}>
-                      <div className="h-10 animate-pulse rounded-md bg-slate-100" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <RegistryTableLoading />
               ) : errorMessage ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-32 text-center text-sm text-rose-600">
