@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
     }
     if (status && status !== 'all') {
       where.status = status;
+    } else {
+      where.status = 'Active';
     }
     if (scholarshipId && scholarshipId !== 'all' && scholarshipId !== 'none') {
       where.scholarships = {

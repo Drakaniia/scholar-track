@@ -6,7 +6,15 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { GRADE_LEVELS, GradeLevel } from '@/types';
 
-const VALID_STATUSES = ['Active', 'Inactive', 'Graduated', 'Withdrawn'];
+const VALID_STATUSES = [
+  'Active',
+  'Inactive',
+  'Graduated',
+  'Graduated SHS',
+  'Completed JHS',
+  'Transferred Out',
+  'Withdrawn',
+];
 const MAX_ROWS = 1000;
 
 // Column name mappings for auto-detection

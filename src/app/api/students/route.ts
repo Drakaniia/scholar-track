@@ -10,7 +10,7 @@ import {
 } from '@/lib/query-optimizer';
 import { validateMultipleStudentScholarshipEligibility } from '@/lib/scholarship-validation';
 import { getAcademicTermCode, getAcademicTermLabel, scholarshipCoversTerm } from '@/lib/terms';
-import { CreateStudentInput } from '@/types';
+import { CreateStudentInput, SEPARATED_STUDENT_STATUSES } from '@/types';
 
 // GET /api/students - Get all students
 export async function GET(request: NextRequest) {
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const scholarshipSource = searchParams.get('scholarshipSource') || '';
     const archivedParam = searchParams.get('archived');
     const includeArchived = archivedParam === 'true';
+    const population = searchParams.get('population') || (includeArchived ? 'archived' : 'active');
 
     // Use server-side cache for student queries
     const cacheKey = generateQueryKey('students-list', {
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
       scholarshipId,
       scholarshipSource,
       archived: includeArchived,
+      population,
     });
     const cachedData = queryOptimizer.get<{ students: unknown[]; total: number }>(cacheKey);
 
@@ -69,6 +71,13 @@ export async function GET(request: NextRequest) {
     if (gradeLevel) additionalFilters.gradeLevel = gradeLevel;
     if (program) additionalFilters.program = program;
     if (status) additionalFilters.status = status;
+    if (!status && population === 'active') additionalFilters.status = 'Active';
+    if (population === 'separated') {
+      additionalFilters.OR = [
+        { status: { in: [...SEPARATED_STUDENT_STATUSES] } },
+        { graduationStatus: { in: [...SEPARATED_STUDENT_STATUSES] } },
+      ];
+    }
 
     const where = buildSearchWhere(search, ['lastName', 'firstName', 'program'], {
       ...additionalFilters,
@@ -124,6 +133,10 @@ export async function GET(request: NextRequest) {
           birthDate: true,
           createdAt: true,
           updatedAt: true,
+          transitionDecision: true,
+          transitionDecisionAt: true,
+          separatedAt: true,
+          separationReason: true,
           scholarships: {
             select: {
               id: true,
