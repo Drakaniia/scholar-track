@@ -13,11 +13,40 @@ export interface Student {
   birthDate?: Date | null;
   isArchived: boolean;
   termType: TermType;
+  transitionDecision?: StudentTransitionDecision | null;
+  transitionDecisionAt?: Date | null;
+  separatedAt?: Date | null;
+  separationReason?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  academicRecords?: StudentAcademicRecord[];
   scholarships?: StudentScholarship[];
   fees?: StudentFees[];
   disbursements?: Disbursement[];
+}
+
+export interface StudentAcademicRecord {
+  id: number;
+  studentId: number;
+  academicYearId: number | null;
+  academicYear: string;
+  gradeLevel: GradeLevel;
+  yearLevel: string;
+  program: string;
+  termType: TermType;
+  status: string;
+  outcome: StudentAcademicOutcome | null;
+  decision: StudentTransitionDecision | null;
+  nextGradeLevel: GradeLevel | null;
+  nextYearLevel: string | null;
+  nextProgram: string | null;
+  nextTermType: TermType | null;
+  isCurrent: boolean;
+  startedAt: Date | null;
+  endedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  student?: Student;
 }
 
 export interface StudentScholarship {
@@ -294,6 +323,53 @@ export const SCHOLARSHIP_SOURCE_LABELS: Record<ScholarshipSource, string> = {
 };
 
 export const DISBURSEMENT_METHODS = ['Bank Transfer', 'Check', 'Cash'] as const;
+
+export type StudentTransitionDecision =
+  | 'CONTINUE_SENIOR_HIGH'
+  | 'CONTINUE_COLLEGE'
+  | 'COMPLETED_JHS'
+  | 'GRADUATED_SHS'
+  | 'TRANSFERRED_OUT'
+  | 'WITHDRAWN'
+  | 'RETAINED';
+
+export const STUDENT_TRANSITION_DECISIONS: StudentTransitionDecision[] = [
+  'CONTINUE_SENIOR_HIGH',
+  'CONTINUE_COLLEGE',
+  'COMPLETED_JHS',
+  'GRADUATED_SHS',
+  'TRANSFERRED_OUT',
+  'WITHDRAWN',
+  'RETAINED',
+] as const;
+
+export const STUDENT_TRANSITION_DECISION_LABELS: Record<StudentTransitionDecision, string> = {
+  CONTINUE_SENIOR_HIGH: 'Continue to Grade 11',
+  CONTINUE_COLLEGE: 'Continue to College',
+  COMPLETED_JHS: 'Completed Junior High',
+  GRADUATED_SHS: 'Graduated Senior High',
+  TRANSFERRED_OUT: 'Transferred Out',
+  WITHDRAWN: 'Withdrawn',
+  RETAINED: 'Retained',
+};
+
+export type StudentAcademicOutcome =
+  | 'PROMOTED'
+  | 'RETAINED'
+  | 'COMPLETED_JHS'
+  | 'GRADUATED_SHS'
+  | 'GRADUATED_COLLEGE'
+  | 'TRANSFERRED_OUT'
+  | 'WITHDRAWN'
+  | 'SKIPPED';
+
+export const SEPARATED_STUDENT_STATUSES = [
+  'Completed JHS',
+  'Graduated SHS',
+  'Graduated',
+  'Transferred Out',
+  'Withdrawn',
+] as const;
 
 // ============================================
 // API RESPONSE TYPES
