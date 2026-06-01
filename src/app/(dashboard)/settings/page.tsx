@@ -69,9 +69,11 @@ import {
   GRADE_LEVEL_LABELS,
   SCHOLARSHIP_TERMS,
   SCHOLARSHIP_TERM_LABELS,
+  STUDENT_TRANSITION_DECISION_LABELS,
   USER_ROLE_LABELS,
   USER_STATUS_LABELS,
 } from '@/types';
+import type { StudentTransitionDecision } from '@/types';
 
 const ARCHIVED_ITEMS_PAGE_SIZE = 10;
 
@@ -356,6 +358,10 @@ export default function SettingsPage() {
   const [isSubmittingAcademicYear, setIsSubmittingAcademicYear] = useState(false);
   const [isAutoPromoting, setIsAutoPromoting] = useState(false);
   const [isUndoingPromotion, setIsUndoingPromotion] = useState(false);
+  const [isSavingTransitionDecisions, setIsSavingTransitionDecisions] = useState(false);
+  const [transitionDecisions, setTransitionDecisions] = useState<
+    Record<number, StudentTransitionDecision>
+  >({});
   const [promotionPreview, setPromotionPreview] = useState<PromotionPreview | null>(null);
   const [isPromotionDialogOpen, setIsPromotionDialogOpen] = useState(false);
   const [promotionRun, setPromotionRun] = useState<PromotionRun | null>(null);
@@ -391,7 +397,9 @@ export default function SettingsPage() {
       nextYearLevel: string | null;
       nextProgram: string | null;
       nextTermType: string | null;
-      action: 'PROMOTE' | 'GRADUATE' | 'SKIP';
+      action: 'PROMOTE' | 'GRADUATE' | 'RETAIN' | 'SEPARATE' | 'SKIP';
+      transitionDecision: StudentTransitionDecision | null;
+      requiresDecision: boolean;
       reason?: string;
     }>;
   }
@@ -1308,6 +1316,18 @@ export default function SettingsPage() {
 
       if (result.success) {
         setPromotionPreview(result.data);
+        const initialDecisions: Record<number, StudentTransitionDecision> = {};
+        result.data.preview.forEach(
+          (student: {
+            id: number;
+            transitionDecision: StudentTransitionDecision | null;
+          }) => {
+            if (student.transitionDecision) {
+              initialDecisions[student.id] = student.transitionDecision;
+            }
+          }
+        );
+        setTransitionDecisions(initialDecisions);
         handleIncomingPromotionRun(result.data.latestRun || null);
       } else {
         toast.error(result.error || 'Failed to fetch promotion preview');
@@ -1483,7 +1503,69 @@ export default function SettingsPage() {
     await fetchPromotionPreview();
   };
 
+  const handleTransitionDecisionChange = (
+    studentId: number,
+    decision: StudentTransitionDecision
+  ) => {
+    setTransitionDecisions((current) => ({
+      ...current,
+      [studentId]: decision,
+    }));
+  };
+
+  const handleSaveTransitionDecisions = async () => {
+    if (!promotionPreview) return;
+
+    const boundaryStudents = promotionPreview.preview.filter(
+      (student) => student.yearLevel === 'Grade 10' || student.yearLevel === 'Grade 12'
+    );
+    const decisions = boundaryStudents
+      .filter((student) => transitionDecisions[student.id])
+      .map((student) => ({
+        studentId: student.id,
+        decision: transitionDecisions[student.id],
+      }));
+
+    if (decisions.length === 0) {
+      toast.error('Select at least one Grade 10 or Grade 12 decision first.');
+      return;
+    }
+
+    setIsSavingTransitionDecisions(true);
+    try {
+      const res = await fetch('/api/academic-years/auto-promote', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decisions }),
+        credentials: 'include',
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to save transition decisions');
+        return;
+      }
+
+      toast.success(result.message || 'Transition decisions saved');
+      await fetchPromotionPreview();
+    } catch (error) {
+      console.error('Error saving transition decisions:', error);
+      toast.error('Failed to save transition decisions');
+    } finally {
+      setIsSavingTransitionDecisions(false);
+    }
+  };
+
   const handleAutoPromoteStudents = async () => {
+    const missingDecisionCount =
+      promotionPreview?.preview.filter((student) => student.requiresDecision).length || 0;
+    if (missingDecisionCount > 0) {
+      toast.error(
+        `${missingDecisionCount} Grade 10/12 student(s) still need transition decisions.`
+      );
+      return;
+    }
+
     setIsAutoPromoting(true);
     try {
       const res = await fetch('/api/academic-years/auto-promote', {
@@ -1553,7 +1635,16 @@ export default function SettingsPage() {
       ? promotionRun
       : null;
   const isDialogPromotionProcessing = isPromotionRunActive(dialogPromotionRun);
+  const promotionDecisionBlockers =
+    promotionPreview?.preview.filter((student) => student.requiresDecision) || [];
+  const hasPromotionDecisionBlockers = promotionDecisionBlockers.length > 0;
   const canStartDialogPromotion = Boolean(
+    promotionPreview?.activeAcademicYear &&
+    !promotionPreview.activeAcademicYear.promotionProcessedAt &&
+    !isDialogPromotionProcessing &&
+    !hasPromotionDecisionBlockers
+  );
+  const canReviewDialogPromotion = Boolean(
     promotionPreview?.activeAcademicYear &&
     !promotionPreview.activeAcademicYear.promotionProcessedAt &&
     !isDialogPromotionProcessing
@@ -2965,84 +3056,180 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {canStartDialogPromotion && (
+                {canReviewDialogPromotion && (
                   <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-                    <div className="flex gap-3">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-                      <p>
-                        Starting promotion will process{' '}
-                        <strong>{promotionPreview.totalStudents.toLocaleString()}</strong> active
-                        students in the background and mark this academic year as promoted when the
-                        run completes.
-                      </p>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="flex gap-3">
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                        <p>
+                          {hasPromotionDecisionBlockers ? (
+                            <>
+                              <strong>{promotionDecisionBlockers.length}</strong> Grade 10/12
+                              student(s) need a transition decision before promotion can start.
+                            </>
+                          ) : (
+                            <>
+                              Starting promotion will process{' '}
+                              <strong>{promotionPreview.totalStudents.toLocaleString()}</strong>{' '}
+                              active students and record year-end outcomes.
+                            </>
+                          )}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSaveTransitionDecisions}
+                        disabled={isSavingTransitionDecisions}
+                      >
+                        {isSavingTransitionDecisions ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save className="h-4 w-4" />
+                        )}
+                        Save Decisions
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                {canStartDialogPromotion && (
+                {canReviewDialogPromotion && (
                   <div className="max-h-96 overflow-x-auto rounded-md border border-gray-200">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Student Name</TableHead>
                           <TableHead>Current Level</TableHead>
+                          <TableHead>Decision</TableHead>
                           <TableHead>Action</TableHead>
                           <TableHead>Next Level</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {promotionPreview.preview.map((student) => (
-                          <TableRow key={student.id}>
-                            <TableCell>
-                              {student.lastName}, {student.firstName}
-                            </TableCell>
-                            <TableCell>
-                              {student.gradeLevel} - {student.yearLevel}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  student.action === 'GRADUATE'
-                                    ? 'destructive'
-                                    : student.action === 'SKIP'
-                                      ? 'secondary'
-                                      : 'default'
-                                }
-                              >
-                                {student.action === 'GRADUATE'
-                                  ? 'Graduate'
+                        {promotionPreview.preview.map((student) => {
+                          const isBoundaryStudent =
+                            student.yearLevel === 'Grade 10' || student.yearLevel === 'Grade 12';
+                          const selectedDecision =
+                            transitionDecisions[student.id] ||
+                            student.transitionDecision ||
+                            ('UNSET' as StudentTransitionDecision | 'UNSET');
+                          const decisionOptions =
+                            student.yearLevel === 'Grade 10'
+                              ? ([
+                                  'CONTINUE_SENIOR_HIGH',
+                                  'COMPLETED_JHS',
+                                  'TRANSFERRED_OUT',
+                                  'WITHDRAWN',
+                                  'RETAINED',
+                                ] as StudentTransitionDecision[])
+                              : ([
+                                  'CONTINUE_COLLEGE',
+                                  'GRADUATED_SHS',
+                                  'TRANSFERRED_OUT',
+                                  'WITHDRAWN',
+                                  'RETAINED',
+                                ] as StudentTransitionDecision[]);
+                          const actionLabel =
+                            student.action === 'GRADUATE'
+                              ? 'Graduate'
+                              : student.action === 'SEPARATE'
+                                ? 'Separate'
+                                : student.action === 'RETAIN'
+                                  ? 'Retain'
                                   : student.action === 'SKIP'
-                                    ? 'Skip'
-                                    : 'Promote'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {student.action === 'GRADUATE' ? (
-                                <span className="font-medium text-destructive">Graduated</span>
-                              ) : student.action === 'SKIP' ? (
-                                <span className="text-muted-foreground">{student.reason}</span>
-                              ) : (
-                                <div className="space-y-1">
-                                  <span className="text-green-600">
-                                    {student.nextGradeLevel} - {student.nextYearLevel}
+                                    ? 'Blocked'
+                                    : 'Promote';
+
+                          return (
+                            <TableRow key={student.id}>
+                              <TableCell>
+                                {student.lastName}, {student.firstName}
+                              </TableCell>
+                              <TableCell>
+                                {student.gradeLevel} - {student.yearLevel}
+                              </TableCell>
+                              <TableCell className="min-w-[220px]">
+                                {isBoundaryStudent ? (
+                                  <Select
+                                    value={selectedDecision}
+                                    onValueChange={(value) => {
+                                      if (value !== 'UNSET') {
+                                        handleTransitionDecisionChange(
+                                          student.id,
+                                          value as StudentTransitionDecision
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-9">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="UNSET" disabled>
+                                        Choose decision
+                                      </SelectItem>
+                                      {decisionOptions.map((decision) => (
+                                        <SelectItem key={decision} value={decision}>
+                                          {STUDENT_TRANSITION_DECISION_LABELS[decision]}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <span className="text-muted-foreground">Auto</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    student.action === 'GRADUATE' ||
+                                    student.action === 'SEPARATE'
+                                      ? 'destructive'
+                                      : student.action === 'SKIP'
+                                        ? 'secondary'
+                                        : 'default'
+                                  }
+                                >
+                                  {actionLabel}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {student.action === 'GRADUATE' ? (
+                                  <span className="font-medium text-destructive">Graduated</span>
+                                ) : student.action === 'SEPARATE' ? (
+                                  <span className="font-medium text-destructive">
+                                    {student.nextYearLevel}
                                   </span>
-                                  {student.nextProgram && (
-                                    <div className="text-xs text-muted-foreground">
-                                      {student.nextProgram}
-                                      {student.nextTermType ? ` - ${student.nextTermType}` : ''}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                ) : student.action === 'RETAIN' ? (
+                                  <span className="font-medium text-amber-700">
+                                    Retain in {student.yearLevel}
+                                  </span>
+                                ) : student.action === 'SKIP' ? (
+                                  <span className="text-muted-foreground">{student.reason}</span>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="text-green-600">
+                                      {student.nextGradeLevel} - {student.nextYearLevel}
+                                    </span>
+                                    {student.nextProgram && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {student.nextProgram}
+                                        {student.nextTermType ? ` - ${student.nextTermType}` : ''}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
                 )}
 
-                {!canStartDialogPromotion &&
+                {!canReviewDialogPromotion &&
                   !isDialogPromotionProcessing &&
                   !dialogPromotionRun && (
                     <div className="rounded-md border border-gray-200 bg-muted/40 px-4 py-3 text-sm text-muted-foreground">

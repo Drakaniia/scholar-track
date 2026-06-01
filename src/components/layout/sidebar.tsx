@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import {
   ChevronDown,
+  ClipboardList,
   FileSpreadsheet,
   GraduationCap,
   LayoutDashboard,
@@ -37,6 +38,7 @@ const LOGO_IMAGE_URL = '/images/logo.webp';
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Students', href: '/students', icon: Users },
+  { name: 'Registry', href: '/registry', icon: ClipboardList },
   { name: 'Scholarships', href: '/scholarships', icon: GraduationCap },
   { name: 'Reports', href: '/reports', icon: FileSpreadsheet },
 ];
