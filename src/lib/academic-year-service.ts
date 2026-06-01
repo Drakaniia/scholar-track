@@ -1,6 +1,11 @@
 import type { Prisma } from '@prisma/client';
 
-import { GradeLevel, TermType } from '@/types';
+import {
+  GradeLevel,
+  StudentAcademicOutcome,
+  StudentTransitionDecision,
+  TermType,
+} from '@/types';
 
 import { logAudit } from './auth';
 import prisma from './prisma';
@@ -12,6 +17,7 @@ export interface PromotionStudentInput {
   yearLevel: string;
   program?: string;
   termType?: string;
+  transitionDecision?: string | null;
 }
 
 export type PromotionTarget =
@@ -26,6 +32,17 @@ export type PromotionTarget =
       action: 'GRADUATE';
     }
   | {
+      action: 'RETAIN';
+      reason: string;
+    }
+  | {
+      action: 'SEPARATE';
+      status: string;
+      graduationStatus: string;
+      outcome: StudentAcademicOutcome;
+      reason: string;
+    }
+  | {
       action: 'SKIP';
       reason: string;
     };
@@ -34,6 +51,7 @@ interface AcademicYearPromotionRecord {
   id: number;
   year: string;
   semester: string;
+  startDate: Date;
   promotionDate?: Date | null;
   promotionProcessedAt?: Date | null;
 }
@@ -69,6 +87,70 @@ export interface DuePromotionRunResult extends PromotionRunResult {
   results: AcademicYearPromotionResult[];
 }
 
+const GRADE_10_DECISIONS = new Set<StudentTransitionDecision>([
+  'CONTINUE_SENIOR_HIGH',
+  'COMPLETED_JHS',
+  'TRANSFERRED_OUT',
+  'WITHDRAWN',
+  'RETAINED',
+]);
+
+const GRADE_12_DECISIONS = new Set<StudentTransitionDecision>([
+  'CONTINUE_COLLEGE',
+  'GRADUATED_SHS',
+  'TRANSFERRED_OUT',
+  'WITHDRAWN',
+  'RETAINED',
+]);
+
+function normalizeTransitionDecision(decision?: string | null): StudentTransitionDecision | null {
+  if (!decision) return null;
+  return decision as StudentTransitionDecision;
+}
+
+function buildSeparateTarget(decision: StudentTransitionDecision): Extract<
+  PromotionTarget,
+  { action: 'SEPARATE' }
+> {
+  if (decision === 'COMPLETED_JHS') {
+    return {
+      action: 'SEPARATE',
+      status: 'Completed JHS',
+      graduationStatus: 'Completed JHS',
+      outcome: 'COMPLETED_JHS',
+      reason: 'Student completed Junior High and is not continuing to Senior High in this school',
+    };
+  }
+
+  if (decision === 'GRADUATED_SHS') {
+    return {
+      action: 'SEPARATE',
+      status: 'Graduated SHS',
+      graduationStatus: 'Graduated SHS',
+      outcome: 'GRADUATED_SHS',
+      reason: 'Student graduated Senior High and is not continuing to College in this school',
+    };
+  }
+
+  if (decision === 'TRANSFERRED_OUT') {
+    return {
+      action: 'SEPARATE',
+      status: 'Transferred Out',
+      graduationStatus: 'Transferred Out',
+      outcome: 'TRANSFERRED_OUT',
+      reason: 'Student transferred out after the school year',
+    };
+  }
+
+  return {
+    action: 'SEPARATE',
+    status: 'Withdrawn',
+    graduationStatus: 'Withdrawn',
+    outcome: 'WITHDRAWN',
+    reason: 'Student withdrew after the school year',
+  };
+}
+
 function parseGradeNumber(yearLevel: string): number | null {
   const match = yearLevel.trim().match(/^Grade\s+(\d+)$/i);
   return match ? Number(match[1]) : null;
@@ -88,6 +170,7 @@ function ordinalCollegeYear(year: number): string {
 
 export function resolvePromotionTarget(student: PromotionStudentInput): PromotionTarget {
   const currentGrade = parseGradeNumber(student.yearLevel);
+  const transitionDecision = normalizeTransitionDecision(student.transitionDecision);
 
   if (currentGrade !== null) {
     if (currentGrade >= 1 && currentGrade <= 5) {
@@ -115,6 +198,25 @@ export function resolvePromotionTarget(student: PromotionStudentInput): Promotio
     }
 
     if (currentGrade === 10) {
+      if (!transitionDecision || !GRADE_10_DECISIONS.has(transitionDecision)) {
+        return {
+          action: 'SKIP',
+          reason:
+            'Grade 10 requires an end-of-year decision before promotion: continue to Grade 11, completed JHS, transferred out, withdrawn, or retained.',
+        };
+      }
+
+      if (transitionDecision === 'RETAINED') {
+        return {
+          action: 'RETAIN',
+          reason: 'Student retained in Grade 10',
+        };
+      }
+
+      if (transitionDecision !== 'CONTINUE_SENIOR_HIGH') {
+        return buildSeparateTarget(transitionDecision);
+      }
+
       return {
         action: 'PROMOTE',
         gradeLevel: 'SENIOR_HIGH',
@@ -131,6 +233,25 @@ export function resolvePromotionTarget(student: PromotionStudentInput): Promotio
     }
 
     if (currentGrade === 12) {
+      if (!transitionDecision || !GRADE_12_DECISIONS.has(transitionDecision)) {
+        return {
+          action: 'SKIP',
+          reason:
+            'Grade 12 requires an end-of-year decision before promotion: continue to College, graduated SHS, transferred out, withdrawn, or retained.',
+        };
+      }
+
+      if (transitionDecision === 'RETAINED') {
+        return {
+          action: 'RETAIN',
+          reason: 'Student retained in Grade 12',
+        };
+      }
+
+      if (transitionDecision !== 'CONTINUE_COLLEGE') {
+        return buildSeparateTarget(transitionDecision);
+      }
+
       return {
         action: 'PROMOTE',
         gradeLevel: 'COLLEGE',
@@ -236,6 +357,11 @@ function buildPromotionUpdate(target: Extract<PromotionTarget, { action: 'PROMOT
     graduationStatus: 'Active',
     graduatedAt: null,
     status: 'Active',
+    transitionDecision: null,
+    transitionDecisionAt: null,
+    transitionDecisionBy: null,
+    separatedAt: null,
+    separationReason: null,
   };
 
   if (target.termType) {
@@ -265,6 +391,11 @@ async function backupStudentBeforePromotion(
       graduationStatus: string | null;
       graduatedAt: Date | null;
       isArchived: boolean;
+      transitionDecision: string | null;
+      transitionDecisionAt: Date | null;
+      transitionDecisionBy: number | null;
+      separatedAt: Date | null;
+      separationReason: string | null;
     };
     scholarships?: Array<Record<string, unknown>>;
     disbursements?: Array<Record<string, unknown>>;
@@ -284,6 +415,64 @@ async function backupStudentBeforePromotion(
       }),
     },
   });
+}
+
+function getPromotionOutcome(target: PromotionTarget): StudentAcademicOutcome {
+  if (target.action === 'PROMOTE') return 'PROMOTED';
+  if (target.action === 'RETAIN') return 'RETAINED';
+  if (target.action === 'GRADUATE') return 'GRADUATED_COLLEGE';
+  if (target.action === 'SEPARATE') return target.outcome;
+  return 'SKIPPED';
+}
+
+async function createAcademicRecordForTransition(
+  tx: Prisma.TransactionClient,
+  params: {
+    academicYear: AcademicYearPromotionRecord;
+    student: {
+      id: number;
+      gradeLevel: string;
+      yearLevel: string;
+      program: string;
+      termType: string;
+      status: string;
+      transitionDecision: string | null;
+    };
+    target: PromotionTarget;
+    now: Date;
+  }
+) {
+  await tx.studentAcademicRecord.create({
+    data: {
+      studentId: params.student.id,
+      academicYearId: params.academicYear.id,
+      academicYear: params.academicYear.year,
+      gradeLevel: params.student.gradeLevel,
+      yearLevel: params.student.yearLevel,
+      program: params.student.program,
+      termType: params.student.termType,
+      status: params.student.status,
+      outcome: getPromotionOutcome(params.target),
+      decision: params.student.transitionDecision,
+      nextGradeLevel: params.target.action === 'PROMOTE' ? params.target.gradeLevel : null,
+      nextYearLevel: params.target.action === 'PROMOTE' ? params.target.yearLevel : null,
+      nextProgram:
+        params.target.action === 'PROMOTE'
+          ? params.target.program || params.student.program
+          : null,
+      nextTermType:
+        params.target.action === 'PROMOTE'
+          ? params.target.termType || params.student.termType
+          : null,
+      isCurrent: false,
+      startedAt: params.academicYear.startDate,
+      endedAt: params.now,
+    },
+  });
+}
+
+function isBlockingPromotionTarget(target: PromotionTarget) {
+  return target.action === 'SKIP' && target.reason.includes('requires an end-of-year decision');
 }
 
 async function processAcademicYearPromotion(
@@ -332,8 +521,41 @@ async function processAcademicYearPromotion(
         graduationStatus: true,
         graduatedAt: true,
         isArchived: true,
+        transitionDecision: true,
+        transitionDecisionAt: true,
+        transitionDecisionBy: true,
+        separatedAt: true,
+        separationReason: true,
       },
     });
+
+    const blockingStudents = students
+      .map((student) => ({ student, target: resolvePromotionTarget(student) }))
+      .filter(({ target }) => isBlockingPromotionTarget(target));
+
+    if (blockingStudents.length > 0) {
+      await tx.academicYear.update({
+        where: { id: academicYear.id },
+        data: { promotionProcessedAt: null },
+      });
+
+      return {
+        success: false,
+        error:
+          'Promotion blocked. Grade 10 and Grade 12 students need end-of-year decisions before this run can continue.',
+        academicYearId: academicYear.id,
+        academicYear: academicYear.year,
+        skippedAcademicYear: true,
+        promotedCount: 0,
+        graduatedCount: 0,
+        skippedCount: blockingStudents.length,
+        errorCount: blockingStudents.length,
+        errors: blockingStudents.map(({ student, target }) => ({
+          studentId: student.id,
+          error: target.action === 'SKIP' ? target.reason : 'Missing transition decision',
+        })),
+      };
+    }
 
     let promotedCount = 0;
     let graduatedCount = 0;
@@ -347,6 +569,12 @@ async function processAcademicYearPromotion(
 
         if (target.action === 'SKIP') {
           skippedCount++;
+          await createAcademicRecordForTransition(tx, {
+            academicYear,
+            student,
+            target,
+            now: options.now,
+          });
           await createAudit(
             tx,
             options.userId || null,
@@ -366,6 +594,13 @@ async function processAcademicYearPromotion(
         }
 
         if (target.action === 'GRADUATE') {
+          await createAcademicRecordForTransition(tx, {
+            academicYear,
+            student,
+            target,
+            now: options.now,
+          });
+
           const [activeScholarships, futureDisbursements] = await Promise.all([
             tx.studentScholarship.findMany({
               where: {
@@ -457,11 +692,172 @@ async function processAcademicYearPromotion(
           continue;
         }
 
+        if (target.action === 'RETAIN') {
+          await backupStudentBeforePromotion(tx, {
+            academicYearId: academicYear.id,
+            userId: options.userId,
+            operation: 'AUTO_PROMOTE_STUDENT',
+            student,
+          });
+
+          await createAcademicRecordForTransition(tx, {
+            academicYear,
+            student,
+            target,
+            now: options.now,
+          });
+
+          await tx.student.update({
+            where: { id: student.id },
+            data: {
+              graduationStatus: 'Active',
+              graduatedAt: null,
+              status: 'Active',
+              transitionDecision: null,
+              transitionDecisionAt: null,
+              transitionDecisionBy: null,
+              separatedAt: null,
+              separationReason: null,
+            },
+          });
+
+          await createAudit(
+            tx,
+            options.userId || null,
+            'AUTO_RETAIN_STUDENT',
+            'STUDENT',
+            student.id,
+            {
+              studentName: `${student.firstName} ${student.lastName}`,
+              gradeLevel: student.gradeLevel,
+              yearLevel: student.yearLevel,
+              academicYear: academicYear.year,
+              reason: target.reason,
+              source: options.source,
+            }
+          );
+
+          skippedCount++;
+          continue;
+        }
+
+        if (target.action === 'SEPARATE') {
+          const [activeScholarships, futureDisbursements] = await Promise.all([
+            tx.studentScholarship.findMany({
+              where: {
+                studentId: student.id,
+                scholarshipStatus: 'Active',
+              },
+              select: {
+                studentId: true,
+                scholarshipId: true,
+                awardDate: true,
+                startTerm: true,
+                endTerm: true,
+                grantAmount: true,
+                scholarshipStatus: true,
+                grantType: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            }),
+            tx.disbursement.findMany({
+              where: {
+                studentId: student.id,
+                disbursementDate: { gte: options.now },
+              },
+              select: {
+                disbursementDate: true,
+                amount: true,
+                term: true,
+                method: true,
+                remarks: true,
+                scholarshipId: true,
+                studentId: true,
+                academicYearId: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            }),
+          ]);
+
+          await backupStudentBeforePromotion(tx, {
+            academicYearId: academicYear.id,
+            userId: options.userId,
+            operation: 'AUTO_GRADUATE_STUDENT',
+            student,
+            scholarships: activeScholarships,
+            disbursements: futureDisbursements,
+          });
+
+          await createAcademicRecordForTransition(tx, {
+            academicYear,
+            student,
+            target,
+            now: options.now,
+          });
+
+          await tx.student.update({
+            where: { id: student.id },
+            data: {
+              graduationStatus: target.graduationStatus,
+              graduatedAt:
+                target.outcome === 'COMPLETED_JHS' || target.outcome === 'GRADUATED_SHS'
+                  ? options.now
+                  : null,
+              status: target.status,
+              separatedAt: options.now,
+              separationReason: target.reason,
+            },
+          });
+
+          await tx.studentScholarship.deleteMany({
+            where: {
+              studentId: student.id,
+              scholarshipStatus: 'Active',
+            },
+          });
+
+          await tx.disbursement.deleteMany({
+            where: {
+              studentId: student.id,
+              disbursementDate: { gte: options.now },
+            },
+          });
+
+          await createAudit(
+            tx,
+            options.userId || null,
+            'AUTO_SEPARATE_STUDENT',
+            'STUDENT',
+            student.id,
+            {
+              studentName: `${student.firstName} ${student.lastName}`,
+              previousGradeLevel: student.gradeLevel,
+              previousYearLevel: student.yearLevel,
+              academicYear: academicYear.year,
+              outcome: target.outcome,
+              reason: target.reason,
+              source: options.source,
+            }
+          );
+
+          graduatedCount++;
+          continue;
+        }
+
         await backupStudentBeforePromotion(tx, {
           academicYearId: academicYear.id,
           userId: options.userId,
           operation: 'AUTO_PROMOTE_STUDENT',
           student,
+        });
+
+        await createAcademicRecordForTransition(tx, {
+          academicYear,
+          student,
+          target,
+          now: options.now,
         });
 
         await tx.student.update({
@@ -556,6 +952,16 @@ function normalizeStudentRestoreData(student: Record<string, unknown>) {
     graduationStatus: student.graduationStatus ? String(student.graduationStatus) : null,
     graduatedAt: student.graduatedAt ? new Date(String(student.graduatedAt)) : null,
     isArchived: Boolean(student.isArchived),
+    transitionDecision: student.transitionDecision ? String(student.transitionDecision) : null,
+    transitionDecisionAt: student.transitionDecisionAt
+      ? new Date(String(student.transitionDecisionAt))
+      : null,
+    transitionDecisionBy:
+      student.transitionDecisionBy === null || student.transitionDecisionBy === undefined
+        ? null
+        : Number(student.transitionDecisionBy),
+    separatedAt: student.separatedAt ? new Date(String(student.separatedAt)) : null,
+    separationReason: student.separationReason ? String(student.separationReason) : null,
   };
 }
 
@@ -682,6 +1088,10 @@ export async function undoLastAcademicYearPromotion(userId?: number): Promise<Pr
       data: { promotionProcessedAt: null },
     });
 
+    await tx.studentAcademicRecord.deleteMany({
+      where: { academicYearId: activeAcademicYear.id },
+    });
+
     await tx.backup.deleteMany({
       where: { operationContext },
     });
@@ -780,7 +1190,8 @@ export async function autoPromoteStudents(
   });
 
   return {
-    success: true,
+    success: result.success,
+    error: result.error,
     promotedCount: result.promotedCount,
     graduatedCount: result.graduatedCount,
     skippedCount: result.skippedCount,
@@ -812,6 +1223,71 @@ export async function promoteStudent(studentId: number, userId?: number) {
 
   if (target.action === 'SKIP') {
     throw new Error(target.reason);
+  }
+
+  if (target.action === 'RETAIN') {
+    const updated = await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        graduationStatus: 'Active',
+        graduatedAt: null,
+        status: 'Active',
+        transitionDecision: null,
+        transitionDecisionAt: null,
+        transitionDecisionBy: null,
+        separatedAt: null,
+        separationReason: null,
+      },
+    });
+
+    await logAudit(userId || null, 'MANUAL_RETAIN_STUDENT', 'STUDENT', student.id, {
+      studentName: `${student.firstName} ${student.lastName}`,
+      gradeLevel: student.gradeLevel,
+      yearLevel: student.yearLevel,
+      reason: target.reason,
+    });
+
+    return updated;
+  }
+
+  if (target.action === 'SEPARATE') {
+    const updated = await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        graduationStatus: target.graduationStatus,
+        graduatedAt:
+          target.outcome === 'COMPLETED_JHS' || target.outcome === 'GRADUATED_SHS'
+            ? new Date()
+            : null,
+        status: target.status,
+        separatedAt: new Date(),
+        separationReason: target.reason,
+      },
+    });
+
+    await prisma.studentScholarship.deleteMany({
+      where: {
+        studentId: student.id,
+        scholarshipStatus: 'Active',
+      },
+    });
+
+    await prisma.disbursement.deleteMany({
+      where: {
+        studentId: student.id,
+        disbursementDate: { gte: new Date() },
+      },
+    });
+
+    await logAudit(userId || null, 'MANUAL_SEPARATE_STUDENT', 'STUDENT', student.id, {
+      studentName: `${student.firstName} ${student.lastName}`,
+      previousGradeLevel: student.gradeLevel,
+      previousYearLevel: student.yearLevel,
+      outcome: target.outcome,
+      reason: target.reason,
+    });
+
+    return updated;
   }
 
   if (target.action === 'GRADUATE') {

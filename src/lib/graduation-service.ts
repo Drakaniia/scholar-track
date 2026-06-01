@@ -1,4 +1,4 @@
-import { GradeLevel, YEAR_LEVELS } from '@/types';
+import { GradeLevel, SEPARATED_STUDENT_STATUSES, YEAR_LEVELS } from '@/types';
 
 import { logAudit } from './auth';
 import {
@@ -16,6 +16,15 @@ import prisma from './prisma';
 export function hasStudentGraduated(student: { gradeLevel: string; yearLevel: string }): boolean {
   const gradeLevel = student.gradeLevel as GradeLevel;
   const { yearLevel } = student;
+
+  if (gradeLevel !== 'COLLEGE') {
+    return false;
+  }
+
+  const collegeYearMatch = yearLevel.trim().match(/^(\d+)(st|nd|rd|th)\s+Year$/i);
+  if (collegeYearMatch) {
+    return Number(collegeYearMatch[1]) >= 3;
+  }
 
   // Get the last year level for the student's education level
   const yearLevels = YEAR_LEVELS[gradeLevel];
@@ -366,8 +375,10 @@ export async function isStudentEligibleForDisbursement(studentId: number): Promi
     return false;
   }
 
-  // Student is not eligible if they have graduated
-  return student.graduationStatus !== 'Graduated';
+  // Students in the separated registry are no longer eligible for new disbursements.
+  return !SEPARATED_STUDENT_STATUSES.includes(
+    (student.graduationStatus || student.status) as (typeof SEPARATED_STUDENT_STATUSES)[number]
+  );
 }
 
 /**
