@@ -12,16 +12,16 @@ export { RecentAwards } from './recent-awards';
 // Skeleton components for loading states
 export function StatsCardSkeleton() {
   return (
-    <Card className="border-gray-200">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between space-x-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[100px]" />
-            <Skeleton className="h-8 w-[120px]" />
-            <Skeleton className="h-3 w-[140px]" />
-          </div>
-          <Skeleton className="h-12 w-12 rounded-full" />
-        </div>
+    <Card className="relative overflow-hidden rounded-lg border-[#e1e8e4] bg-white py-0 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+      <Skeleton className="absolute inset-x-0 top-0 h-1 rounded-none" />
+      <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 px-5 pt-5 pb-2">
+        <Skeleton className="h-4 w-[110px]" />
+        <Skeleton className="h-9 w-9 rounded-lg" />
+      </CardHeader>
+      <CardContent className="relative z-10 px-5 pb-5">
+        <Skeleton className="h-8 w-[120px]" />
+        <Skeleton className="mt-2 h-3 w-[150px]" />
+        <Skeleton className="mt-4 h-1.5 w-full rounded-full" />
       </CardContent>
     </Card>
   );
@@ -29,7 +29,7 @@ export function StatsCardSkeleton() {
 
 export function StatsGridSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[...Array(4)].map((_, i) => (
         <StatsCardSkeleton key={i} />
       ))}
@@ -39,13 +39,16 @@ export function StatsGridSkeleton() {
 
 export function ChartCardSkeleton() {
   return (
-    <Card className="border-gray-200">
-      <CardHeader>
-        <Skeleton className="h-6 w-[180px]" />
+    <Card className="rounded-lg border-[#e1e8e4] bg-white py-0 shadow-sm">
+      <CardHeader className="border-b border-[#e4ece8] px-5 py-5">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-2.5 w-2.5 rounded-full" />
+          <Skeleton className="h-6 w-[180px]" />
+        </div>
         <Skeleton className="h-4 w-[240px]" />
       </CardHeader>
-      <CardContent>
-        <Skeleton className="h-[300px] w-full" />
+      <CardContent className="px-5 py-5">
+        <Skeleton className="h-[350px] w-full" />
       </CardContent>
     </Card>
   );
