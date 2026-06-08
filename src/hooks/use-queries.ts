@@ -81,6 +81,7 @@ interface StudentFilters {
   scholarshipId?: string;
   scholarshipSource?: string;
   archived?: boolean;
+  population?: string;
   page?: number;
   limit?: number;
 }

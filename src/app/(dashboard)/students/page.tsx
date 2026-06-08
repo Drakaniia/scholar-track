@@ -448,7 +448,12 @@ export default function StudentsPage() {
   const [gradeLevelCounts, setGradeLevelCounts] = useState<Record<string, number>>({});
   const [programCounts, setProgramCounts] = useState<Record<string, number>>({});
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [filteredTotal, setFilteredTotal] = useState<number>(0);
+  const [facetTotals, setFacetTotals] = useState({
+    gradeLevel: 0,
+    program: 0,
+    status: 0,
+    scholarship: 0,
+  });
   const [dynamicScholarshipCounts, setDynamicScholarshipCounts] = useState<Record<string, number>>(
     {}
   );
@@ -456,6 +461,7 @@ export default function StudentsPage() {
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [hoveredScholarshipId, setHoveredScholarshipId] = useState<number | null>(null);
+  const studentPopulation = showArchived ? 'archived' : 'all';
 
   // TanStack Query hooks for data fetching
   const { data: studentsData, isLoading: studentsLoading } = useStudents({
@@ -466,6 +472,7 @@ export default function StudentsPage() {
     scholarshipSource: scholarshipSourceFilter === 'all' ? undefined : scholarshipSourceFilter,
     scholarshipId: scholarshipFilter === 'all' ? undefined : scholarshipFilter,
     archived: showArchived,
+    population: studentPopulation,
     page,
     limit: 11,
   });
@@ -479,11 +486,14 @@ export default function StudentsPage() {
   const archiveStudentMutation = useArchiveStudent();
 
   const { data: filterOptionsData } = useStudentFilterOptions({
+    search: debouncedSearch,
     gradeLevel: gradeLevelFilter,
     program: programFilter,
     status: statusFilter,
     scholarshipSource: scholarshipSourceFilter,
     scholarshipId: scholarshipFilter,
+    archived: showArchived,
+    population: studentPopulation,
   });
 
   // Update state when TanStack Query data changes
@@ -523,7 +533,12 @@ export default function StudentsPage() {
         gradeLevelCounts: Record<string, number>;
         programCounts: Record<string, number>;
         statusCounts: Record<string, number>;
-        filteredTotal: number;
+        facetTotals?: {
+          gradeLevel: number;
+          program: number;
+          status: number;
+          scholarship: number;
+        };
         dynamicScholarshipCounts: Record<string, number>;
       };
       setPrograms(data.programs || []);
@@ -532,7 +547,12 @@ export default function StudentsPage() {
       setGradeLevelCounts(data.gradeLevelCounts || {});
       setProgramCounts(data.programCounts || {});
       setStatusCounts(data.statusCounts || {});
-      setFilteredTotal(data.filteredTotal || 0);
+      setFacetTotals({
+        gradeLevel: data.facetTotals?.gradeLevel || 0,
+        program: data.facetTotals?.program || 0,
+        status: data.facetTotals?.status || 0,
+        scholarship: data.facetTotals?.scholarship || 0,
+      });
       setDynamicScholarshipCounts(data.dynamicScholarshipCounts || {});
     }
   }, [filterOptionsData]);
@@ -547,6 +567,7 @@ export default function StudentsPage() {
     statusFilter,
     scholarshipSourceFilter,
     scholarshipFilter,
+    showArchived,
   ]);
 
   useEffect(() => {
@@ -787,7 +808,7 @@ export default function StudentsPage() {
                     <SelectValue placeholder="Grade Level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Grades ({filteredTotal})</SelectItem>
+                    <SelectItem value="all">All Grades ({facetTotals.gradeLevel})</SelectItem>
                     {GRADE_LEVELS.map((level) => (
                       <SelectItem key={level} value={level}>
                         {GRADE_LEVEL_LABELS[level]} ({gradeLevelCounts[level] || 0})
@@ -801,7 +822,7 @@ export default function StudentsPage() {
                     <SelectValue placeholder="Program" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Programs ({filteredTotal})</SelectItem>
+                    <SelectItem value="all">All Programs ({facetTotals.program})</SelectItem>
                     {programs
                       .filter((program) => program)
                       .map((program) => (
@@ -817,7 +838,7 @@ export default function StudentsPage() {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status ({filteredTotal})</SelectItem>
+                    <SelectItem value="all">All Status ({facetTotals.status})</SelectItem>
                     <SelectItem value="Active">Active ({statusCounts['Active'] || 0})</SelectItem>
                     <SelectItem value="Inactive">
                       Inactive ({statusCounts['Inactive'] || 0})
@@ -847,7 +868,9 @@ export default function StudentsPage() {
                     <SelectValue placeholder="Scholarship" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Scholarships ({filteredTotal})</SelectItem>
+                    <SelectItem value="all">
+                      All Scholarships ({facetTotals.scholarship})
+                    </SelectItem>
                     <SelectItem value="none">
                       No Scholarship ({studentsWithoutScholarship})
                     </SelectItem>

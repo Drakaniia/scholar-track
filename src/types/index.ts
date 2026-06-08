@@ -401,6 +401,12 @@ export interface StudentFilterOptions {
   studentsWithoutScholarship: number;
   total: number;
   scholarships?: Array<{ id: number; scholarshipName: string; source: string }>;
+  facetTotals?: {
+    gradeLevel: number;
+    program: number;
+    status: number;
+    scholarship: number;
+  };
   filteredTotal?: number;
   dynamicScholarshipCounts?: Record<string, number>;
 }
