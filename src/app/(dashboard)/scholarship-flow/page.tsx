@@ -6,6 +6,8 @@ import {
   ArrowUpRight,
   Award,
   BadgeCheck,
+  CalendarRange,
+  Filter,
   Layers,
   LineChart,
   RefreshCw,
@@ -25,7 +27,6 @@ import {
   YAxis,
 } from 'recharts';
 
-import { PageHeader } from '@/components/layout';
 import {
   AnimatedChart,
   AnimatedNumber,
@@ -35,6 +36,16 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -52,6 +63,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScholarshipFlowData, useScholarshipFlow } from '@/hooks/use-queries';
+import {
+  getDefaultScholarshipFlowStartYear,
+  getScholarshipFlowEndYear,
+} from '@/lib/scholarship-flow-years';
 import { formatCurrency } from '@/lib/utils';
 import { SCHOLARSHIP_SOURCES, SCHOLARSHIP_SOURCE_LABELS } from '@/types';
 
@@ -506,42 +521,165 @@ function ScholarshipFlowSkeleton() {
 
 export default function ScholarshipFlowPage() {
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [startYearFilter, setStartYearFilter] = useState(() =>
+    getDefaultScholarshipFlowStartYear()
+  );
+  const [yearDialogOpen, setYearDialogOpen] = useState(false);
+  const [draftStartYear, setDraftStartYear] = useState(() =>
+    String(getDefaultScholarshipFlowStartYear())
+  );
   const {
     data: flowResponse,
     isLoading,
     isFetching,
     refetch,
-  } = useScholarshipFlow(sourceFilter, {
+  } = useScholarshipFlow(sourceFilter, startYearFilter, {
     refetchOnWindowFocus: false,
   });
   const data = flowResponse?.data;
+  const selectedEndYear = getScholarshipFlowEndYear(startYearFilter);
+  const selectedWindowLabel = `${startYearFilter}-${selectedEndYear}`;
+  const draftStartYearNumber = Number(draftStartYear);
+  const hasValidDraftStartYear =
+    Number.isInteger(draftStartYearNumber) &&
+    draftStartYearNumber >= 1900 &&
+    draftStartYearNumber <= 2200;
+  const draftWindowLabel = hasValidDraftStartYear
+    ? `${draftStartYearNumber}-${getScholarshipFlowEndYear(draftStartYearNumber)}`
+    : 'Enter a valid start year';
+
+  const handleYearDialogOpenChange = (open: boolean) => {
+    setYearDialogOpen(open);
+    if (open) {
+      setDraftStartYear(String(startYearFilter));
+    }
+  };
+
+  const handleApplyWindow = () => {
+    if (!hasValidDraftStartYear) return;
+    setStartYearFilter(draftStartYearNumber);
+    setYearDialogOpen(false);
+  };
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Scholarship Flow"
-        description="Compare scholarship movement and student scholarship load across the last five years"
-      >
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="h-10 w-[210px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              {SCHOLARSHIP_SOURCES.map((source) => (
-                <SelectItem key={source} value={source}>
-                  {SCHOLARSHIP_SOURCE_LABELS[source]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+      <section className="rounded-lg border border-emerald-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-emerald-100 bg-emerald-50/60 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-white shadow-sm">
+              <Filter className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-950">5-Year Window</p>
+              <p className="text-xs text-emerald-800">
+                Showing {selectedWindowLabel} for {getSourceLabel(sourceFilter).toLowerCase()}
+              </p>
+            </div>
+          </div>
+          <Badge className="w-fit border-emerald-200 bg-white text-emerald-800" variant="outline">
+            <CalendarRange className="mr-1 h-3.5 w-3.5" />
+            Showing {selectedWindowLabel}
+          </Badge>
+        </div>
+
+        <div className="grid gap-3 p-4 md:grid-cols-[minmax(180px,240px)_minmax(220px,280px)_auto] md:items-end">
+          <div className="space-y-2">
+            <Label htmlFor="flow-start-year" className="text-xs font-semibold text-slate-500">
+              Start Year
+            </Label>
+            <Button
+              id="flow-start-year"
+              type="button"
+              variant="outline"
+              onClick={() => handleYearDialogOpenChange(true)}
+              className="h-10 w-full justify-between border-slate-300 bg-white px-3 font-semibold text-slate-900"
+            >
+              <span>{selectedWindowLabel}</span>
+              <span className="text-xs font-medium text-emerald-700">Choose Year</span>
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="flow-source" className="text-xs font-semibold text-slate-500">
+              Source
+            </Label>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger id="flow-source" className="h-10 w-full border-slate-300 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                {SCHOLARSHIP_SOURCES.map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {SCHOLARSHIP_SOURCE_LABELS[source]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="h-10 justify-center gap-2 border-slate-300 bg-white md:w-fit"
+          >
+            <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
-      </PageHeader>
+      </section>
+
+      <Dialog open={yearDialogOpen} onOpenChange={handleYearDialogOpenChange}>
+        <DialogContent className="border-emerald-200 p-0 sm:max-w-md">
+          <DialogHeader className="border-b border-emerald-100 bg-emerald-50 px-6 py-5">
+            <DialogTitle className="flex items-center gap-2 text-emerald-950">
+              <CalendarRange className="h-5 w-5 text-emerald-700" />
+              Choose Flow Window
+            </DialogTitle>
+            <DialogDescription className="text-emerald-800">
+              Enter any start year. ScholarTrack will show that year plus the next four years.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            className="space-y-5 px-6 pb-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleApplyWindow();
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="flow-window-start-year">Start Year</Label>
+              <Input
+                id="flow-window-start-year"
+                type="number"
+                inputMode="numeric"
+                min={1900}
+                max={2200}
+                step={1}
+                value={draftStartYear}
+                onChange={(event) => setDraftStartYear(event.target.value)}
+                className="h-11 border-slate-300 text-lg font-semibold"
+              />
+            </div>
+
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+              <p className="text-xs font-semibold text-emerald-700">Window Preview</p>
+              <p className="mt-1 text-2xl font-semibold text-emerald-950">{draftWindowLabel}</p>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setYearDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!hasValidDraftStartYear}>
+                Apply Window
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {isLoading || !data ? (
         <ScholarshipFlowSkeleton />
@@ -617,7 +755,7 @@ export default function ScholarshipFlowPage() {
             <MetricTile
               label="Beneficiaries"
               value={data.summary.totalBeneficiaries}
-              detail="Unique students awarded in five years"
+              detail="Unique students awarded in selected window"
               icon={UsersRound}
               tone="sky"
             />
@@ -653,7 +791,7 @@ export default function ScholarshipFlowPage() {
               <CardContent className="pt-5">
                 {data.multiScholarshipStudents.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500">
-                    No students with multiple scholarships in the selected source.
+                    No students with multiple scholarships in the selected source and window.
                   </div>
                 ) : (
                   <div className="space-y-3">

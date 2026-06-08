@@ -16,6 +16,7 @@ import { useCallback } from 'react';
 import { UseQueryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { getScholarshipFlowEndYear } from '@/lib/scholarship-flow-years';
 import type { CreateStudentInput, StudentFilterOptions, UpdateStudentInput } from '@/types';
 
 // ============================================
@@ -50,7 +51,8 @@ export const queryKeys = {
     detail: (id: number) => [...queryKeys.scholarships.details(), id] as const,
     filterOptions: (filters: ScholarshipFilters = {}) =>
       [...queryKeys.scholarships.all, 'filter-options', filters] as const,
-    flow: (source?: string) => [...queryKeys.scholarships.all, 'flow', source || 'all'] as const,
+    flow: (source?: string, startYear?: number) =>
+      [...queryKeys.scholarships.all, 'flow', source || 'all', startYear || 'current'] as const,
   },
 
   // Users
@@ -693,14 +695,18 @@ export function useDeleteScholarship() {
 
 export function useScholarshipFlow(
   source = 'all',
+  startYear?: number,
   options?: Partial<UseQueryOptions<ApiResponse<ScholarshipFlowData>, Error>>
 ) {
   return useQuery<ApiResponse<ScholarshipFlowData>, Error>({
-    queryKey: queryKeys.scholarships.flow(source),
+    queryKey: queryKeys.scholarships.flow(source, startYear),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (source && source !== 'all') {
         params.set('source', source);
+      }
+      if (startYear) {
+        params.set('endYear', String(getScholarshipFlowEndYear(startYear)));
       }
 
       const url = `/api/scholarships/flow${params.toString() ? `?${params.toString()}` : ''}`;
