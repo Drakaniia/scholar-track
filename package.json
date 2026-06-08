@@ -19,6 +19,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:add-indexes": "npx tsx scripts/add-indexes.ts",
+    "db:reset-students": "npx tsx scripts/delete-student-data.ts",
     "erd:generate": "PRISMA_SCHEMA=prisma/schema-with-erd.prisma prisma generate",
     "erd:view": "start docs/index.html",
     "clean": "rm -rf node_modules .next && npm install"
