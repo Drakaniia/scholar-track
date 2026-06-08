@@ -98,9 +98,6 @@ const LoginPage = () => {
               <h1 className="truncate text-lg font-extrabold tracking-[0.01em] text-white sm:text-2xl">
                 De La Salle John Bosco College
               </h1>
-              <p className="truncate text-xs font-medium text-[#d6ead9] sm:text-sm">
-                Automated Scholarship Record Management System
-              </p>
             </div>
           </div>
 
@@ -129,13 +126,9 @@ const LoginPage = () => {
               />
 
               <div className="relative">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#d9c174]/60 bg-[#f7edc9] px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[#0d5b3b]">
-                  ScholarTrack Access
-                </div>
-
                 <div className="mb-8">
-                  <h2 className="text-4xl font-black leading-[0.95] text-[#0b2c1d] sm:text-5xl">
-                    Records start here.
+                  <h2 className="text-3xl font-black leading-[0.98] text-[#0b2c1d] sm:text-4xl">
+                    Automated Schoalship System for FSE
                   </h2>
                   <p className="mt-4 max-w-md text-sm leading-6 text-[#4b5d52] sm:text-base">
                     Sign in to manage scholarship records, student assistance data, and annual fee
@@ -213,13 +206,6 @@ const LoginPage = () => {
                 </form>
               </div>
             </div>
-          </section>
-
-          <section className="hidden self-end justify-self-end pb-10 text-right lg:block">
-            <p className="max-w-xl text-5xl font-black leading-none text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
-              Scholarship stewardship with every record accounted for.
-            </p>
-            <div className="ml-auto mt-6 h-1 w-32 rounded-full bg-[#e0b848]" />
           </section>
         </main>
 
