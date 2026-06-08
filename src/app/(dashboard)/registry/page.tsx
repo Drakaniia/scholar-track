@@ -53,6 +53,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useDebounce } from '@/hooks/use-debounce';
+import { clientCache, fetchWithCache } from '@/lib/cache';
 import { cn } from '@/lib/utils';
 import { STUDENT_TRANSITION_DECISION_LABELS, StudentTransitionDecision } from '@/types';
 
@@ -434,12 +435,13 @@ export default function RegistryPage() {
       });
       if (debouncedSearch) params.set('search', debouncedSearch);
 
-      const response = await fetch(`/api/registry?${params.toString()}`, {
-        credentials: 'include',
-      });
-      const result: RegistryResponse = await response.json();
+      const result = await fetchWithCache<RegistryResponse>(
+        `/api/registry?${params.toString()}`,
+        undefined,
+        5 * 60 * 1000
+      );
 
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         throw new Error(result.error || 'Failed to load promotion level');
       }
 
@@ -476,12 +478,13 @@ export default function RegistryPage() {
     setPromotionLoading(true);
     setPromotionErrorMessage(null);
     try {
-      const response = await fetch('/api/academic-years/auto-promote', {
-        credentials: 'include',
-      });
-      const result: PromotionPreviewResponse = await response.json();
+      const result = await fetchWithCache<PromotionPreviewResponse>(
+        '/api/academic-years/auto-promote',
+        undefined,
+        5 * 60 * 1000
+      );
 
-      if (!response.ok || !result.success || !result.data) {
+      if (!result.success || !result.data) {
         throw new Error(result.error || 'Failed to load promotion preview');
       }
 
@@ -546,6 +549,8 @@ export default function RegistryPage() {
       }
 
       toast.success(result.message || 'Transition decision saved.');
+      clientCache.invalidatePattern('^/api/registry');
+      clientCache.invalidate('/api/academic-years/auto-promote');
       await Promise.all([fetchRegistry(), fetchPromotionPreview()]);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save transition decision';
@@ -664,6 +669,8 @@ export default function RegistryPage() {
 
       setSelectedStudentIds(new Set());
       setIsBulkDialogOpen(false);
+      clientCache.invalidatePattern('^/api/registry');
+      clientCache.invalidate('/api/academic-years/auto-promote');
       await Promise.all([fetchRegistry(), fetchPromotionPreview()]);
     } catch (error) {
       const message =

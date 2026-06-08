@@ -4,6 +4,12 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import { usePathname, useRouter } from 'next/navigation';
 
+import { useQueryClient } from '@tanstack/react-query';
+
+import { clearSessionPreloadMarkers } from '@/lib/app-preload';
+import { clientCache } from '@/lib/cache';
+import { clearPersistedQueryCaches } from '@/lib/query-persistence';
+
 interface User {
   id: number;
   username: string;
@@ -60,6 +66,7 @@ function cacheUser(user: User | null): void {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(() => {
     // Initialize from sessionStorage on component mount
     if (typeof window !== 'undefined') {
@@ -70,6 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+
+  const clearAuthenticatedCache = useCallback(() => {
+    cacheUser(null);
+    clearSessionPreloadMarkers();
+    clearPersistedQueryCaches();
+    clientCache.clear();
+    queryClient.clear();
+  }, [queryClient]);
 
   const checkAuth = useCallback(async (): Promise<boolean> => {
     // First check sessionStorage - if we have cached user, assume valid
@@ -96,16 +111,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return true;
       } else {
         setUser(null);
-        cacheUser(null);
+        clearAuthenticatedCache();
         return false;
       }
     } catch (error) {
       console.error('Auth check error:', error);
       setUser(null);
-      cacheUser(null);
+      clearAuthenticatedCache();
       return false;
     }
-  }, []);
+  }, [clearAuthenticatedCache]);
 
   const logout = async () => {
     try {
@@ -116,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       // Clear storage regardless of API response
-      cacheUser(null);
+      clearAuthenticatedCache();
       setUser(null);
       router.push('/login');
 
@@ -125,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Logout error:', error);
-      cacheUser(null);
+      clearAuthenticatedCache();
       setUser(null);
       router.push('/login');
     }

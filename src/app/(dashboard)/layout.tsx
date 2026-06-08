@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/auth/auth-provider';
 import { Sidebar } from '@/components/layout';
 import { MainContent, SidebarProvider, useSidebar } from '@/components/layout/layout-wrapper';
 import { PageTransition } from '@/components/layout/page-transition';
+import { AuthenticatedPreloader } from '@/components/providers/authenticated-preloader';
 import { GridBackground } from '@/components/ui/grid-background';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,7 @@ export default function DashboardLayout({
 }>) {
   return (
     <AuthProvider>
+      <AuthenticatedPreloader />
       <SidebarProvider>
         <GridBackground>
           <DashboardContent>{children}</DashboardContent>

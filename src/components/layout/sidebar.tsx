@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 import {
   ChevronDown,
@@ -61,10 +61,9 @@ function isActivePath(pathname: string, href: string) {
 
 export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { setMobileOpen } = useSidebar();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [displayUser, setDisplayUser] = useState<{ username: string; role: string } | null>(null);
   const isAdmin = user?.role === 'ADMIN';
 
@@ -88,26 +87,10 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success('Logged out successfully');
-        router.push('/login');
-        router.refresh();
-      } else {
-        toast.error(data.error || 'Failed to logout');
-        router.push('/login');
-        router.refresh();
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
+      await logout();
+      toast.success('Logged out successfully');
+    } catch {
       toast.error('An error occurred during logout');
-      router.push('/login');
-      router.refresh();
     } finally {
       setIsLoggingOut(false);
     }
