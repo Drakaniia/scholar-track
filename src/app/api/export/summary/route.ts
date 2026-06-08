@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
+import { workbookToBuffer } from '@/lib/excel';
 import prisma from '@/lib/prisma';
 
 export const runtime = 'nodejs';
@@ -711,37 +711,6 @@ function buildSummaryRows(
   return rows;
 }
 
-function applyWorkbookStyles(buffer: Buffer, sheets: Array<{ rows: SummaryRow[] }>) {
-  const zip = unzipSync(new Uint8Array(buffer));
-
-  sheets.forEach(({ rows }, sheetIndex) => {
-    const sheetPath = `xl/worksheets/sheet${sheetIndex + 1}.xml`;
-    let sheetXml = strFromU8(zip[sheetPath]);
-
-    rows.forEach((row, rowIndex) => {
-      for (let columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex += 1) {
-        const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
-        const styleId = resolveStyle(row.kind, rowIndex, columnIndex);
-        sheetXml = setCellStyle(sheetXml, cellRef, styleId);
-      }
-    });
-
-    zip[sheetPath] = strToU8(sheetXml);
-  });
-
-  zip['xl/styles.xml'] = strToU8(STYLES_XML);
-
-  return Buffer.from(zipSync(zip, { level: 6 }));
-}
-
-function setCellStyle(xml: string, cellRef: string, styleId: number) {
-  const cellPattern = new RegExp(`<c r="${cellRef}"([^>]*)>`, 'g');
-  return xml.replace(cellPattern, (_match, attributes: string) => {
-    const cleanedAttributes = attributes.replace(/\s+s="\d+"/, '');
-    return `<c r="${cellRef}" s="${styleId}"${cleanedAttributes}>`;
-  });
-}
-
 function resolveStyle(kind: SummaryRow['kind'], rowIndex: number, columnIndex: number) {
   const isMetricColumn = METRIC_COLUMNS.some(({ count, fse, percent }) =>
     ([count, fse, percent] as number[]).includes(columnIndex)
@@ -776,45 +745,113 @@ function resolveStyle(kind: SummaryRow['kind'], rowIndex: number, columnIndex: n
   return STYLE.default;
 }
 
-function buildWorkbook(sheets: Array<{ name: string; rows: SummaryRow[] }>) {
-  const wb = XLSX.utils.book_new();
+function argb(rgb: string) {
+  return `FF${rgb}`;
+}
+
+function setFill(cell: ExcelJS.Cell, rgb: string) {
+  cell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: argb(rgb) },
+  };
+}
+
+function setFont(cell: ExcelJS.Cell, options: { bold?: boolean; color?: string } = {}) {
+  cell.font = {
+    name: 'Calibri',
+    size: 11,
+    bold: options.bold,
+    color: options.color ? { argb: argb(options.color) } : undefined,
+  };
+}
+
+function applyCellStyle(cell: ExcelJS.Cell, styleId: number) {
+  setFont(cell);
+
+  switch (styleId) {
+    case STYLE.topFill:
+      setFill(cell, 'FFE699');
+      break;
+    case STYLE.topCenter:
+      setFill(cell, 'FFE699');
+      cell.alignment = { horizontal: 'center' };
+      break;
+    case STYLE.yellowBold:
+      setFont(cell, { bold: true });
+      setFill(cell, 'FFFF00');
+      break;
+    case STYLE.paleHeaderCenter:
+      setFont(cell, { bold: true });
+      setFill(cell, 'FFE699');
+      cell.alignment = { horizontal: 'center' };
+      break;
+    case STYLE.redWhite:
+      setFont(cell, { color: 'FFFFFF' });
+      setFill(cell, 'FF0000');
+      break;
+    case STYLE.redWhiteCenter:
+      setFont(cell, { bold: true, color: 'FFFFFF' });
+      setFill(cell, 'FF0000');
+      cell.alignment = { horizontal: 'center' };
+      break;
+    case STYLE.redWhiteRight:
+      setFont(cell, { color: 'FFFFFF' });
+      setFill(cell, 'FF0000');
+      cell.alignment = { horizontal: 'right' };
+      break;
+    case STYLE.blue:
+      setFill(cell, '4472C4');
+      break;
+    case STYLE.blueCenter:
+      setFont(cell, { bold: true });
+      setFill(cell, '4472C4');
+      cell.alignment = { horizontal: 'center' };
+      break;
+    case STYLE.blueRight:
+      setFill(cell, '4472C4');
+      cell.alignment = { horizontal: 'right' };
+      break;
+    case STYLE.blackFill:
+      setFill(cell, '000000');
+      break;
+    case STYLE.bold:
+      setFont(cell, { bold: true });
+      break;
+    case STYLE.right:
+      cell.alignment = { horizontal: 'right' };
+      break;
+  }
+}
+
+async function buildWorkbook(sheets: Array<{ name: string; rows: SummaryRow[] }>) {
+  const workbook = new ExcelJS.Workbook();
 
   sheets.forEach(({ name, rows }) => {
-    const ws = XLSX.utils.aoa_to_sheet(rows.map((row) => row.cells));
+    const worksheet = workbook.addWorksheet(safeSheetName(name));
 
-    ws['!cols'] = [
-      { wch: 24 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 14 },
-      { wch: 24 },
-      { wch: 18 },
-      { wch: 12 },
-      { wch: 16 },
-      { wch: 4 },
-      { wch: 10 },
-      { wch: 9 },
-      { wch: 16 },
-      { wch: 4 },
-      { wch: 10 },
-      { wch: 9 },
-      { wch: 16 },
-      { wch: 4 },
-      { wch: 10 },
-      { wch: 9 },
-    ];
-    ws['!rows'] = rows.map(() => ({ hpt: 18 }));
-    ws['!merges'] = [
-      { s: { r: 0, c: 7 }, e: { r: 0, c: 10 } },
-      { s: { r: 0, c: 11 }, e: { r: 0, c: 14 } },
-      { s: { r: 0, c: 15 }, e: { r: 0, c: 18 } },
-    ];
+    worksheet.columns = [24, 12, 12, 14, 24, 18, 12, 16, 4, 10, 9, 16, 4, 10, 9, 16, 4, 10, 9].map(
+      (width) => ({ width })
+    );
 
-    XLSX.utils.book_append_sheet(wb, ws, safeSheetName(name));
+    rows.forEach((summaryRow, rowIndex) => {
+      const worksheetRow = worksheet.addRow(summaryRow.cells);
+      worksheetRow.height = 18;
+
+      for (let columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex += 1) {
+        applyCellStyle(
+          worksheetRow.getCell(columnIndex + 1),
+          resolveStyle(summaryRow.kind, rowIndex, columnIndex)
+        );
+      }
+    });
+
+    worksheet.mergeCells(1, 8, 1, 11);
+    worksheet.mergeCells(1, 12, 1, 15);
+    worksheet.mergeCells(1, 16, 1, 19);
   });
 
-  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  return applyWorkbookStyles(buffer, sheets);
+  return workbookToBuffer(workbook);
 }
 
 function buildTotalStudentsByYear(fees: FeeYearRecord[], gradeLevel: string) {
@@ -833,46 +870,6 @@ function buildTotalStudentsByYear(fees: FeeYearRecord[], gradeLevel: string) {
     Array.from(totals.entries()).map(([year, studentIds]) => [year, studentIds.size])
   );
 }
-
-const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <fonts count="4">
-    <font><sz val="11"/><color rgb="000000"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>
-    <font><b/><sz val="11"/><color rgb="000000"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>
-    <font><sz val="11"/><color rgb="FFFFFF"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>
-    <font><b/><sz val="11"/><color rgb="FFFFFF"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>
-  </fonts>
-  <fills count="7">
-    <fill><patternFill patternType="none"/></fill>
-    <fill><patternFill patternType="gray125"/></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFE699"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFF00"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FF0000"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="4472C4"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="000000"/><bgColor indexed="64"/></patternFill></fill>
-  </fills>
-  <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
-  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="14">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-    <xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>
-    <xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-    <xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
-    <xf numFmtId="0" fontId="3" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="4" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="right"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>
-    <xf numFmtId="0" fontId="1" fillId="5" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment horizontal="right"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="6" borderId="0" xfId="0" applyFill="1"/>
-    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="right"/></xf>
-  </cellXfs>
-  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
-  <dxfs count="0"/>
-  <tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>
-</styleSheet>`;
 
 // GET /api/export/summary - Export sample-style scholarship summary workbook
 export async function GET(request: NextRequest) {
@@ -945,7 +942,7 @@ export async function GET(request: NextRequest) {
         rows: buildSummaryRows(gradeScholarships, years, totalStudentsByYear),
       };
     });
-    const buffer = buildWorkbook(sheets);
+    const buffer = await buildWorkbook(sheets);
 
     return new NextResponse(buffer, {
       headers: {

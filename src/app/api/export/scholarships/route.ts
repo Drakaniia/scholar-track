@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 
+import { addWorksheetFromRows, workbookToBuffer } from '@/lib/excel';
 import prisma from '@/lib/prisma';
 import { getCoveredTermsLabel } from '@/lib/terms';
+
+export const runtime = 'nodejs';
 
 function formatGeneratedAt(date = new Date()) {
   return new Intl.DateTimeFormat('en-PH', {
@@ -75,40 +78,14 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (format === 'xlsx') {
-      // Create workbook and worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['Scholarship Programs'],
-        [`Generated: ${generatedAt}`],
-        [],
-        headers,
-        ...rows,
-      ]);
-
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 5 }, // ID
-        { wch: 35 }, // Name
-        { wch: 30 }, // Sponsor
-        { wch: 10 }, // Type
-        { wch: 12 }, // Source
-        { wch: 30 }, // Covered Terms
-        { wch: 12 }, // Amount
-        { wch: 12 }, // Tuition Fee
-        { wch: 12 }, // Misc Fee
-        { wch: 12 }, // Lab Fee
-        { wch: 12 }, // Other Fee
-        { wch: 15 }, // Amount Subsidy
-        { wch: 12 }, // % Subsidy
-        { wch: 50 }, // Requirements
-        { wch: 10 }, // Status
-        { wch: 10 }, // Students
-      ];
-
-      XLSX.utils.book_append_sheet(wb, ws, 'Scholarships');
-
-      // Generate buffer
-      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const workbook = new ExcelJS.Workbook();
+      addWorksheetFromRows(
+        workbook,
+        'Scholarships',
+        [['Scholarship Programs'], [`Generated: ${generatedAt}`], [], headers, ...rows],
+        [5, 35, 30, 10, 12, 30, 12, 12, 12, 12, 12, 15, 12, 50, 10, 10]
+      );
+      const buffer = await workbookToBuffer(workbook);
 
       return new NextResponse(buffer, {
         headers: {

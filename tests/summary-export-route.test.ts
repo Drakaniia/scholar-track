@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 
+import ExcelJS from 'exceljs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as XLSX from 'xlsx';
+
+import { loadWorkbookFromBuffer } from '@/lib/excel';
 
 const prismaMock = vi.hoisted(() => ({
   academicYear: {
@@ -18,6 +20,12 @@ const prismaMock = vi.hoisted(() => ({
 vi.mock('@/lib/prisma', () => ({
   default: prismaMock,
 }));
+
+function fillRgb(cell: ExcelJS.Cell) {
+  const fill = cell.fill;
+  if (fill?.type !== 'pattern') return undefined;
+  return fill.fgColor?.argb?.slice(-6);
+}
 
 describe('summary export route', () => {
   beforeEach(() => {
@@ -85,28 +93,26 @@ describe('summary export route', () => {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
 
-    const workbook = XLSX.read(Buffer.from(await response.arrayBuffer()), {
-      type: 'buffer',
-      cellStyles: true,
-    });
-    expect(workbook.SheetNames).toEqual(['Grade School', 'Junior High', 'Senior High', 'College']);
+    const workbook = await loadWorkbookFromBuffer(await response.arrayBuffer());
+    expect(workbook.worksheets.map((worksheet) => worksheet.name)).toEqual([
+      'Grade School',
+      'Junior High',
+      'Senior High',
+      'College',
+    ]);
 
-    const sheet = workbook.Sheets['Grade School'];
-    const rows = XLSX.utils.sheet_to_json<string[]>(sheet, {
-      header: 1,
-      raw: false,
-      defval: '',
-    });
+    const sheet = workbook.getWorksheet('Grade School');
+    expect(sheet).toBeDefined();
 
-    expect(rows[0][0]).toBe('SCHOLARSHIP');
-    expect(rows[0][7]).toBe('2022-2023');
-    expect(rows[1][0]).toBe('INTERNALLY FUNDED');
-    expect(rows[2][0]).toBe('Employees Ward (BED/SHS)');
-    expect(rows[2][3]).toBe('5,000.00/STUDENT');
-    expect(rows[2][15]).toBe('1');
-    expect(rows[2][17]).toBe('0.10');
-    expect(rows[2][18]).toBe('10%');
-    expect(sheet.A2.s?.fgColor?.rgb).toBe('FFFF00');
-    expect(sheet.A12.s?.fgColor?.rgb).toBe('FF0000');
+    expect(sheet?.getCell(1, 1).text).toBe('SCHOLARSHIP');
+    expect(sheet?.getCell(1, 8).text).toBe('2022-2023');
+    expect(sheet?.getCell(2, 1).text).toBe('INTERNALLY FUNDED');
+    expect(sheet?.getCell(3, 1).text).toBe('Employees Ward (BED/SHS)');
+    expect(sheet?.getCell(3, 4).text).toBe('5,000.00/STUDENT');
+    expect(sheet?.getCell(3, 16).text).toBe('1');
+    expect(sheet?.getCell(3, 18).text).toBe('0.10');
+    expect(sheet?.getCell(3, 19).text).toBe('10%');
+    expect(sheet ? fillRgb(sheet.getCell('A2')) : undefined).toBe('FFFF00');
+    expect(sheet ? fillRgb(sheet.getCell('A12')) : undefined).toBe('FF0000');
   });
 });

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const authMock = vi.hoisted(() => ({
@@ -17,20 +17,26 @@ vi.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }));
 
-function createWorkbookFile(rows: Record<string, string>[]) {
-  const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
-  const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }) as ArrayBuffer;
+async function createWorkbookFile(rows: Record<string, string>[]) {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Students');
+  const headers = Object.keys(rows[0] ?? {});
 
-  return new File([buffer], 'students.xlsx', {
+  worksheet.addRow(headers);
+  rows.forEach((row) => {
+    worksheet.addRow(headers.map((header) => row[header] ?? ''));
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  return new File([Buffer.from(buffer as ArrayBuffer)], 'students.xlsx', {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
 
-function createImportPreviewRequest(rows: Record<string, string>[]) {
+async function createImportPreviewRequest(rows: Record<string, string>[]) {
   const formData = new FormData();
-  formData.append('file', createWorkbookFile(rows));
+  formData.append('file', await createWorkbookFile(rows));
 
   return new Request('http://localhost/api/students/import/preview', {
     method: 'POST',
@@ -49,7 +55,7 @@ describe('students import preview route', () => {
     const { POST } = await import('@/app/api/students/import/preview/route');
 
     const response = await POST(
-      createImportPreviewRequest([
+      (await createImportPreviewRequest([
         {
           firstName: 'Ana',
           lastName: 'Reyes',
@@ -58,7 +64,7 @@ describe('students import preview route', () => {
           yearLevel: 'Grade 11',
           status: 'Active',
         },
-      ]) as never
+      ])) as never
     );
     const body = await response.json();
 

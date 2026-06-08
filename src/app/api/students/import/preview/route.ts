@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import * as XLSX from 'xlsx';
-
 import { getSession } from '@/lib/auth';
+import { loadWorkbookFromBuffer, worksheetToObjects } from '@/lib/excel';
 import { prisma } from '@/lib/prisma';
 import { GRADE_LEVELS, GradeLevel } from '@/types';
+
+export const runtime = 'nodejs';
 
 const VALID_STATUSES = [
   'Active',
@@ -108,10 +109,14 @@ export async function POST(req: NextRequest) {
 
     // Read file
     const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json<ImportRow>(worksheet);
+    const workbook = await loadWorkbookFromBuffer(buffer);
+    const worksheet = workbook.worksheets[0];
+
+    if (!worksheet) {
+      return NextResponse.json({ success: false, error: 'File is empty' }, { status: 400 });
+    }
+
+    const data = worksheetToObjects<ImportRow>(worksheet);
 
     if (data.length === 0) {
       return NextResponse.json({ success: false, error: 'File is empty' }, { status: 400 });

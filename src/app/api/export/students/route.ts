@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { Prisma } from '@prisma/client';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 
+import { addWorksheetFromRows, workbookToBuffer } from '@/lib/excel';
 import prisma from '@/lib/prisma';
+
+export const runtime = 'nodejs';
 
 const GRADE_LEVEL_LABELS: Record<string, string> = {
   GRADE_SCHOOL: 'Grade School',
@@ -290,7 +293,8 @@ export async function GET(request: NextRequest) {
     ];
 
     if (format === 'xlsx') {
-      const wb = XLSX.utils.book_new();
+      const workbook = new ExcelJS.Workbook();
+      let sheetCount = 0;
 
       GRADE_LEVELS.forEach((gradeLevel) => {
         const gradeLevelStudents = students.filter((s) => s.gradeLevel === gradeLevel);
@@ -357,38 +361,25 @@ export async function GET(request: NextRequest) {
           sheetData.push([]);
         });
 
-        const ws = XLSX.utils.aoa_to_sheet(sheetData);
-        ws['!cols'] = [
-          { wch: 18 },
-          { wch: 18 },
-          { wch: 8 },
-          { wch: 14 },
-          { wch: 44 },
-          { wch: 14 },
-          { wch: 14 },
-          { wch: 14 },
-          { wch: 14 },
-          { wch: 14 },
-          { wch: 16 },
-          { wch: 12 },
-          { wch: 14 },
-          { wch: 10 },
-        ];
-
-        XLSX.utils.book_append_sheet(wb, ws, GRADE_LEVEL_LABELS[gradeLevel]);
+        addWorksheetFromRows(
+          workbook,
+          GRADE_LEVEL_LABELS[gradeLevel],
+          sheetData,
+          [18, 18, 8, 14, 44, 14, 14, 14, 14, 14, 16, 12, 14, 10]
+        );
+        sheetCount += 1;
       });
 
-      if (wb.SheetNames.length === 0) {
-        const ws = XLSX.utils.aoa_to_sheet([
+      if (sheetCount === 0) {
+        addWorksheetFromRows(workbook, 'Report', [
           ['Detailed Student Scholarship Report'],
           [`Generated: ${generatedAt}`],
           [],
           ['No records found.'],
         ]);
-        XLSX.utils.book_append_sheet(wb, ws, 'Report');
       }
 
-      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      const buffer = await workbookToBuffer(workbook);
 
       return new NextResponse(buffer, {
         headers: {
