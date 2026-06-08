@@ -27,7 +27,12 @@ import {
   StudentsChart,
   TabsSkeleton,
 } from '@/components/dashboard';
-import { ExportButton } from '@/components/shared';
+import {
+  AnimatedNumber,
+  AnimatedProgressBar,
+  ExportButton,
+  StaggeredReveal,
+} from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -253,7 +258,10 @@ function DashboardHero({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-2">
+        <StaggeredReveal
+          className="grid gap-3 sm:grid-cols-3 lg:grid-cols-2"
+          animationKey={`${coverageRate}:${stats.totalDisbursed}:${remainingFunds}:${disbursementRate}`}
+        >
           <HeroMetric
             label="Student coverage"
             value={`${coverageRate}%`}
@@ -275,16 +283,18 @@ function DashboardHero({
           <div className="rounded-lg border border-[hsl(var(--pastel-green))] bg-white bg-gradient-to-r from-white via-[hsl(var(--pastel-green))]/20 to-[hsl(var(--pastel-blue))]/18 p-3 text-sm text-slate-600 shadow-sm sm:col-span-3 lg:col-span-2">
             <div className="mb-2 flex items-center justify-between">
               <span>Disbursement rate</span>
-              <span className="font-semibold text-slate-950">{disbursementRate}%</span>
+              <span className="font-semibold text-slate-950">
+                <AnimatedNumber value={`${disbursementRate}%`} />
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-[hsl(var(--pastel-green))]"
-                style={{ width: `${Math.min(disbursementRate, 100)}%` }}
+              <AnimatedProgressBar
+                width={Math.min(disbursementRate, 100)}
+                className="bg-[hsl(var(--pastel-green))]"
               />
             </div>
           </div>
-        </div>
+        </StaggeredReveal>
       </div>
     </section>
   );
@@ -311,7 +321,9 @@ function HeroMetric({
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="text-xl font-bold text-slate-950">{value}</div>
+      <div className="text-xl font-bold text-slate-950">
+        <AnimatedNumber value={value} />
+      </div>
     </div>
   );
 }
@@ -320,9 +332,13 @@ function StatsSection({ stats }: { stats: DashboardData['stats'] }) {
   const coverageRate = getPercent(stats.studentsWithScholarships, stats.totalStudents);
   const activeRate = getPercent(stats.activeScholarships, stats.totalScholarships);
   const disbursementRate = getPercent(stats.totalDisbursed, stats.totalAmountAwarded);
+  const animationKey = Object.values(stats).join('|');
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <StaggeredReveal
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      animationKey={animationKey}
+    >
       <StatsCard
         title="Total Students"
         value={stats.totalStudents}
@@ -354,7 +370,7 @@ function StatsSection({ stats }: { stats: DashboardData['stats'] }) {
         progress={disbursementRate}
         variant="default"
       />
-    </div>
+    </StaggeredReveal>
   );
 }
 
@@ -436,25 +452,32 @@ function SecondaryChartsSection({
         </CardHeader>
         <CardContent className="px-5 pb-5">
           {scholarshipTypeChartData.length > 0 ? (
-            <div className="space-y-4">
+            <StaggeredReveal
+              className="space-y-4"
+              animationKey={scholarshipTypeChartData
+                .map((item) => `${item.name}:${item.value}`)
+                .join('|')}
+            >
               {scholarshipTypeChartData.map((item, index) => (
                 <div key={item.name} className="space-y-2">
                   <div className="flex items-center justify-between gap-3 text-sm">
                     <span className="truncate font-medium text-slate-700">{item.name}</span>
-                    <span className="font-semibold text-slate-950">{item.value}</span>
+                    <span className="font-semibold text-slate-950">
+                      <AnimatedNumber value={item.value} />
+                    </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white shadow-inner">
-                    <div
-                      className="h-full rounded-full"
+                    <AnimatedProgressBar
+                      width={(item.value / maxScholarshipTypeCount) * 100}
+                      delay={index * 0.04}
                       style={{
-                        width: `${(item.value / maxScholarshipTypeCount) * 100}%`,
                         backgroundColor: PASTEL_BAR_COLORS[index % PASTEL_BAR_COLORS.length],
                       }}
                     />
                   </div>
                 </div>
               ))}
-            </div>
+            </StaggeredReveal>
           ) : (
             <div className="flex h-[280px] items-center justify-center rounded-lg border border-dashed border-[#d4dfd9] text-sm text-slate-500">
               No scholarship type data

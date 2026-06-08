@@ -26,6 +26,12 @@ import {
 } from 'recharts';
 
 import { PageHeader } from '@/components/layout';
+import {
+  AnimatedChart,
+  AnimatedNumber,
+  AnimatedProgressBar,
+  StaggeredReveal,
+} from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -98,13 +104,22 @@ function MetricTile({
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="text-2xl font-semibold text-slate-950">{value}</div>
+      <div className="text-2xl font-semibold text-slate-950">
+        <AnimatedNumber value={value} />
+      </div>
       <p className="mt-1 text-xs text-slate-500">{detail}</p>
     </div>
   );
 }
 
 function FlowChart({ years }: { years: ScholarshipFlowData['years'] }) {
+  const animationKey = years
+    .map(
+      (year) =>
+        `${year.year}:${year.awardedAmount}:${year.disbursedAmount}:${year.beneficiaryCount}`
+    )
+    .join('|');
+
   return (
     <Card className="rounded-lg border-slate-200 bg-white shadow-sm lg:col-span-2">
       <CardHeader className="border-b border-slate-200">
@@ -122,78 +137,80 @@ function FlowChart({ years }: { years: ScholarshipFlowData['years'] }) {
       </CardHeader>
       <CardContent className="pt-5">
         <div className="h-[360px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={years} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} />
-              <YAxis
-                yAxisId="amount"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => formatCompactPhp(Number(value)).replace('PHP ', '')}
-              />
-              <YAxis yAxisId="count" orientation="right" tickLine={false} axisLine={false} />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (!active || !payload?.length) return null;
-                  return (
-                    <div className="min-w-[220px] rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-                      <p className="mb-2 font-semibold text-slate-950">{label}</p>
-                      {payload.map((entry) => {
-                        const value =
-                          entry.dataKey === 'beneficiaryCount'
-                            ? `${entry.value} students`
-                            : formatPhp(Number(entry.value || 0));
-                        return (
-                          <div
-                            key={String(entry.dataKey)}
-                            className="flex items-center justify-between gap-4 text-sm"
-                          >
-                            <span className="flex items-center gap-2 text-slate-500">
-                              <span
-                                className="h-2 w-2 rounded-full"
-                                style={{ backgroundColor: entry.color }}
-                              />
-                              {entry.name}
-                            </span>
-                            <span className="font-medium text-slate-950">{value}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }}
-              />
-              <Bar
-                yAxisId="amount"
-                dataKey="awardedAmount"
-                name="Awarded"
-                fill="#f59e0b"
-                radius={[5, 5, 0, 0]}
-                barSize={28}
-                isAnimationActive={false}
-              />
-              <Bar
-                yAxisId="amount"
-                dataKey="disbursedAmount"
-                name="Disbursed"
-                fill="#10b981"
-                radius={[5, 5, 0, 0]}
-                barSize={28}
-                isAnimationActive={false}
-              />
-              <Line
-                yAxisId="count"
-                type="monotone"
-                dataKey="beneficiaryCount"
-                name="Beneficiaries"
-                stroke="#0284c7"
-                strokeWidth={3}
-                dot={{ r: 4, fill: '#0284c7', stroke: 'white', strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
+          <AnimatedChart animationKey={animationKey} mode="vertical-bars">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={years} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} />
+                <YAxis
+                  yAxisId="amount"
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => formatCompactPhp(Number(value)).replace('PHP ', '')}
+                />
+                <YAxis yAxisId="count" orientation="right" tickLine={false} axisLine={false} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    return (
+                      <div className="min-w-[220px] rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+                        <p className="mb-2 font-semibold text-slate-950">{label}</p>
+                        {payload.map((entry) => {
+                          const value =
+                            entry.dataKey === 'beneficiaryCount'
+                              ? `${entry.value} students`
+                              : formatPhp(Number(entry.value || 0));
+                          return (
+                            <div
+                              key={String(entry.dataKey)}
+                              className="flex items-center justify-between gap-4 text-sm"
+                            >
+                              <span className="flex items-center gap-2 text-slate-500">
+                                <span
+                                  className="h-2 w-2 rounded-full"
+                                  style={{ backgroundColor: entry.color }}
+                                />
+                                {entry.name}
+                              </span>
+                              <span className="font-medium text-slate-950">{value}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                />
+                <Bar
+                  yAxisId="amount"
+                  dataKey="awardedAmount"
+                  name="Awarded"
+                  fill="#f59e0b"
+                  radius={[5, 5, 0, 0]}
+                  barSize={28}
+                  isAnimationActive={false}
+                />
+                <Bar
+                  yAxisId="amount"
+                  dataKey="disbursedAmount"
+                  name="Disbursed"
+                  fill="#10b981"
+                  radius={[5, 5, 0, 0]}
+                  barSize={28}
+                  isAnimationActive={false}
+                />
+                <Line
+                  yAxisId="count"
+                  type="monotone"
+                  dataKey="beneficiaryCount"
+                  name="Beneficiaries"
+                  stroke="#0284c7"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#0284c7', stroke: 'white', strokeWidth: 2 }}
+                  isAnimationActive={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </AnimatedChart>
         </div>
       </CardContent>
     </Card>
@@ -224,26 +241,34 @@ function ScholarshipLoadPanel({ data }: { data: ScholarshipFlowData }) {
           <p className="text-sm font-medium text-amber-900">Multi-scholarship students</p>
           <div className="mt-2 flex items-end justify-between gap-3">
             <span className="text-3xl font-semibold text-slate-950">
-              {data.summary.multiScholarshipStudents}
+              <AnimatedNumber value={data.summary.multiScholarshipStudents} />
             </span>
             <Badge className="bg-white text-amber-800" variant="outline">
-              {multiShare}% of active
+              <AnimatedNumber value={`${multiShare}%`} /> of active
             </Badge>
           </div>
         </div>
 
-        <div className="space-y-3">
-          {data.loadDistribution.map((row) => (
+        <StaggeredReveal
+          className="space-y-3"
+          animationKey={data.loadDistribution
+            .map((row) => `${row.key}:${row.students}:${row.percentage}`)
+            .join('|')}
+        >
+          {data.loadDistribution.map((row, index) => (
             <div key={row.key} className="space-y-1.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-slate-700">{row.label}</span>
                 <span className="text-slate-500">
-                  {row.students} students / {row.percentage}%
+                  <AnimatedNumber value={row.students} /> students /{' '}
+                  <AnimatedNumber value={`${row.percentage}%`} />
                 </span>
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className={`h-full rounded-full ${
+                <AnimatedProgressBar
+                  width={Math.max((row.students / maxStudents) * 100, 3)}
+                  delay={index * 0.04}
+                  className={
                     row.key === 'one'
                       ? 'bg-emerald-400'
                       : row.key === 'two'
@@ -253,13 +278,12 @@ function ScholarshipLoadPanel({ data }: { data: ScholarshipFlowData }) {
                           : row.key === 'fourPlus'
                             ? 'bg-rose-400'
                             : 'bg-slate-300'
-                  }`}
-                  style={{ width: `${Math.max((row.students / maxStudents) * 100, 3)}%` }}
+                  }
                 />
               </div>
             </div>
           ))}
-        </div>
+        </StaggeredReveal>
       </CardContent>
     </Card>
   );
@@ -267,7 +291,10 @@ function ScholarshipLoadPanel({ data }: { data: ScholarshipFlowData }) {
 
 function YearComparison({ years }: { years: ScholarshipFlowData['years'] }) {
   return (
-    <section className="grid gap-3 md:grid-cols-5">
+    <StaggeredReveal
+      className="grid gap-3 md:grid-cols-5"
+      animationKey={years.map((year) => `${year.year}:${year.awardedAmount}`).join('|')}
+    >
       {years.map((year) => {
         const totalSourceAmount = year.internalAmount + year.externalAmount;
         const internalShare = getShare(year.internalAmount, totalSourceAmount);
@@ -286,40 +313,44 @@ function YearComparison({ years }: { years: ScholarshipFlowData['years'] }) {
               <div>
                 <p className="text-slate-500">Awarded</p>
                 <p className="font-semibold text-slate-950">
-                  {formatCompactPhp(year.awardedAmount)}
+                  <AnimatedNumber value={formatCompactPhp(year.awardedAmount)} />
                 </p>
               </div>
               <div>
                 <p className="text-slate-500">Disbursed</p>
                 <p className="font-semibold text-emerald-700">
-                  {formatCompactPhp(year.disbursedAmount)}
+                  <AnimatedNumber value={formatCompactPhp(year.disbursedAmount)} />
                 </p>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Students</span>
-                <span className="font-semibold text-slate-950">{year.beneficiaryCount}</span>
+                <span className="font-semibold text-slate-950">
+                  <AnimatedNumber value={year.beneficiaryCount} />
+                </span>
               </div>
             </div>
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full float-left bg-emerald-400"
-                style={{ width: `${internalShare}%` }}
-              />
-              <div className="h-full bg-sky-400" style={{ width: `${externalShare}%` }} />
+              <AnimatedProgressBar width={internalShare} className="float-left bg-emerald-400" />
+              <AnimatedProgressBar width={externalShare} className="bg-sky-400" delay={0.05} />
             </div>
             <div className="mt-2 flex justify-between text-[11px] text-slate-500">
-              <span>Internal {internalShare}%</span>
-              <span>External {externalShare}%</span>
+              <span>
+                Internal <AnimatedNumber value={`${internalShare}%`} />
+              </span>
+              <span>
+                External <AnimatedNumber value={`${externalShare}%`} />
+              </span>
             </div>
           </div>
         );
       })}
-    </section>
+    </StaggeredReveal>
   );
 }
 
 function TypeBars({ data }: { data: ScholarshipFlowData }) {
   const topTypes = data.topTypes.slice(0, 6);
+  const animationKey = topTypes.map((item) => `${item.type}:${item.awardedAmount}`).join('|');
 
   return (
     <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
@@ -328,30 +359,32 @@ function TypeBars({ data }: { data: ScholarshipFlowData }) {
       </CardHeader>
       <CardContent className="pt-5">
         <div className="h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={topTypes} layout="vertical" margin={{ left: 10, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-              <XAxis type="number" hide />
-              <YAxis
-                type="category"
-                dataKey="type"
-                width={120}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip
-                formatter={(value) => formatPhp(Number(value))}
-                labelClassName="font-semibold"
-              />
-              <Bar
-                dataKey="awardedAmount"
-                fill="#38bdf8"
-                radius={[0, 6, 6, 0]}
-                isAnimationActive={false}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <AnimatedChart animationKey={animationKey} mode="horizontal-bars">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topTypes} layout="vertical" margin={{ left: 10, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                <XAxis type="number" hide />
+                <YAxis
+                  type="category"
+                  dataKey="type"
+                  width={120}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip
+                  formatter={(value) => formatPhp(Number(value))}
+                  labelClassName="font-semibold"
+                />
+                <Bar
+                  dataKey="awardedAmount"
+                  fill="#38bdf8"
+                  radius={[0, 6, 6, 0]}
+                  isAnimationActive={false}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </AnimatedChart>
         </div>
       </CardContent>
     </Card>
@@ -531,34 +564,42 @@ export default function ScholarshipFlowPage() {
                   students carrying 2, 3, or 4 scholarships are visible immediately.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-3 border-t border-emerald-100 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0">
+              <StaggeredReveal
+                className="grid grid-cols-2 gap-3 border-t border-emerald-100 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0"
+                animationKey={`${data.summary.totalAwarded}:${data.summary.totalDisbursed}:${data.summary.totalBeneficiaries}:${data.summary.maxScholarshipsPerStudent}`}
+              >
                 <div>
                   <p className="text-xs uppercase text-slate-400">Awarded</p>
                   <p className="mt-1 text-xl font-semibold">
-                    {formatCompactPhp(data.summary.totalAwarded)}
+                    <AnimatedNumber value={formatCompactPhp(data.summary.totalAwarded)} />
                   </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-slate-400">Disbursed</p>
                   <p className="mt-1 text-xl font-semibold">
-                    {formatCompactPhp(data.summary.totalDisbursed)}
+                    <AnimatedNumber value={formatCompactPhp(data.summary.totalDisbursed)} />
                   </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-slate-400">Beneficiaries</p>
-                  <p className="mt-1 text-xl font-semibold">{data.summary.totalBeneficiaries}</p>
+                  <p className="mt-1 text-xl font-semibold">
+                    <AnimatedNumber value={data.summary.totalBeneficiaries} />
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs uppercase text-slate-400">Max Stack</p>
                   <p className="mt-1 text-xl font-semibold">
-                    {data.summary.maxScholarshipsPerStudent} scholarships
+                    <AnimatedNumber value={data.summary.maxScholarshipsPerStudent} /> scholarships
                   </p>
                 </div>
-              </div>
+              </StaggeredReveal>
             </div>
           </section>
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StaggeredReveal
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+            animationKey={`${data.summary.totalAwarded}:${data.summary.totalDisbursed}:${data.summary.totalBeneficiaries}:${data.summary.multiScholarshipStudents}`}
+          >
             <MetricTile
               label="Total Awarded"
               value={formatCompactPhp(data.summary.totalAwarded)}
@@ -587,7 +628,7 @@ export default function ScholarshipFlowPage() {
               icon={Split}
               tone="slate"
             />
-          </section>
+          </StaggeredReveal>
 
           <section className="grid gap-5 lg:grid-cols-3">
             <FlowChart years={data.years} />
@@ -631,7 +672,7 @@ export default function ScholarshipFlowPage() {
                             </p>
                           </div>
                           <Badge className="shrink-0 bg-amber-100 text-amber-900" variant="outline">
-                            {student.scholarshipCount} scholarships
+                            <AnimatedNumber value={student.scholarshipCount} /> scholarships
                           </Badge>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-1.5">

@@ -2,6 +2,7 @@
 
 import { LucideIcon, TrendingDown, TrendingUp } from 'lucide-react';
 
+import { AnimatedNumber, AnimatedProgressBar } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -87,7 +88,9 @@ export function StatsCard({
       </CardHeader>
 
       <CardContent className="relative z-10 px-5 pb-5">
-        <div className="text-2xl font-bold text-slate-950">{value}</div>
+        <div className="text-2xl font-bold text-slate-950">
+          <AnimatedNumber value={value} />
+        </div>
         {(description || trend) && (
           <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
             {trend && (
@@ -112,9 +115,9 @@ export function StatsCard({
         )}
         {normalizedProgress !== null && (
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className={cn('h-full rounded-full shadow-sm transition-all', styles.accent)}
-              style={{ width: `${normalizedProgress}%` }}
+            <AnimatedProgressBar
+              width={normalizedProgress}
+              className={cn('shadow-sm', styles.accent)}
             />
           </div>
         )}
