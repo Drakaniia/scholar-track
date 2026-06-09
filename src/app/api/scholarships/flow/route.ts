@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import prisma from '@/lib/prisma';
 import { generateQueryKey, queryOptimizer } from '@/lib/query-optimizer';
+import { getAcademicYearStartYear } from '@/lib/scholarship-flow-years';
 
 const CACHE_TTL = 2 * 60 * 1000;
 const VALID_SOURCES = new Set(['INTERNAL', 'EXTERNAL']);
@@ -49,18 +50,12 @@ function createYearBuckets(endYear: number) {
   return buckets;
 }
 
-function getAcademicYearEndingYear(academicYear: string) {
-  const years = academicYear.match(/\d{4}/g);
-  if (!years || years.length === 0) return null;
-  return Number(years[years.length - 1]);
-}
-
 function getBucketYearFromAcademicYear(
   academicYear: AssignmentYearRelation | undefined,
   fallbackDate: Date
 ) {
   return academicYear?.year
-    ? getAcademicYearEndingYear(academicYear.year)
+    ? getAcademicYearStartYear(academicYear.year)
     : fallbackDate.getUTCFullYear();
 }
 
@@ -75,7 +70,7 @@ function buildStudentScholarshipWindowWhere(sourceFilter: string, startDate: Dat
         {
           academicYearRel: {
             is: {
-              endDate: {
+              startDate: {
                 gte: startDate,
                 lte: endDate,
               },
@@ -111,7 +106,7 @@ function buildDisbursementWindowWhere(sourceFilter: string, startDate: Date, end
         {
           academicYearRel: {
             is: {
-              endDate: {
+              startDate: {
                 gte: startDate,
                 lte: endDate,
               },
@@ -394,7 +389,7 @@ export async function GET(request: NextRequest) {
     });
 
     fees.forEach((fee) => {
-      const year = getAcademicYearEndingYear(fee.academicYear);
+      const year = getAcademicYearStartYear(fee.academicYear);
       const bucket = year ? buckets.get(year) : undefined;
       if (!bucket) return;
       bucket.subsidyAmount += Number(fee.amountSubsidy || 0);
