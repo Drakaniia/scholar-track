@@ -23,6 +23,11 @@ import { toast } from 'sonner';
 
 import { useAuth } from '@/components/auth/auth-provider';
 import {
+  DIALOG_BODY_CLASS,
+  DIALOG_FOOTER_CLASS,
+  DIALOG_HEADER_CLASS,
+} from '@/components/shared/dialog-layout';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -1059,15 +1064,15 @@ export default function RegistryPage() {
       </section>
 
       <AlertDialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden p-0 sm:max-w-2xl lg:max-w-3xl">
+          <AlertDialogHeader className={DIALOG_HEADER_CLASS}>
             <AlertDialogTitle>Process Promotion Cohort</AlertDialogTitle>
             <AlertDialogDescription>
               Checked students will continue at Bosco/FSE and be promoted. Unchecked students in
               this filtered cohort will be archived.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-4">
+          <div className={cn(DIALOG_BODY_CLASS, 'space-y-4')}>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-medium text-slate-500">Cohort</p>
@@ -1089,38 +1094,40 @@ export default function RegistryPage() {
               </div>
             </div>
 
-            <div className="max-h-56 overflow-y-auto rounded-md border border-slate-200">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Next Level</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPromotionStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell>
-                        {student.lastName}, {student.firstName}
-                      </TableCell>
-                      <TableCell>
-                        {selectedStudentIds.has(student.id)
-                          ? 'Promote to next grade level'
-                          : 'Archive as non-continuing'}
-                      </TableCell>
-                      <TableCell>
-                        {selectedStudentIds.has(student.id)
-                          ? formatPromotionTarget(student)
-                          : 'Archived'}
-                      </TableCell>
+            <div className="overflow-hidden rounded-md border border-slate-200">
+              <div className="max-h-72 overflow-y-auto">
+                <Table className="min-w-[680px] table-fixed">
+                  <TableHeader className="sticky top-0 z-10 bg-white">
+                    <TableRow>
+                      <TableHead className="w-[220px]">Student</TableHead>
+                      <TableHead className="w-[280px]">Action</TableHead>
+                      <TableHead className="w-[180px]">Next Level</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPromotionStudents.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell>
+                          {student.lastName}, {student.firstName}
+                        </TableCell>
+                        <TableCell>
+                          {selectedStudentIds.has(student.id)
+                            ? 'Promote to next grade level'
+                            : 'Archive as non-continuing'}
+                        </TableCell>
+                        <TableCell>
+                          {selectedStudentIds.has(student.id)
+                            ? formatPromotionTarget(student)
+                            : 'Archived'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
-          <AlertDialogFooter>
+          <AlertDialogFooter className={DIALOG_FOOTER_CLASS}>
             <AlertDialogCancel disabled={isBulkPromoting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
