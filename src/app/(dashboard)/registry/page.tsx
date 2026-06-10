@@ -633,7 +633,7 @@ export default function RegistryPage() {
     }
 
     if (selectedPromotionStudents.length === 0) {
-      toast.message('No continuing students selected. The current cohort will be archived.');
+      toast.message('No students selected to promote. All visible eligible students will be archived.');
     }
 
     setIsBulkDialogOpen(true);
@@ -669,7 +669,7 @@ export default function RegistryPage() {
           `Bulk promotion completed with ${result.data.errorCount} issue(s). Review the summary.`
         );
       } else {
-        toast.success(result.message || 'Promotion cohort processed.');
+        toast.success(result.message || 'Promotion list processed.');
       }
 
       setSelectedStudentIds(new Set());
@@ -771,8 +771,8 @@ export default function RegistryPage() {
               <ShieldCheck className="h-7 w-7 text-emerald-300" />
               <h2 className="mt-4 text-xl font-semibold">Selection controls promotion.</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Check only students continuing at Bosco/FSE. Unchecked students in the selected
-                cohort are archived so they are not carried into the next academic level.
+                Check only students continuing at Bosco/FSE. Unchecked students in the current
+                list are archived so they are not carried into the next academic level.
               </p>
             </div>
             <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
@@ -846,7 +846,7 @@ export default function RegistryPage() {
               ) : (
                 <GraduationCap className="h-4 w-4" />
               )}
-              Process Current Cohort
+              Promote Selected
             </Button>
           </div>
         </div>
@@ -1066,16 +1066,16 @@ export default function RegistryPage() {
       <AlertDialog open={isBulkDialogOpen} onOpenChange={setIsBulkDialogOpen}>
         <AlertDialogContent className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden p-0 sm:max-w-2xl lg:max-w-3xl">
           <AlertDialogHeader className={DIALOG_HEADER_CLASS}>
-            <AlertDialogTitle>Process Promotion Cohort</AlertDialogTitle>
+            <AlertDialogTitle>Promote Selected Students</AlertDialogTitle>
             <AlertDialogDescription>
               Checked students will continue at Bosco/FSE and be promoted. Unchecked students in
-              this filtered cohort will be archived.
+              the current filtered list will be archived.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className={cn(DIALOG_BODY_CLASS, 'space-y-4')}>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs font-medium text-slate-500">Cohort</p>
+                <p className="text-xs font-medium text-slate-500">Current List</p>
                 <p className="mt-1 text-xl font-semibold text-slate-950">
                   {filteredPromotionStudents.length}
                 </p>
@@ -1138,7 +1138,7 @@ export default function RegistryPage() {
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
               {isBulkPromoting && <Loader2 className="h-4 w-4 animate-spin" />}
-              Confirm Cohort Processing
+              Confirm Promotion
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

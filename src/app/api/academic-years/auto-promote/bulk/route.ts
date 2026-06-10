@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (rawCohortStudentIds.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Select a promotion cohort before processing.' },
+        { success: false, error: 'No students are available in the promotion list.' },
         { status: 400 }
       );
     }
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const cohortSet = new Set(cohortStudentIds);
     if (studentIds.some((studentId) => !cohortSet.has(studentId))) {
       return NextResponse.json(
-        { success: false, error: 'Selected students must belong to the submitted cohort.' },
+        { success: false, error: 'Selected students must belong to the current promotion list.' },
         { status: 400 }
       );
     }
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
       {
         success: result.success,
         message: result.success
-          ? `Processed ${processedCount} cohort student(s): ${result.promotedCount} promoted and ${result.archivedCount} archived.`
-          : result.error || 'No selected cohort students were processed.',
+          ? `Processed ${processedCount} student(s): ${result.promotedCount} promoted and ${result.archivedCount} archived.`
+          : result.error || 'No selected students were processed.',
         data: result,
         error: result.success ? undefined : result.error,
       },

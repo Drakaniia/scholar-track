@@ -742,7 +742,7 @@ export async function promoteSelectedStudents(
   if (cohortIds.length === 0) {
     return {
       success: false,
-      error: 'Select a promotion cohort before processing.',
+      error: 'No students are available in the promotion list.',
       cohortCount: 0,
       selectedCount: 0,
       archivedCount: 0,
@@ -757,7 +757,7 @@ export async function promoteSelectedStudents(
   if (selectedIds.some((studentId) => !cohortIdSet.has(studentId))) {
     return {
       success: false,
-      error: 'Selected students must belong to the submitted promotion cohort.',
+      error: 'Selected students must belong to the current promotion list.',
       cohortCount: cohortIds.length,
       selectedCount: selectedIds.length,
       archivedCount: 0,
@@ -772,7 +772,7 @@ export async function promoteSelectedStudents(
         toLevel: null,
         action: 'SKIP',
         success: false,
-        error: 'Selected student is outside the submitted promotion cohort.',
+        error: 'Selected student is outside the current promotion list.',
       })),
     };
   }
@@ -1105,7 +1105,7 @@ export async function promoteSelectedStudents(
       success: promotedCount + graduatedCount + archivedCount > 0,
       error:
         promotedCount + graduatedCount + archivedCount === 0
-          ? 'No selected cohort students were processed.'
+          ? 'No selected students were processed.'
           : undefined,
       cohortCount: cohortIds.length,
       selectedCount: selectedIds.length,
