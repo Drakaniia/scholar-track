@@ -5,7 +5,6 @@ import { useState } from 'react';
 import {
   ArrowUpRight,
   Award,
-  BadgeCheck,
   CalendarRange,
   Filter,
   Layers,
@@ -27,6 +26,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { MultipleScholarshipStudentsCard } from '@/components/dashboard/multiple-scholarship-students-card';
 import {
   AnimatedChart,
   AnimatedNumber,
@@ -62,7 +62,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ScholarshipFlowData, useScholarshipFlow } from '@/hooks/use-queries';
+import { useScholarshipFlow } from '@/hooks/use-queries';
+import type { ScholarshipFlowData } from '@/hooks/use-queries';
 import {
   getDefaultScholarshipFlowStartYear,
   getScholarshipFlowEndYear,
@@ -779,59 +780,7 @@ export default function ScholarshipFlowPage() {
 
           <section className="grid gap-5 lg:grid-cols-2">
             <TypeBars data={data} />
-            <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
-              <CardHeader className="border-b border-slate-200">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-sky-50 text-sky-700">
-                    <BadgeCheck className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-lg text-slate-950">
-                    Students With Multiple Scholarships
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-5">
-                {data.multiScholarshipStudents.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500">
-                    No students with multiple scholarships in the selected source and window.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {data.multiScholarshipStudents.map((student) => (
-                      <div
-                        key={student.id}
-                        className="rounded-lg border border-slate-200 bg-slate-50/60 p-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold text-slate-950">
-                              {student.studentName}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {student.yearLevel} / {student.program || student.gradeLevel}
-                            </p>
-                          </div>
-                          <Badge className="shrink-0 bg-amber-100 text-amber-900" variant="outline">
-                            <AnimatedNumber value={student.scholarshipCount} /> scholarships
-                          </Badge>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {student.scholarships.map((scholarship, index) => (
-                            <span
-                              key={`${student.id}-${scholarship.scholarshipName}-${index}`}
-                              className="rounded-md border border-white bg-white px-2 py-1 text-xs text-slate-700 shadow-sm"
-                            >
-                              {index + 1}. {scholarship.scholarshipName}
-                              {scholarship.academicYear ? ` / ${scholarship.academicYear}` : ''}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MultipleScholarshipStudentsCard students={data.multiScholarshipStudents} />
           </section>
 
           <Card className="rounded-lg border-slate-200 bg-white shadow-sm">

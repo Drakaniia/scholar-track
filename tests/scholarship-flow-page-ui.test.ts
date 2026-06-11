@@ -7,6 +7,10 @@ const pageSource = readFileSync(
   'utf8'
 );
 
+function readProjectFile(path: string) {
+  return readFileSync(join(process.cwd(), path), 'utf8');
+}
+
 describe('scholarship flow page UI', () => {
   it('shows explicit five-year window filter labels', () => {
     expect(pageSource).toContain('5-Year Window');
@@ -28,5 +32,20 @@ describe('scholarship flow page UI', () => {
     expect(pageSource).not.toContain(
       'Compare scholarship movement and student scholarship load across the last five years'
     );
+  });
+
+  it('limits the multi-scholarship student card and provides a full-list dialog', () => {
+    const cardSource = readProjectFile(
+      'src/components/dashboard/multiple-scholarship-students-card.tsx'
+    );
+
+    expect(pageSource).toContain(
+      '<MultipleScholarshipStudentsCard students={data.multiScholarshipStudents} />'
+    );
+    expect(cardSource).toContain('const MULTI_SCHOLARSHIP_PREVIEW_LIMIT = 4');
+    expect(cardSource).toContain('.slice(0, MULTI_SCHOLARSHIP_PREVIEW_LIMIT)');
+    expect(cardSource).toContain('View all');
+    expect(cardSource).toContain('<Dialog ');
+    expect(cardSource).toContain('Students With Multiple Scholarships');
   });
 });
