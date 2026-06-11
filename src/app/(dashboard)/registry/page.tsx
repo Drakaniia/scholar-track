@@ -197,6 +197,7 @@ const PROMOTION_FILTERS: PromotionFilter[] = [
   'grade-12',
   'graduating',
 ];
+const PROMOTION_QUEUE_PAGE_SIZE = 10;
 const OUTCOME_LABELS: Record<string, string> = {
   COMPLETED_JHS: 'Completed JHS',
   GRADUATED_SHS: 'Graduated SHS',
@@ -428,6 +429,7 @@ export default function RegistryPage() {
   const [promotionLoading, setPromotionLoading] = useState(true);
   const [promotionErrorMessage, setPromotionErrorMessage] = useState<string | null>(null);
   const [promotionFilter, setPromotionFilter] = useState<PromotionFilter>('all-eligible');
+  const [promotionQueuePage, setPromotionQueuePage] = useState(1);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(() => new Set());
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
   const [isBulkPromoting, setIsBulkPromoting] = useState(false);
@@ -538,6 +540,7 @@ export default function RegistryPage() {
   }, [fetchPromotionPreview]);
 
   useEffect(() => {
+    setPromotionQueuePage(1);
     setSelectedStudentIds(new Set());
   }, [promotionFilter]);
 
@@ -589,20 +592,43 @@ export default function RegistryPage() {
     () => promotionStudents.filter((student) => matchesPromotionFilter(student, promotionFilter)),
     [promotionFilter, promotionStudents]
   );
+  const promotionQueueTotalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredPromotionStudents.length / PROMOTION_QUEUE_PAGE_SIZE)),
+    [filteredPromotionStudents.length]
+  );
+  const promotionQueuePageNumber = Math.min(promotionQueuePage, promotionQueueTotalPages);
+  const promotionQueueStartIndex = (promotionQueuePageNumber - 1) * PROMOTION_QUEUE_PAGE_SIZE;
+  const visiblePromotionStudents = useMemo(
+    () =>
+      filteredPromotionStudents.slice(
+        promotionQueueStartIndex,
+        promotionQueueStartIndex + PROMOTION_QUEUE_PAGE_SIZE
+      ),
+    [filteredPromotionStudents, promotionQueueStartIndex]
+  );
   const selectableFilteredPromotionStudents = useMemo(
     () => filteredPromotionStudents.filter(isPromotionSelectable),
     [filteredPromotionStudents]
+  );
+  const promotionQueueStartItem =
+    filteredPromotionStudents.length === 0 ? 0 : promotionQueueStartIndex + 1;
+  const promotionQueueEndItem = Math.min(
+    promotionQueueStartIndex + PROMOTION_QUEUE_PAGE_SIZE,
+    filteredPromotionStudents.length
   );
   const selectedPromotionStudents = useMemo(
     () => promotionStudents.filter((student) => selectedStudentIds.has(student.id)),
     [promotionStudents, selectedStudentIds]
   );
+  const selectedPromotionStudentIds = useMemo(
+    () => selectedPromotionStudents.map((student) => student.id),
+    [selectedPromotionStudents]
+  );
   const selectedPromotionSummary = useMemo(
     () => ({
       promote: selectedPromotionStudents.filter(isPromotionSelectable).length,
-      archive: Math.max(filteredPromotionStudents.length - selectedPromotionStudents.length, 0),
     }),
-    [filteredPromotionStudents.length, selectedPromotionStudents]
+    [selectedPromotionStudents]
   );
   const failedBulkPromotionResults = useMemo(
     () => bulkPromotionResult?.results.filter((result) => !result.success) || [],
@@ -632,15 +658,15 @@ export default function RegistryPage() {
   const promotionFeedbackMessage =
     bulkPromotionMessage ||
     (promotionPreview?.activeAcademicYear?.promotionProcessedAt ? null : promotionActionBlocker);
-  const allVisiblePromotionStudentsSelected =
+  const allFilteredPromotionStudentsSelected =
     selectableFilteredPromotionStudents.length > 0 &&
     selectableFilteredPromotionStudents.every((student) => selectedStudentIds.has(student.id));
-  const someVisiblePromotionStudentsSelected = selectableFilteredPromotionStudents.some((student) =>
-    selectedStudentIds.has(student.id)
+  const someFilteredPromotionStudentsSelected = selectableFilteredPromotionStudents.some(
+    (student) => selectedStudentIds.has(student.id)
   );
-  const visibleSelectAllState = allVisiblePromotionStudentsSelected
+  const filteredSelectAllState = allFilteredPromotionStudentsSelected
     ? true
-    : someVisiblePromotionStudentsSelected
+    : someFilteredPromotionStudentsSelected
       ? 'indeterminate'
       : false;
 
@@ -657,7 +683,7 @@ export default function RegistryPage() {
     });
   };
 
-  const toggleVisiblePromotionStudents = (checked: boolean) => {
+  const toggleFilteredPromotionStudents = (checked: boolean) => {
     if (!isAdmin) return;
     setSelectedStudentIds((current) => {
       const next = new Set(current);
@@ -672,6 +698,10 @@ export default function RegistryPage() {
     });
   };
 
+  useEffect(() => {
+    setPromotionQueuePage((current) => Math.min(current, promotionQueueTotalPages));
+  }, [promotionQueueTotalPages]);
+
   const handleOpenBulkDialog = () => {
     setBulkPromotionMessage(null);
     setBulkPromotionResult(null);
@@ -681,16 +711,15 @@ export default function RegistryPage() {
     }
 
     if (selectedPromotionStudents.length === 0) {
-      setBulkPromotionMessage(
-        'No students are selected to promote. Confirm only if every visible student should be archived as non-continuing.'
-      );
+      setBulkPromotionMessage('Select at least one student before promoting.');
+      return;
     }
 
     setIsBulkDialogOpen(true);
   };
 
   const handleBulkPromotion = async () => {
-    if (filteredPromotionStudents.length === 0) return;
+    if (selectedPromotionStudents.length === 0) return;
 
     setIsBulkPromoting(true);
     setBulkPromotionMessage(null);
@@ -700,8 +729,8 @@ export default function RegistryPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          studentIds: selectedPromotionStudents.map((student) => student.id),
-          cohortStudentIds: filteredPromotionStudents.map((student) => student.id),
+          studentIds: selectedPromotionStudentIds,
+          cohortStudentIds: selectedPromotionStudentIds,
           transitionDecisions: getImplicitPromotionDecisions(selectedPromotionStudents),
         }),
         credentials: 'include',
@@ -828,8 +857,8 @@ export default function RegistryPage() {
               <ShieldCheck className="h-7 w-7 text-emerald-300" />
               <h2 className="mt-4 text-xl font-semibold">Selection controls promotion.</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Check only students continuing at Bosco/FSE. Unchecked students in the current list
-                are archived so they are not carried into the next academic level.
+                Check students continuing at Bosco/FSE. Only selected students are processed when
+                promotion is confirmed.
               </p>
             </div>
             <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
@@ -855,6 +884,7 @@ export default function RegistryPage() {
       </section>
 
       <section
+        id="promotion-queue"
         className="rounded-lg border border-slate-200 bg-white shadow-sm"
         aria-busy={promotionLoading}
       >
@@ -930,15 +960,15 @@ export default function RegistryPage() {
           ) : (
             <div className="grid gap-2 text-sm sm:grid-cols-3 xl:min-w-[420px]">
               <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
-                <p className="text-xs font-medium text-emerald-700">Promote</p>
+                <p className="text-xs font-medium text-emerald-700">Selected to Promote</p>
                 <p className="font-semibold text-emerald-950">{selectedPromotionSummary.promote}</p>
               </div>
-              <div className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2">
-                <p className="text-xs font-medium text-orange-700">Archive Unchecked</p>
-                <p className="font-semibold text-orange-950">{selectedPromotionSummary.archive}</p>
+              <div className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2">
+                <p className="text-xs font-medium text-cyan-700">Selected Records</p>
+                <p className="font-semibold text-cyan-950">{selectedPromotionStudents.length}</p>
               </div>
               <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                <p className="text-xs font-medium text-slate-500">Visible Eligible</p>
+                <p className="text-xs font-medium text-slate-500">Eligible in Filter</p>
                 <p className="font-semibold text-slate-950">
                   {selectableFilteredPromotionStudents.length}
                 </p>
@@ -1007,9 +1037,9 @@ export default function RegistryPage() {
               <TableRow className="bg-slate-50">
                 <TableHead className="w-12">
                   <Checkbox
-                    aria-label="Select all visible eligible students"
-                    checked={visibleSelectAllState}
-                    onCheckedChange={(checked) => toggleVisiblePromotionStudents(checked === true)}
+                    aria-label="Select all eligible students in this filter"
+                    checked={filteredSelectAllState}
+                    onCheckedChange={(checked) => toggleFilteredPromotionStudents(checked === true)}
                     disabled={
                       !isAdmin ||
                       promotionLoading ||
@@ -1040,7 +1070,7 @@ export default function RegistryPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredPromotionStudents.map((student) => {
+                visiblePromotionStudents.map((student) => {
                   const selectable =
                     isAdmin &&
                     isPromotionSelectable(student) &&
@@ -1118,11 +1148,47 @@ export default function RegistryPage() {
             <Skeleton className="h-4 w-56" />
           ) : (
             <p>
-              Showing {filteredPromotionStudents.length} of {promotionPreview?.totalStudents || 0}{' '}
-              active students
+              Showing {promotionQueueStartItem}-{promotionQueueEndItem} of{' '}
+              {filteredPromotionStudents.length} matching students
+              {promotionPreview?.totalStudents
+                ? ` (${promotionPreview.totalStudents} active total)`
+                : ''}
             </p>
           )}
-          {!isAdmin && <p>Administrator access is required for bulk promotion.</p>}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {!isAdmin && <p>Administrator access is required for bulk promotion.</p>}
+            {!promotionLoading && filteredPromotionStudents.length > PROMOTION_QUEUE_PAGE_SIZE && (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPromotionQueuePage((current) => Math.max(current - 1, 1))}
+                  disabled={promotionQueuePageNumber === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <span className="text-sm text-slate-500">
+                  Page {promotionQueuePageNumber} of {promotionQueueTotalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setPromotionQueuePage((current) =>
+                      Math.min(current + 1, promotionQueueTotalPages)
+                    )
+                  }
+                  disabled={promotionQueuePageNumber === promotionQueueTotalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -1131,8 +1197,7 @@ export default function RegistryPage() {
           <AlertDialogHeader className={DIALOG_HEADER_CLASS}>
             <AlertDialogTitle>Promote Selected Students</AlertDialogTitle>
             <AlertDialogDescription>
-              Checked students will continue at Bosco/FSE and be promoted. Unchecked students in the
-              current filtered list will be archived.
+              Only the selected students shown here will be processed for promotion.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className={cn(DIALOG_BODY_CLASS, 'space-y-4')}>
@@ -1162,23 +1227,17 @@ export default function RegistryPage() {
               </div>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs font-medium text-slate-500">Current List</p>
+                <p className="text-xs font-medium text-slate-500">Selected List</p>
                 <p className="mt-1 text-xl font-semibold text-slate-950">
-                  {filteredPromotionStudents.length}
+                  {selectedPromotionStudents.length}
                 </p>
               </div>
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-xs font-medium text-emerald-700">Promote</p>
                 <p className="mt-1 text-xl font-semibold text-emerald-950">
                   {selectedPromotionSummary.promote}
-                </p>
-              </div>
-              <div className="rounded-md border border-orange-200 bg-orange-50 p-3">
-                <p className="text-xs font-medium text-orange-700">Archive</p>
-                <p className="mt-1 text-xl font-semibold text-orange-950">
-                  {selectedPromotionSummary.archive}
                 </p>
               </div>
             </div>
@@ -1194,24 +1253,18 @@ export default function RegistryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredPromotionStudents.map((student) => (
+                    {selectedPromotionStudents.map((student) => (
                       <TableRow key={student.id}>
                         <TableCell>
                           {student.lastName}, {student.firstName}
                         </TableCell>
                         <TableCell>
-                          {selectedStudentIds.has(student.id)
-                            ? 'Promote to next grade level'
-                            : 'Archive as non-continuing'}
+                          Promote to next grade level
                           {shouldShowPromotionReason(student) && (
                             <p className="mt-1 text-xs text-amber-700">{student.reason}</p>
                           )}
                         </TableCell>
-                        <TableCell>
-                          {selectedStudentIds.has(student.id)
-                            ? formatSelectedPromotionTarget(student)
-                            : 'Archived'}
-                        </TableCell>
+                        <TableCell>{formatSelectedPromotionTarget(student)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
