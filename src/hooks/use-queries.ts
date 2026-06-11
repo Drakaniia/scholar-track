@@ -22,6 +22,7 @@ import type {
   AcademicYear,
   AcademicYearInput,
   CreateStudentInput,
+  CreateStudentsInput,
   StudentFilterOptions,
   UpdateStudentInput,
 } from '@/types';
@@ -298,11 +299,42 @@ interface ApiResponse<T> {
   success: boolean;
   data: T;
   error?: string;
+  details?: string[];
   limit?: number;
   page?: number;
   total?: number;
   totalPages?: number;
   cached?: boolean;
+}
+
+function getApiErrorMessage(response: { error?: string; details?: string[] }, fallback: string) {
+  if (response.details && response.details.length > 0) {
+    return response.details.join('\n');
+  }
+
+  return response.error || fallback;
+}
+
+async function fetchJsonResponse<T>(response: Response, fallbackError: string): Promise<T> {
+  let json: T & { error?: string; details?: string[] };
+
+  try {
+    json = await response.json();
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(
+        response.ok ? 'Server returned an unreadable response' : 'Server rejected the request'
+      );
+    }
+
+    throw error;
+  }
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(json, fallbackError));
+  }
+
+  return json;
 }
 
 function removeListItemsById<T extends { id: number }>(
@@ -487,18 +519,24 @@ export function useCreateStudent() {
 
   return useMutation<ApiResponse<{ id: number }>, Error, CreateStudentInput>({
     mutationFn: async (data) => {
-      const response = await fetch('/api/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        credentials: 'include',
-      });
+      let response: Response;
 
-      const json = await response.json();
-      if (!response.ok) {
-        throw new Error(json.error || 'Failed to create student');
+      try {
+        response = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include',
+        });
+      } catch (error) {
+        if (error instanceof TypeError) {
+          throw new Error('Unable to reach the server. Check the app connection and try again.');
+        }
+
+        throw error;
       }
-      return json;
+
+      return fetchJsonResponse<ApiResponse<{ id: number }>>(response, 'Failed to create student');
     },
     onSuccess: () => {
       // Invalidate relevant queries
@@ -508,6 +546,44 @@ export function useCreateStudent() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create student');
+    },
+  });
+}
+
+export function useCreateStudents() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<Array<{ id: number }>>, Error, CreateStudentsInput>({
+    mutationFn: async (data) => {
+      let response: Response;
+
+      try {
+        response = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include',
+        });
+      } catch (error) {
+        if (error instanceof TypeError) {
+          throw new Error('Unable to reach the server. Check the app connection and try again.');
+        }
+
+        throw error;
+      }
+
+      return fetchJsonResponse<ApiResponse<Array<{ id: number }>>>(
+        response,
+        'Failed to create students'
+      );
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      toast.success(`${response.data.length} students created successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create students');
     },
   });
 }

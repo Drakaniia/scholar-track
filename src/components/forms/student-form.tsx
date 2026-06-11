@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
 
 import { CalendarPlus, Filter, Info, Pencil, Plus, Search, X } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import {
   COMPACT_DIALOG_CONTENT_CLASS,
@@ -184,6 +185,14 @@ interface SelectedScholarship {
   scholarshipStatus: string;
 }
 
+export type StudentFormSubmissionResult =
+  | { readonly success: true; readonly data: CreateStudentInput }
+  | { readonly success: false; readonly message: string };
+
+export type StudentFormHandle = {
+  readonly getSubmissionData: () => Promise<StudentFormSubmissionResult>;
+};
+
 interface StudentFormProps {
   defaultValues?: Partial<CreateStudentInput>;
   onSubmit: (data: CreateStudentInput) => void;
@@ -193,18 +202,69 @@ interface StudentFormProps {
   canEditFees?: boolean;
   canManageAcademicYears?: boolean;
   studentName?: string; // Name of student being edited for confirmation display
+  hideFooter?: boolean;
+  submitLabel?: string;
+  cancelLabel?: string;
+  idPrefix?: string;
+  embedded?: boolean;
 }
 
-export function StudentForm({
-  defaultValues,
-  onSubmit,
-  onCancel,
-  isEditing = false,
-  loading = false,
-  canEditFees = true,
-  canManageAcademicYears = false,
-  studentName,
-}: StudentFormProps) {
+function getRequiredStudentFieldMessage(data: CreateStudentInput): string | null {
+  const missingFields: string[] = [];
+
+  if (!data.lastName?.trim()) {
+    missingFields.push('Last name');
+  }
+
+  if (!data.firstName?.trim()) {
+    missingFields.push('First name');
+  }
+
+  if (!data.gradeLevel) {
+    missingFields.push('Grade level');
+  }
+
+  if (!data.yearLevel?.trim()) {
+    missingFields.push('Year level');
+  }
+
+  if (data.gradeLevel === 'COLLEGE' && !data.program?.trim()) {
+    missingFields.push('Course');
+  } else if (
+    data.gradeLevel &&
+    data.gradeLevel !== 'SENIOR_HIGH' &&
+    data.yearLevel?.trim() &&
+    !data.program?.trim()
+  ) {
+    missingFields.push('Program');
+  }
+
+  if (missingFields.length === 0) {
+    return null;
+  }
+
+  const verb = missingFields.length === 1 ? 'is' : 'are';
+  return `${missingFields.join(', ')} ${verb} required.`;
+}
+
+export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(function StudentForm(
+  {
+    defaultValues,
+    onSubmit,
+    onCancel,
+    isEditing = false,
+    loading = false,
+    canEditFees = true,
+    canManageAcademicYears = false,
+    studentName,
+    hideFooter = false,
+    submitLabel,
+    cancelLabel = 'Cancel',
+    idPrefix,
+    embedded = false,
+  }: StudentFormProps,
+  ref
+) {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<GradeLevel | ''>(
     defaultValues?.gradeLevel || ''
   );
@@ -283,6 +343,11 @@ export function StudentForm({
       ...defaultValues,
     },
   });
+  const fieldId = useCallback((id: string) => (idPrefix ? `${idPrefix}-${id}` : id), [idPrefix]);
+  const formClassName = embedded ? 'flex flex-col' : DIALOG_FORM_CLASS;
+  const bodyClassName = embedded
+    ? 'flex flex-col gap-6'
+    : `${DIALOG_BODY_CLASS} flex flex-col gap-6`;
   const currentGradeLevel = form.watch('gradeLevel') || selectedGradeLevel;
   const currentProgram = form.watch('program') || '';
   const defaultAssignmentAcademicYearId = activeAcademicYear?.id ?? null;
@@ -689,35 +754,75 @@ export function StudentForm({
     return fees.tuitionFee + fees.otherFee + fees.miscellaneousFee + fees.laboratoryFee;
   };
 
-  const handleFormSubmit = (data: CreateStudentInput) => {
-    const program = data.gradeLevel === 'SENIOR_HIGH' ? data.yearLevel : data.program;
-    const submitData: CreateStudentInput = {
-      ...data,
-      program,
-      scholarships:
-        selectedScholarships.length > 0
-          ? selectedScholarships.map((scholarship) => ({
-              id: scholarship.id,
-              scholarshipId: scholarship.scholarshipId,
-              academicYearId: scholarship.academicYearId ?? null,
-              awardDate: scholarship.awardDate,
-              startTerm: scholarship.startTerm,
-              endTerm: scholarship.endTerm,
-              grantAmount: scholarship.grantAmount,
-              grantType: scholarship.grantType,
-              scholarshipStatus: scholarship.scholarshipStatus,
-            }))
-          : undefined,
-    };
-
-    if (canEditFees) {
-      submitData.fees = {
-        tuitionFee: fees.tuitionFee,
-        otherFee: fees.otherFee,
-        miscellaneousFee: fees.miscellaneousFee,
-        laboratoryFee: fees.laboratoryFee,
+  const buildSubmitData = useCallback(
+    (data: CreateStudentInput) => {
+      const program = data.gradeLevel === 'SENIOR_HIGH' ? data.yearLevel : data.program;
+      const submitData: CreateStudentInput = {
+        ...data,
+        program,
+        scholarships:
+          selectedScholarships.length > 0
+            ? selectedScholarships.map((scholarship) => ({
+                id: scholarship.id,
+                scholarshipId: scholarship.scholarshipId,
+                academicYearId: scholarship.academicYearId ?? null,
+                awardDate: scholarship.awardDate,
+                startTerm: scholarship.startTerm,
+                endTerm: scholarship.endTerm,
+                grantAmount: scholarship.grantAmount,
+                grantType: scholarship.grantType,
+                scholarshipStatus: scholarship.scholarshipStatus,
+              }))
+            : undefined,
       };
+
+      if (canEditFees) {
+        submitData.fees = {
+          tuitionFee: fees.tuitionFee,
+          otherFee: fees.otherFee,
+          miscellaneousFee: fees.miscellaneousFee,
+          laboratoryFee: fees.laboratoryFee,
+        };
+      }
+
+      return submitData;
+    },
+    [canEditFees, fees, selectedScholarships]
+  );
+
+  const getSubmissionData = useCallback(() => {
+    return new Promise<StudentFormSubmissionResult>((resolve) => {
+      void form.handleSubmit(
+        (data) => {
+          const validationMessage = getRequiredStudentFieldMessage(data);
+
+          if (validationMessage) {
+            resolve({ success: false, message: validationMessage });
+            return;
+          }
+
+          resolve({ success: true, data: buildSubmitData(data) });
+        },
+        () =>
+          resolve({
+            success: false,
+            message:
+              getRequiredStudentFieldMessage(form.getValues()) || 'Complete required fields.',
+          })
+      )();
+    });
+  }, [buildSubmitData, form]);
+
+  useImperativeHandle(ref, () => ({ getSubmissionData }), [getSubmissionData]);
+
+  const handleFormSubmit = (data: CreateStudentInput) => {
+    const validationMessage = getRequiredStudentFieldMessage(data);
+    if (validationMessage) {
+      toast.error(validationMessage);
+      return;
     }
+
+    const submitData = buildSubmitData(data);
 
     // Show confirmation dialog when editing
     if (isEditing) {
@@ -737,15 +842,15 @@ export function StudentForm({
   };
 
   return (
-    <form onSubmit={form.handleSubmit(handleFormSubmit)} className={DIALOG_FORM_CLASS}>
-      <div className={`${DIALOG_BODY_CLASS} flex flex-col gap-6`}>
+    <form onSubmit={form.handleSubmit(handleFormSubmit)} className={formClassName}>
+      <div className={bodyClassName}>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="space-y-3 col-span-1">
-            <Label htmlFor="lastName" className="text-sm font-medium">
+            <Label htmlFor={fieldId('lastName')} className="text-sm font-medium">
               Last Name
             </Label>
             <Input
-              id="lastName"
+              id={fieldId('lastName')}
               {...form.register('lastName', { required: true })}
               placeholder="Enter last name"
               className="h-10"
@@ -756,11 +861,11 @@ export function StudentForm({
             />
           </div>
           <div className="space-y-3 col-span-1">
-            <Label htmlFor="firstName" className="text-sm font-medium">
+            <Label htmlFor={fieldId('firstName')} className="text-sm font-medium">
               First Name
             </Label>
             <Input
-              id="firstName"
+              id={fieldId('firstName')}
               {...form.register('firstName', { required: true })}
               placeholder="Enter first name"
               className="h-10"
@@ -771,11 +876,11 @@ export function StudentForm({
             />
           </div>
           <div className="space-y-3 col-span-1">
-            <Label htmlFor="middleInitial" className="text-sm font-medium">
+            <Label htmlFor={fieldId('middleInitial')} className="text-sm font-medium">
               M.I.
             </Label>
             <Input
-              id="middleInitial"
+              id={fieldId('middleInitial')}
               {...form.register('middleInitial')}
               placeholder="Enter middle initial"
               maxLength={1}
@@ -789,7 +894,7 @@ export function StudentForm({
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="gradeLevel" className="text-sm font-medium">
+          <Label htmlFor={fieldId('gradeLevel')} className="text-sm font-medium">
             Grade Level
           </Label>
           <Controller
@@ -803,7 +908,7 @@ export function StudentForm({
                   handleGradeLevelChange(value as GradeLevel);
                 }}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger id={fieldId('gradeLevel')} className="h-10">
                   <SelectValue placeholder="Select grade level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -821,7 +926,7 @@ export function StudentForm({
         {/* Term Type Selector - Only for College */}
         {selectedGradeLevel === 'COLLEGE' && (
           <div className="space-y-3">
-            <Label htmlFor="termType" className="text-sm font-medium">
+            <Label htmlFor={fieldId('termType')} className="text-sm font-medium">
               Academic Term System
             </Label>
             <Controller
@@ -835,7 +940,7 @@ export function StudentForm({
                     setSelectedTermType(value as TermType);
                   }}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id={fieldId('termType')} className="h-10">
                     <SelectValue placeholder="Select term system" />
                   </SelectTrigger>
                   <SelectContent>
@@ -860,7 +965,7 @@ export function StudentForm({
         {selectedGradeLevel === 'COLLEGE' && (
           <>
             <div className="space-y-3">
-              <Label htmlFor="course" className="text-sm font-medium">
+              <Label htmlFor={fieldId('course')} className="text-sm font-medium">
                 Course
               </Label>
               <Select
@@ -873,7 +978,7 @@ export function StudentForm({
                   }
                 }}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger id={fieldId('course')} className="h-10">
                   <SelectValue placeholder="Select a course" />
                 </SelectTrigger>
                 <SelectContent>
@@ -888,11 +993,11 @@ export function StudentForm({
 
             {selectedCourse === 'Other' && (
               <div className="space-y-3">
-                <Label htmlFor="customCourse" className="text-sm font-medium">
+                <Label htmlFor={fieldId('customCourse')} className="text-sm font-medium">
                   Enter Course Name
                 </Label>
                 <Input
-                  id="customCourse"
+                  id={fieldId('customCourse')}
                   value={customCourse}
                   onChange={(e) => {
                     setCustomCourse(e.target.value);
@@ -906,7 +1011,7 @@ export function StudentForm({
 
             {selectedCourse && (
               <div className="space-y-3">
-                <Label htmlFor="program" className="text-sm font-medium">
+                <Label htmlFor={fieldId('program')} className="text-sm font-medium">
                   Major (Optional)
                 </Label>
                 <Select
@@ -926,7 +1031,7 @@ export function StudentForm({
                     }
                   }}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id={fieldId('program')} className="h-10">
                     <SelectValue placeholder="Select a major" />
                   </SelectTrigger>
                   <SelectContent>
@@ -942,11 +1047,11 @@ export function StudentForm({
 
             {selectedProgram === 'Other' && (
               <div className="space-y-3">
-                <Label htmlFor="customProgram" className="text-sm font-medium">
+                <Label htmlFor={fieldId('customProgram')} className="text-sm font-medium">
                   Enter Major Name
                 </Label>
                 <Input
-                  id="customProgram"
+                  id={fieldId('customProgram')}
                   value={customProgram}
                   onChange={(e) => {
                     setCustomProgram(e.target.value);
@@ -960,7 +1065,7 @@ export function StudentForm({
             )}
 
             <div className="space-y-3">
-              <Label htmlFor="yearLevel" className="text-sm font-medium">
+              <Label htmlFor={fieldId('yearLevel')} className="text-sm font-medium">
                 Year Level
               </Label>
               <Controller
@@ -968,7 +1073,7 @@ export function StudentForm({
                 control={form.control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-10">
+                    <SelectTrigger id={fieldId('yearLevel')} className="h-10">
                       <SelectValue placeholder="Select year level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -988,7 +1093,7 @@ export function StudentForm({
         {/* Senior High Fields */}
         {selectedGradeLevel === 'SENIOR_HIGH' && (
           <div className="space-y-3">
-            <Label htmlFor="yearLevel" className="text-sm font-medium">
+            <Label htmlFor={fieldId('yearLevel')} className="text-sm font-medium">
               Year Level
             </Label>
             <Controller
@@ -1002,7 +1107,7 @@ export function StudentForm({
                     form.setValue('program', value);
                   }}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id={fieldId('yearLevel')} className="h-10">
                     <SelectValue placeholder="Select year level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1021,7 +1126,7 @@ export function StudentForm({
         {/* Grade School Fields */}
         {selectedGradeLevel === 'GRADE_SCHOOL' && (
           <div className="space-y-3">
-            <Label htmlFor="yearLevel" className="text-sm font-medium">
+            <Label htmlFor={fieldId('yearLevel')} className="text-sm font-medium">
               Select Grade
             </Label>
             <Controller
@@ -1035,7 +1140,7 @@ export function StudentForm({
                     form.setValue('program', value);
                   }}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id={fieldId('yearLevel')} className="h-10">
                     <SelectValue placeholder="Select grade level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1054,7 +1159,7 @@ export function StudentForm({
         {/* Junior High Fields */}
         {selectedGradeLevel === 'JUNIOR_HIGH' && (
           <div className="space-y-3">
-            <Label htmlFor="yearLevel" className="text-sm font-medium">
+            <Label htmlFor={fieldId('yearLevel')} className="text-sm font-medium">
               Year Level
             </Label>
             <Controller
@@ -1068,7 +1173,7 @@ export function StudentForm({
                     form.setValue('program', value);
                   }}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id={fieldId('yearLevel')} className="h-10">
                     <SelectValue placeholder="Select year level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1452,7 +1557,7 @@ export function StudentForm({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Tuition Fee */}
                 <div className="space-y-2">
-                  <Label htmlFor="tuitionFee" className="text-sm font-medium">
+                  <Label htmlFor={fieldId('tuitionFee')} className="text-sm font-medium">
                     Tuition Fee
                   </Label>
                   <div className="relative">
@@ -1460,7 +1565,7 @@ export function StudentForm({
                       ₱
                     </span>
                     <CurrencyInput
-                      id="tuitionFee"
+                      id={fieldId('tuitionFee')}
                       value={fees.tuitionFee}
                       onChange={(value) => handleFeeChange('tuitionFee', value)}
                       placeholder="0.00"
@@ -1471,7 +1576,7 @@ export function StudentForm({
 
                 {/* Other Fees */}
                 <div className="space-y-2">
-                  <Label htmlFor="otherFee" className="text-sm font-medium">
+                  <Label htmlFor={fieldId('otherFee')} className="text-sm font-medium">
                     Other Fees
                   </Label>
                   <div className="relative">
@@ -1479,7 +1584,7 @@ export function StudentForm({
                       ₱
                     </span>
                     <CurrencyInput
-                      id="otherFee"
+                      id={fieldId('otherFee')}
                       value={fees.otherFee}
                       onChange={(value) => handleFeeChange('otherFee', value)}
                       placeholder="0.00"
@@ -1490,7 +1595,7 @@ export function StudentForm({
 
                 {/* Miscellaneous Fee */}
                 <div className="space-y-2">
-                  <Label htmlFor="miscellaneousFee" className="text-sm font-medium">
+                  <Label htmlFor={fieldId('miscellaneousFee')} className="text-sm font-medium">
                     Miscellaneous Fee
                   </Label>
                   <div className="relative">
@@ -1498,7 +1603,7 @@ export function StudentForm({
                       ₱
                     </span>
                     <CurrencyInput
-                      id="miscellaneousFee"
+                      id={fieldId('miscellaneousFee')}
                       value={fees.miscellaneousFee}
                       onChange={(value) => handleFeeChange('miscellaneousFee', value)}
                       placeholder="0.00"
@@ -1509,7 +1614,7 @@ export function StudentForm({
 
                 {/* Laboratory Fee */}
                 <div className="space-y-2">
-                  <Label htmlFor="laboratoryFee" className="text-sm font-medium">
+                  <Label htmlFor={fieldId('laboratoryFee')} className="text-sm font-medium">
                     Laboratory Fee
                   </Label>
                   <div className="relative">
@@ -1517,7 +1622,7 @@ export function StudentForm({
                       ₱
                     </span>
                     <CurrencyInput
-                      id="laboratoryFee"
+                      id={fieldId('laboratoryFee')}
                       value={fees.laboratoryFee}
                       onChange={(value) => handleFeeChange('laboratoryFee', value)}
                       placeholder="0.00"
@@ -1558,9 +1663,9 @@ export function StudentForm({
           <div className={`${DIALOG_BODY_CLASS} space-y-4`}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_1.15fr]">
               <div className="space-y-2">
-                <Label htmlFor="student-scholarship-year-start-year">Start Year</Label>
+                <Label htmlFor={fieldId('student-scholarship-year-start-year')}>Start Year</Label>
                 <Input
-                  id="student-scholarship-year-start-year"
+                  id={fieldId('student-scholarship-year-start-year')}
                   type="number"
                   min={1900}
                   max={2200}
@@ -1581,9 +1686,9 @@ export function StudentForm({
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="student-scholarship-year-start">Start Date</Label>
+                <Label htmlFor={fieldId('student-scholarship-year-start')}>Start Date</Label>
                 <Input
-                  id="student-scholarship-year-start"
+                  id={fieldId('student-scholarship-year-start')}
                   type="date"
                   value={academicYearFormData.startDate}
                   onChange={(event) =>
@@ -1593,9 +1698,9 @@ export function StudentForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="student-scholarship-year-end">End Date</Label>
+                <Label htmlFor={fieldId('student-scholarship-year-end')}>End Date</Label>
                 <Input
-                  id="student-scholarship-year-end"
+                  id={fieldId('student-scholarship-year-end')}
                   type="date"
                   value={academicYearFormData.endDate}
                   onChange={(event) => handleAcademicYearFormChange('endDate', event.target.value)}
@@ -1604,12 +1709,12 @@ export function StudentForm({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="student-scholarship-year-semester">Current Semester</Label>
+              <Label htmlFor={fieldId('student-scholarship-year-semester')}>Current Semester</Label>
               <Select
                 value={academicYearFormData.semester}
                 onValueChange={(value) => handleAcademicYearFormChange('semester', value)}
               >
-                <SelectTrigger id="student-scholarship-year-semester">
+                <SelectTrigger id={fieldId('student-scholarship-year-semester')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1623,23 +1728,23 @@ export function StudentForm({
             </div>
             <div className="flex items-center gap-2 rounded-md border p-3">
               <Checkbox
-                id="student-scholarship-year-active"
+                id={fieldId('student-scholarship-year-active')}
                 checked={!!academicYearFormData.isActive}
                 onCheckedChange={(checked) =>
                   handleAcademicYearFormChange('isActive', checked === true)
                 }
               />
               <Label
-                htmlFor="student-scholarship-year-active"
+                htmlFor={fieldId('student-scholarship-year-active')}
                 className="cursor-pointer font-normal"
               >
                 Set as active academic year
               </Label>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="student-scholarship-year-promotion">Promotion Date</Label>
+              <Label htmlFor={fieldId('student-scholarship-year-promotion')}>Promotion Date</Label>
               <Input
-                id="student-scholarship-year-promotion"
+                id={fieldId('student-scholarship-year-promotion')}
                 type="date"
                 value={academicYearFormData.promotionDate || ''}
                 onChange={(event) =>
@@ -1668,14 +1773,16 @@ export function StudentForm({
         </DialogContent>
       </Dialog>
 
-      <DialogFooter className={DIALOG_FOOTER_CLASS}>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="gradient" disabled={loading} className="min-w-32">
-          {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Student'}
-        </Button>
-      </DialogFooter>
+      {!hideFooter && (
+        <DialogFooter className={DIALOG_FOOTER_CLASS}>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+          <Button type="submit" variant="gradient" disabled={loading} className="min-w-32">
+            {loading ? 'Saving...' : submitLabel || (isEditing ? 'Save Changes' : 'Add Student')}
+          </Button>
+        </DialogFooter>
+      )}
 
       {/* Confirmation Dialog for Editing */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -1706,4 +1813,4 @@ export function StudentForm({
       </AlertDialog>
     </form>
   );
-}
+});

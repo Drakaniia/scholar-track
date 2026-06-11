@@ -1,9 +1,13 @@
+import type { Prisma } from '@prisma/client';
+
 import prisma from './prisma';
 import {
   isGradeLevelEligibleForScholarship,
   isProgramEligibleForScholarship,
   isScholarshipEligibleForStudent,
 } from './validations';
+
+type ScholarshipValidationClient = Prisma.TransactionClient | typeof prisma;
 
 /**
  * Validates if a student can be assigned a specific scholarship based on grade level and program compatibility
@@ -13,14 +17,15 @@ import {
  */
 export async function validateStudentScholarshipEligibility(
   studentId: number,
-  scholarshipId: number
+  scholarshipId: number,
+  client: ScholarshipValidationClient = prisma
 ): Promise<void> {
   // Fetch student and scholarship data
   const [student, scholarship] = await Promise.all([
-    prisma.student.findUnique({
+    client.student.findUnique({
       where: { id: studentId },
     }),
-    prisma.scholarship.findUnique({
+    client.scholarship.findUnique({
       where: { id: scholarshipId },
     }),
   ]);
@@ -71,9 +76,10 @@ export function filterEligibleScholarships(
  */
 export async function validateMultipleStudentScholarshipEligibility(
   studentId: number,
-  scholarshipIds: number[]
+  scholarshipIds: number[],
+  client: ScholarshipValidationClient = prisma
 ): Promise<void> {
-  const student = await prisma.student.findUnique({
+  const student = await client.student.findUnique({
     where: { id: studentId },
   });
 
@@ -82,7 +88,7 @@ export async function validateMultipleStudentScholarshipEligibility(
   }
 
   // Fetch all scholarships at once
-  const scholarships = await prisma.scholarship.findMany({
+  const scholarships = await client.scholarship.findMany({
     where: { id: { in: scholarshipIds } },
   });
 

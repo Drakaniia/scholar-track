@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
 
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
@@ -13,9 +14,134 @@ import {
 import { canManageStudentFees, canManageStudentsAndScholarships } from '@/lib/rbac';
 import { validateMultipleStudentScholarshipEligibility } from '@/lib/scholarship-validation';
 import { getAcademicTermCode, getAcademicTermLabel, scholarshipCoversTerm } from '@/lib/terms';
-import { CreateStudentInput, SEPARATED_STUDENT_STATUSES } from '@/types';
+import { SEPARATED_STUDENT_STATUSES } from '@/types';
 
-type StudentScholarshipAssignmentInput = NonNullable<CreateStudentInput['scholarships']>[number];
+const nullablePositiveIntSchema = z.preprocess(
+  (value) => (value === '' || value === 'all' ? null : value),
+  z.coerce.number().int().positive().nullable()
+);
+
+const nullableDateSchema = z.preprocess(
+  (value) => (value === '' ? null : value),
+  z.coerce.date().nullable()
+);
+
+const optionalDateSchema = z.preprocess(
+  (value) => (value === '' || value === null ? undefined : value),
+  z.coerce.date().optional()
+);
+
+function requiredString(message: string) {
+  return z.string({ required_error: message, invalid_type_error: message }).trim().min(1, message);
+}
+
+const studentFeesInputSchema = z.object({
+  tuitionFee: z.coerce.number().optional(),
+  otherFee: z.coerce.number().optional(),
+  miscellaneousFee: z.coerce.number().optional(),
+  laboratoryFee: z.coerce.number().optional(),
+});
+
+const studentScholarshipAssignmentSchema = z.object({
+  id: z.coerce.number().int().positive().optional(),
+  scholarshipId: z.coerce
+    .number({
+      required_error: 'Scholarship is required',
+      invalid_type_error: 'Scholarship is required',
+    })
+    .int()
+    .positive('Scholarship is required'),
+  academicYearId: nullablePositiveIntSchema.optional(),
+  awardDate: optionalDateSchema,
+  startTerm: z.string().optional(),
+  endTerm: z.string().optional(),
+  grantAmount: z.coerce.number().optional(),
+  grantType: z.enum(['FULL', 'TUITION_ONLY', 'MISC_ONLY', 'LAB_ONLY', 'NONE']).optional(),
+  scholarshipStatus: z.string().optional(),
+});
+
+const createStudentInputSchema = z.object({
+  lastName: requiredString('Last name is required'),
+  firstName: requiredString('First name is required'),
+  middleInitial: z.string().optional(),
+  program: requiredString('Program is required'),
+  gradeLevel: z.enum(['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'], {
+    required_error: 'Grade level is required',
+    invalid_type_error: 'Grade level is required',
+  }),
+  yearLevel: requiredString('Year level is required'),
+  status: requiredString('Status is required').default('Active'),
+  birthDate: nullableDateSchema.optional(),
+  termType: z.enum(['SEMESTER', 'TRIMESTER']).optional(),
+  scholarshipId: nullablePositiveIntSchema.optional(),
+  awardDate: nullableDateSchema.optional(),
+  startTerm: z.string().nullable().optional(),
+  endTerm: z.string().nullable().optional(),
+  grantAmount: z.coerce.number().nullable().optional(),
+  grantType: z.enum(['FULL', 'TUITION_ONLY', 'MISC_ONLY', 'LAB_ONLY', 'NONE']).optional(),
+  scholarshipStatus: z.string().nullable().optional(),
+  scholarships: z.array(studentScholarshipAssignmentSchema).optional(),
+  fees: studentFeesInputSchema.optional(),
+});
+
+const createStudentsInputSchema = z.object({
+  students: z.array(createStudentInputSchema).min(1, 'At least one student is required'),
+});
+
+type StudentScholarshipAssignmentInput = z.infer<typeof studentScholarshipAssignmentSchema>;
+type CreateStudentPayload = z.infer<typeof createStudentInputSchema>;
+type CreateStudentsPayload = {
+  readonly students: CreateStudentPayload[];
+  readonly isBatch: boolean;
+};
+type StudentRouteClient = Prisma.TransactionClient | typeof prisma;
+
+class DuplicateStudentInRequestError extends Error {
+  constructor() {
+    super('Duplicate student in submission');
+    this.name = 'DuplicateStudentInRequestError';
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseCreateStudentsPayload(body: unknown): CreateStudentsPayload {
+  if (isRecord(body) && 'students' in body) {
+    const batch = createStudentsInputSchema.parse(body);
+    return { students: batch.students, isBatch: true };
+  }
+
+  return { students: [createStudentInputSchema.parse(body)], isBatch: false };
+}
+
+function getStudentValidationDetails(error: z.ZodError): string[] {
+  const details = error.issues.map((issue) => {
+    const studentsSegmentIndex = issue.path.findIndex((segment) => segment === 'students');
+    const studentIndex =
+      studentsSegmentIndex >= 0 ? issue.path[studentsSegmentIndex + 1] : undefined;
+    const prefix = typeof studentIndex === 'number' ? `Student ${studentIndex + 1}: ` : '';
+
+    return `${prefix}${issue.message}`;
+  });
+
+  return Array.from(new Set(details));
+}
+
+function assertUniqueStudentsInRequest(students: CreateStudentPayload[]) {
+  const seen = new Set<string>();
+
+  for (const student of students) {
+    const key = `${student.lastName.toUpperCase()}:${student.firstName.toUpperCase()}`;
+
+    if (seen.has(key)) {
+      throw new DuplicateStudentInRequestError();
+    }
+
+    seen.add(key);
+  }
+}
 
 function parseOptionalAcademicYearId(value: unknown) {
   if (value === undefined || value === null || value === '' || value === 'all') {
@@ -337,129 +463,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
-    const body: CreateStudentInput = await request.json();
+    const payload = parseCreateStudentsPayload(await request.json());
 
-    if (body.fees && !canManageStudentFees(session.role)) {
+    if (payload.students.some((student) => student.fees) && !canManageStudentFees(session.role)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized to manage student fees' },
         { status: 403 }
       );
     }
 
-    // Check if student with same name already exists
-    const existingStudent = await prisma.student.findFirst({
-      where: {
-        lastName: body.lastName.toUpperCase(),
-        firstName: body.firstName.toUpperCase(),
-        isArchived: false,
-      },
-    });
+    assertUniqueStudentsInRequest(payload.students);
 
-    if (existingStudent) {
-      return NextResponse.json(
-        { success: false, error: 'Student already exists' },
-        { status: 409 }
-      );
-    }
+    const createdStudents = await prisma.$transaction(async (client) => {
+      const records = [];
 
-    const student = await prisma.student.create({
-      data: {
-        lastName: body.lastName.toUpperCase(),
-        firstName: body.firstName.toUpperCase(),
-        middleInitial: body.middleInitial ? body.middleInitial.toUpperCase() : null,
-        program: body.program,
-        gradeLevel: body.gradeLevel,
-        yearLevel: body.yearLevel,
-        status: body.status,
-        birthDate: body.birthDate || null,
-      },
-    });
+      for (const student of payload.students) {
+        records.push(await createStudentRecord(client, student));
+      }
 
-    // Handle multiple scholarships if provided
-
-    if (body.scholarships && body.scholarships.length > 0) {
-      // Validate scholarship assignments before creating them
-
-      const scholarshipIds = body.scholarships.map((s) => s.scholarshipId);
-      const resolveAcademicYearId = await createAcademicYearResolver(prisma, body.scholarships);
-      assertUniqueScholarshipAssignments(body.scholarships, resolveAcademicYearId);
-
-      await validateMultipleStudentScholarshipEligibility(student.id, scholarshipIds);
-
-      await prisma.studentScholarship.createMany({
-        data: body.scholarships.map((scholarship) => ({
-          studentId: student.id,
-
-          scholarshipId: scholarship.scholarshipId,
-
-          awardDate: scholarship.awardDate || new Date(),
-
-          startTerm: scholarship.startTerm || '',
-
-          endTerm: scholarship.endTerm || '',
-
-          grantAmount: scholarship.grantAmount || 0,
-
-          grantType: scholarship.grantType || 'FULL',
-
-          scholarshipStatus: scholarship.scholarshipStatus || 'Active',
-
-          academicYearId: resolveAcademicYearId(scholarship.academicYearId),
-        })),
-      });
-    }
-
-    // Fallback to single scholarship for backward compatibility
-    else if (body.scholarshipId) {
-      // Validate scholarship assignment before creating it
-
-      await validateMultipleStudentScholarshipEligibility(student.id, [body.scholarshipId]);
-
-      await prisma.studentScholarship.create({
-        data: {
-          studentId: student.id,
-
-          scholarshipId: body.scholarshipId,
-
-          awardDate: body.awardDate || new Date(),
-
-          startTerm: body.startTerm || '',
-
-          endTerm: body.endTerm || '',
-
-          grantAmount: body.grantAmount || 0,
-
-          scholarshipStatus: body.scholarshipStatus || 'Active',
-        },
-      });
-    }
-
-    if (body.fees) {
-      await createStudentFeesManual(student.id, body.fees);
-    }
-
-    const studentWithScholarships = await prisma.student.findUnique({
-      where: { id: student.id },
-      include: {
-        scholarships: {
-          include: {
-            scholarship: true,
-            academicYearRel: true,
-          },
-        },
-        fees: true,
-      },
+      return records;
     });
 
     queryOptimizer.invalidatePattern('students-list');
     queryOptimizer.invalidatePattern('dashboard');
 
+    if (payload.isBatch) {
+      return NextResponse.json({
+        success: true,
+        data: createdStudents,
+        message: `${createdStudents.length} students created successfully`,
+      });
+    }
+
+    const createdStudent = createdStudents[0];
+    if (!createdStudent) {
+      throw new Error('No student was created');
+    }
+
     return NextResponse.json({
       success: true,
-      data: studentWithScholarships || student,
+      data: createdStudent,
       message: 'Student created successfully',
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      const details = getStudentValidationDetails(error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Student validation failed',
+          details,
+        },
+        { status: 400 }
+      );
+    }
+
     console.error('Error creating student:', error);
     if (
       error instanceof Error &&
@@ -469,7 +528,9 @@ export async function POST(request: NextRequest) {
     }
     if (
       error instanceof Error &&
-      error.message === 'Duplicate scholarship assignment for academic year'
+      (error.message === 'Duplicate scholarship assignment for academic year' ||
+        error.message === 'Student already exists' ||
+        error instanceof DuplicateStudentInRequestError)
     ) {
       return NextResponse.json({ success: false, error: error.message }, { status: 409 });
     }
@@ -480,10 +541,95 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function createStudentRecord(client: StudentRouteClient, body: CreateStudentPayload) {
+  const existingStudent = await client.student.findFirst({
+    where: {
+      lastName: body.lastName.toUpperCase(),
+      firstName: body.firstName.toUpperCase(),
+      isArchived: false,
+    },
+  });
+
+  if (existingStudent) {
+    throw new Error('Student already exists');
+  }
+
+  const student = await client.student.create({
+    data: {
+      lastName: body.lastName.toUpperCase(),
+      firstName: body.firstName.toUpperCase(),
+      middleInitial: body.middleInitial ? body.middleInitial.toUpperCase() : null,
+      program: body.program,
+      gradeLevel: body.gradeLevel,
+      yearLevel: body.yearLevel,
+      status: body.status,
+      birthDate: body.birthDate || null,
+      termType: body.termType || 'SEMESTER',
+    },
+  });
+
+  if (body.scholarships && body.scholarships.length > 0) {
+    const scholarshipIds = body.scholarships.map((scholarship) => scholarship.scholarshipId);
+    const resolveAcademicYearId = await createAcademicYearResolver(client, body.scholarships);
+    assertUniqueScholarshipAssignments(body.scholarships, resolveAcademicYearId);
+
+    await validateMultipleStudentScholarshipEligibility(student.id, scholarshipIds, client);
+
+    await client.studentScholarship.createMany({
+      data: body.scholarships.map((scholarship) => ({
+        studentId: student.id,
+        scholarshipId: scholarship.scholarshipId,
+        awardDate: scholarship.awardDate || new Date(),
+        startTerm: scholarship.startTerm || '',
+        endTerm: scholarship.endTerm || '',
+        grantAmount: scholarship.grantAmount || 0,
+        grantType: scholarship.grantType || 'FULL',
+        scholarshipStatus: scholarship.scholarshipStatus || 'Active',
+        academicYearId: resolveAcademicYearId(scholarship.academicYearId),
+      })),
+    });
+  } else if (body.scholarshipId) {
+    await validateMultipleStudentScholarshipEligibility(student.id, [body.scholarshipId], client);
+
+    await client.studentScholarship.create({
+      data: {
+        studentId: student.id,
+        scholarshipId: body.scholarshipId,
+        awardDate: body.awardDate || new Date(),
+        startTerm: body.startTerm || '',
+        endTerm: body.endTerm || '',
+        grantAmount: body.grantAmount || 0,
+        grantType: body.grantType || 'FULL',
+        scholarshipStatus: body.scholarshipStatus || 'Active',
+      },
+    });
+  }
+
+  if (body.fees) {
+    await createStudentFeesManual(client, student.id, body.fees);
+  }
+
+  const studentWithScholarships = await client.student.findUnique({
+    where: { id: student.id },
+    include: {
+      scholarships: {
+        include: {
+          scholarship: true,
+          academicYearRel: true,
+        },
+      },
+      fees: true,
+    },
+  });
+
+  return studentWithScholarships || student;
+}
+
 /**
  * Helper function to create StudentFees with manual values
  */
 async function createStudentFeesManual(
+  client: StudentRouteClient,
   studentId: number,
   fees: {
     tuitionFee?: number;
@@ -493,7 +639,7 @@ async function createStudentFeesManual(
   }
 ) {
   // Get current academic year
-  const currentAcademicYear = await prisma.academicYear.findFirst({
+  const currentAcademicYear = await client.academicYear.findFirst({
     where: { isActive: true },
   });
 
@@ -511,7 +657,7 @@ async function createStudentFeesManual(
     (fees.laboratoryFee || 0);
 
   // Calculate subsidies based on scholarships
-  const studentScholarships = await prisma.studentScholarship.findMany({
+  const studentScholarships = await client.studentScholarship.findMany({
     where: { studentId },
     include: { scholarship: true },
   });
@@ -529,7 +675,7 @@ async function createStudentFeesManual(
   const percentSubsidy = totalFees > 0 ? Number((amountSubsidy / totalFees).toFixed(4)) : 0;
 
   // Check if fees already exist for this term
-  const existingFees = await prisma.studentFees.findFirst({
+  const existingFees = await client.studentFees.findFirst({
     where: {
       studentId,
       term: `${term} ${academicYear}`,
@@ -539,7 +685,7 @@ async function createStudentFeesManual(
 
   if (existingFees) {
     // Update existing fees
-    await prisma.studentFees.update({
+    await client.studentFees.update({
       where: { id: existingFees.id },
       data: {
         tuitionFee: fees.tuitionFee || 0,
@@ -553,7 +699,7 @@ async function createStudentFeesManual(
     });
   } else {
     // Create new fees
-    await prisma.studentFees.create({
+    await client.studentFees.create({
       data: {
         studentId,
         tuitionFee: fees.tuitionFee || 0,

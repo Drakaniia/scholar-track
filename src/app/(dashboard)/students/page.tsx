@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/auth-provider';
+import { StudentBatchForm } from '@/components/forms/student-batch-form';
 import { StudentFeesManager } from '@/components/forms/student-fees-manager';
 import { StudentForm } from '@/components/forms/student-form';
 import { PageHeader } from '@/components/layout';
@@ -70,6 +71,7 @@ import {
   useAcademicYears,
   useArchiveStudent,
   useCreateStudent,
+  useCreateStudents,
   useStudent,
   useStudentFilterOptions,
   useStudents,
@@ -92,6 +94,7 @@ import {
   Student,
   StudentFees,
   StudentScholarship,
+  TermType,
 } from '@/types';
 
 type StudentMutationData = {
@@ -104,6 +107,7 @@ type StudentMutationData = {
   yearLevel: string;
   status: string;
   birthDate?: Date | null;
+  termType?: TermType;
   fees?: {
     tuitionFee: number;
     otherFee: number;
@@ -608,6 +612,7 @@ export default function StudentsPage() {
   });
 
   const createStudentMutation = useCreateStudent();
+  const createStudentsMutation = useCreateStudents();
   const updateStudentMutation = useUpdateStudent();
   const archiveStudentMutation = useArchiveStudent();
   const { data: academicYearsData } = useAcademicYears();
@@ -762,43 +767,60 @@ export default function StudentsPage() {
     setDialogOpen(true);
   };
 
+  const toStudentMutationData = (data: CreateStudentInput): StudentMutationData => ({
+    lastName: data.lastName,
+    firstName: data.firstName,
+    middleInitial: data.middleInitial,
+    program: data.program,
+    gradeLevel: data.gradeLevel,
+    yearLevel: data.yearLevel,
+    status: data.status,
+    birthDate: data.birthDate || null,
+    termType: data.termType,
+    fees: data.fees
+      ? {
+          tuitionFee: Number(data.fees.tuitionFee) || 0,
+          otherFee: Number(data.fees.otherFee) || 0,
+          miscellaneousFee: Number(data.fees.miscellaneousFee) || 0,
+          laboratoryFee: Number(data.fees.laboratoryFee) || 0,
+        }
+      : undefined,
+    scholarships: data.scholarships?.map((s) => ({
+      scholarshipId: s.scholarshipId,
+      awardDate: s.awardDate,
+      startTerm: s.startTerm,
+      endTerm: s.endTerm,
+      grantAmount: s.grantAmount,
+      grantType: s.grantType,
+      scholarshipStatus: s.scholarshipStatus,
+      academicYearId: s.academicYearId ?? null,
+    })),
+  });
+
   const handleFormSubmit = async (data: CreateStudentInput) => {
     setSubmitting(true);
     try {
-      const mutationData: StudentMutationData = {
-        lastName: data.lastName,
-        firstName: data.firstName,
-        middleInitial: data.middleInitial,
-        program: data.program,
-        gradeLevel: data.gradeLevel,
-        yearLevel: data.yearLevel,
-        status: data.status,
-        birthDate: data.birthDate || null,
-        fees: data.fees
-          ? {
-              tuitionFee: Number(data.fees.tuitionFee) || 0,
-              otherFee: Number(data.fees.otherFee) || 0,
-              miscellaneousFee: Number(data.fees.miscellaneousFee) || 0,
-              laboratoryFee: Number(data.fees.laboratoryFee) || 0,
-            }
-          : undefined,
-        scholarships: data.scholarships?.map((s) => ({
-          scholarshipId: s.scholarshipId,
-          awardDate: s.awardDate,
-          startTerm: s.startTerm,
-          endTerm: s.endTerm,
-          grantAmount: s.grantAmount,
-          grantType: s.grantType,
-          scholarshipStatus: s.scholarshipStatus,
-          academicYearId: s.academicYearId ?? null,
-        })),
-      };
+      const mutationData = toStudentMutationData(data);
 
       if (editingStudent) {
         await updateStudentMutation.mutateAsync({ id: editingStudent.id, data: mutationData });
       } else {
         await createStudentMutation.mutateAsync(mutationData);
       }
+      closeStudentDialog();
+    } catch {
+      // Error handling is already in mutation hooks
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBatchFormSubmit = async (studentEntries: CreateStudentInput[]) => {
+    setSubmitting(true);
+    try {
+      await createStudentsMutation.mutateAsync({
+        students: studentEntries.map(toStudentMutationData),
+      });
       closeStudentDialog();
     } catch {
       // Error handling is already in mutation hooks
@@ -965,18 +987,18 @@ export default function StudentsPage() {
               <DialogTrigger asChild>
                 <Button variant="gradient">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Student
+                  Add Students
                 </Button>
               </DialogTrigger>
               <DialogContent className={FORM_DIALOG_CONTENT_CLASS}>
                 <DialogHeader className={DIALOG_HEADER_CLASS}>
                   <DialogTitle>
-                    {editingStudentId !== null ? 'Edit Student' : 'Add New Student'}
+                    {editingStudentId !== null ? 'Edit Student' : 'Add Students'}
                   </DialogTitle>
                   <DialogDescription>
                     {editingStudentId !== null
                       ? 'Update student information'
-                      : 'Enter student details to add a new record'}
+                      : 'Enter student details to add new records'}
                   </DialogDescription>
                 </DialogHeader>
                 {editingStudentId !== null && !editingStudent ? (
@@ -984,15 +1006,15 @@ export default function StudentsPage() {
                     hasError={editingStudentDetailError}
                     onRetry={() => void refetchEditingStudent()}
                   />
-                ) : (
+                ) : editingStudentId !== null ? (
                   <StudentForm
-                    key={editingStudentId !== null ? `edit-${editingStudentId}` : 'create'}
+                    key={`edit-${editingStudentId}`}
                     defaultValues={
                       editingStudent ? getStudentFormDefaultValues(editingStudent) : undefined
                     }
                     onSubmit={handleFormSubmit}
                     onCancel={closeStudentDialog}
-                    isEditing={editingStudentId !== null}
+                    isEditing
                     loading={submitting}
                     canEditFees={canManageStudentFees}
                     canManageAcademicYears={canManageStudents}
@@ -1001,6 +1023,14 @@ export default function StudentsPage() {
                         ? `${editingStudent.firstName} ${editingStudent.lastName}`
                         : undefined
                     }
+                  />
+                ) : (
+                  <StudentBatchForm
+                    onSubmit={handleBatchFormSubmit}
+                    onCancel={closeStudentDialog}
+                    loading={submitting}
+                    canEditFees={canManageStudentFees}
+                    canManageAcademicYears={canManageStudents}
                   />
                 )}
               </DialogContent>

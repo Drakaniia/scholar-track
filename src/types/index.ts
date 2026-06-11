@@ -120,6 +120,10 @@ export interface CreateStudentInput {
   fees?: StudentFeesInput;
 }
 
+export interface CreateStudentsInput {
+  readonly students: CreateStudentInput[];
+}
+
 export type UpdateStudentInput = Partial<CreateStudentInput>;
 
 // ============================================
