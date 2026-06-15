@@ -391,6 +391,7 @@ function formatFse(value: number, showZero = false) {
 
 function formatPercent(value: number, showZero = false) {
   if (value === 0 && !showZero) return '';
+  if (!Number.isFinite(value)) return '';
   
   // For grand total calculation: value is COUNT / GRAND_FSE, don't multiply
   // Just floor to whole number
