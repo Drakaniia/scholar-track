@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const lane = searchParams.get('lane') || 'all';
     const status = searchParams.get('status') || 'all';
+    const yearLevel = searchParams.get('yearLevel') || 'all';
     const skip = (page - 1) * limit;
 
     const [records, separatedStudents, currentPromotionStudents] = await Promise.all([
@@ -302,7 +303,8 @@ export async function GET(request: NextRequest) {
     const filteredRows = allRows.filter((row) => {
       const laneMatch = lane === 'all' || row.lane === lane;
       const statusMatch = status === 'all' || row.status === status || row.outcome === status;
-      return laneMatch && statusMatch && matchesSearch(row, search);
+      const yearLevelMatch = yearLevel === 'all' || row.yearLevel === yearLevel;
+      return laneMatch && statusMatch && yearLevelMatch && matchesSearch(row, search);
     });
 
     return NextResponse.json({

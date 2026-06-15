@@ -64,6 +64,7 @@ import {
   getPromotionDecisionOptions,
   isStudentTransitionDecision,
 } from '@/lib/promotion-decisions';
+import { EDUCATION_LEVEL_INFO } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { STUDENT_TRANSITION_DECISION_LABELS } from '@/types';
 import type { StudentTransitionDecision } from '@/types';
@@ -197,6 +198,9 @@ const PROMOTION_FILTERS: PromotionFilter[] = [
   'grade-12',
   'graduating',
 ];
+const ALL_YEAR_LEVELS = Object.values(EDUCATION_LEVEL_INFO).flatMap(
+  (info) => info.yearLevels
+);
 const PROMOTION_QUEUE_PAGE_SIZE = 10;
 const OUTCOME_LABELS: Record<string, string> = {
   COMPLETED_JHS: 'Completed JHS',
@@ -420,6 +424,7 @@ export default function RegistryPage() {
   const [search, setSearch] = useState('');
   const [lane, setLane] = useState<RegistryLane>('all');
   const [status, setStatus] = useState('all');
+  const [registryYearLevel, setRegistryYearLevel] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -429,6 +434,7 @@ export default function RegistryPage() {
   const [promotionLoading, setPromotionLoading] = useState(true);
   const [promotionErrorMessage, setPromotionErrorMessage] = useState<string | null>(null);
   const [promotionFilter, setPromotionFilter] = useState<PromotionFilter>('all-eligible');
+  const [promotionYearLevel, setPromotionYearLevel] = useState<string>('all');
   const [promotionQueuePage, setPromotionQueuePage] = useState(1);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(() => new Set());
   const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
@@ -446,7 +452,7 @@ export default function RegistryPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, lane, status]);
+  }, [debouncedSearch, lane, registryYearLevel, status]);
 
   const fetchRegistry = useCallback(async () => {
     setLoading(true);
@@ -457,6 +463,7 @@ export default function RegistryPage() {
         limit: '12',
         lane,
         status,
+        yearLevel: registryYearLevel,
       });
       if (debouncedSearch) params.set('search', debouncedSearch);
 
@@ -493,7 +500,7 @@ export default function RegistryPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, lane, page, status]);
+  }, [debouncedSearch, lane, page, registryYearLevel, status]);
 
   useEffect(() => {
     fetchRegistry();
@@ -542,7 +549,7 @@ export default function RegistryPage() {
   useEffect(() => {
     setPromotionQueuePage(1);
     setSelectedStudentIds(new Set());
-  }, [promotionFilter]);
+  }, [promotionFilter, promotionYearLevel]);
 
   const handleDecisionChange = (studentId: number, decision: StudentTransitionDecision) => {
     setPendingDecisions((current) => ({
@@ -589,8 +596,12 @@ export default function RegistryPage() {
   const selectedLaneLabel = useMemo(() => LANE_LABELS[lane], [lane]);
   const promotionStudents = useMemo(() => promotionPreview?.preview || [], [promotionPreview]);
   const filteredPromotionStudents = useMemo(
-    () => promotionStudents.filter((student) => matchesPromotionFilter(student, promotionFilter)),
-    [promotionFilter, promotionStudents]
+    () =>
+      promotionStudents.filter((student) => {
+        if (promotionYearLevel !== 'all' && student.yearLevel !== promotionYearLevel) return false;
+        return matchesPromotionFilter(student, promotionFilter);
+      }),
+    [promotionFilter, promotionYearLevel, promotionStudents]
   );
   const promotionQueueTotalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredPromotionStudents.length / PROMOTION_QUEUE_PAGE_SIZE)),
@@ -954,6 +965,26 @@ export default function RegistryPage() {
                 </Button>
               ))}
             </div>
+          )}
+          {promotionLoading ? (
+            <Skeleton className="h-9 w-[180px] rounded-md" />
+          ) : (
+            <Select
+              value={promotionYearLevel}
+              onValueChange={(value) => setPromotionYearLevel(value)}
+            >
+              <SelectTrigger className="h-9 w-[180px]">
+                <SelectValue placeholder="All Year Levels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Year Levels</SelectItem>
+                {ALL_YEAR_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {promotionLoading ? (
             <PromotionQueueSummaryLoading />
@@ -1327,6 +1358,22 @@ export default function RegistryPage() {
                 <SelectItem value="TRANSFERRED_OUT">Transferred Out</SelectItem>
                 <SelectItem value="WITHDRAWN">Withdrawn</SelectItem>
                 <SelectItem value="RETAINED">Retained</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={registryYearLevel}
+              onValueChange={(value) => setRegistryYearLevel(value)}
+            >
+              <SelectTrigger className="h-10 w-full lg:w-[180px]">
+                <SelectValue placeholder="All Year Levels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Year Levels</SelectItem>
+                {ALL_YEAR_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
