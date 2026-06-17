@@ -55,4 +55,23 @@ describe('scholarship eligibility helpers', () => {
       )
     ).toBe(false);
   });
+
+  it('supports specific year level matching (e.g. Grade 1 only)', () => {
+    // Scholarship specifically for Grade 1
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Grade 1', 'Grade 1')).toBe(true);
+    // Scholarship for Grade 1 should not match Grade 2 student
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Grade 1', 'Grade 2')).toBe(false);
+    
+    // Scholarship for broad category BED should match any Grade 1-6
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'BED', 'Grade 1')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'BED', 'Grade 6')).toBe(true);
+  });
+
+  it('supports mixed specific and broad eligibility', () => {
+    // Scholarship for Grade 1 OR JHS
+    const eligibility = 'Grade 1, JHS';
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', eligibility, 'Grade 1')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('JUNIOR_HIGH', eligibility, 'Grade 7')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', eligibility, 'Grade 2')).toBe(false);
+  });
 });

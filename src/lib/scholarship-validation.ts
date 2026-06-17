@@ -38,9 +38,9 @@ export async function validateStudentScholarshipEligibility(
     throw new Error(`Scholarship with ID ${scholarshipId} not found`);
   }
 
-  if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels)) {
+  if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels, student.yearLevel)) {
     throw new Error(
-      `Student grade level '${student.gradeLevel}' is not eligible for scholarship ` +
+      `Student grade level '${student.gradeLevel}' (${student.yearLevel}) is not eligible for scholarship ` +
         `'${scholarship.scholarshipName}' which is only available for: ${scholarship.eligibleGradeLevels}`
     );
   }
@@ -55,12 +55,12 @@ export async function validateStudentScholarshipEligibility(
 
 /**
  * Filters out scholarships that are not eligible for a student based on their grade level and program
- * @param student The student object with gradeLevel and program
+ * @param student The student object with gradeLevel, program, and yearLevel
  * @param scholarships Array of scholarships with their eligibility criteria
  * @returns Array of scholarship IDs that are eligible
  */
 export function filterEligibleScholarships(
-  student: { gradeLevel: string; program: string },
+  student: { gradeLevel: string; program: string; yearLevel: string },
   scholarships: Array<{ id: number; eligibleGradeLevels: string; eligiblePrograms: string | null }>
 ): number[] {
   return scholarships
@@ -94,9 +94,9 @@ export async function validateMultipleStudentScholarshipEligibility(
 
   // Check each scholarship for eligibility
   for (const scholarship of scholarships) {
-    if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels)) {
+    if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels, student.yearLevel)) {
       throw new Error(
-        `Student grade level '${student.gradeLevel}' is not eligible for scholarship ` +
+        `Student grade level '${student.gradeLevel}' (${student.yearLevel}) is not eligible for scholarship ` +
           `'${scholarship.scholarshipName}' which is only available for: ${scholarship.eligibleGradeLevels}`
       );
     }

@@ -59,28 +59,46 @@ export function isValidPhoneNumber(phone: string): boolean {
 export function getGradeLevelForStudent(studentGradeLevel: string): string[] {
   const normalizedGradeLevel = normalizeEligibilityValue(studentGradeLevel);
 
-  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_ELIGIBILITY_ALIASES.GRADE_SCHOOL)) {
-    return [...GRADE_LEVEL_ELIGIBILITY_ALIASES.GRADE_SCHOOL];
+  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.GRADE_SCHOOL)) {
+    return [...GRADE_LEVEL_CATEGORY_ALIASES.GRADE_SCHOOL];
   }
 
-  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_ELIGIBILITY_ALIASES.JUNIOR_HIGH)) {
-    return [...GRADE_LEVEL_ELIGIBILITY_ALIASES.JUNIOR_HIGH];
+  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.JUNIOR_HIGH)) {
+    return [...GRADE_LEVEL_CATEGORY_ALIASES.JUNIOR_HIGH];
   }
 
-  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_ELIGIBILITY_ALIASES.SENIOR_HIGH)) {
-    return [...GRADE_LEVEL_ELIGIBILITY_ALIASES.SENIOR_HIGH];
+  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.SENIOR_HIGH)) {
+    return [...GRADE_LEVEL_CATEGORY_ALIASES.SENIOR_HIGH];
   }
 
-  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_ELIGIBILITY_ALIASES.COLLEGE)) {
-    return [...GRADE_LEVEL_ELIGIBILITY_ALIASES.COLLEGE];
+  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.COLLEGE)) {
+    return [...GRADE_LEVEL_CATEGORY_ALIASES.COLLEGE];
   }
 
   return [studentGradeLevel.toUpperCase(), normalizedGradeLevel];
 }
 
+/**
+ * Normalizes a year level string for matching (e.g., "Grade 1" -> "GRADE 1")
+ */
+export function normalizeYearLevel(yearLevel: string | null | undefined): string {
+  if (!yearLevel) return '';
+  return normalizeEligibilityValue(yearLevel);
+}
+
+/**
+ * Checks if a student is eligible based on their grade level category and specific year level.
+ * 
+ * Logic:
+ * 1. Normalize both the student's yearLevel and the scholarship's eligibility list.
+ * 2. A match is found if:
+ *    a) The student's normalized yearLevel is directly in the eligibility list.
+ *    b) The student's grade level category alias (e.g., "BED", "COLLEGE") is in the list.
+ */
 export function isGradeLevelEligibleForScholarship(
   studentGradeLevel: string | null | undefined,
-  eligibleGradeLevels: string | null | undefined
+  eligibleGradeLevels: string | null | undefined,
+  studentYearLevel?: string | null | undefined
 ): boolean {
   if (!studentGradeLevel) {
     return false;
@@ -92,11 +110,18 @@ export function isGradeLevelEligibleForScholarship(
     return false;
   }
 
-  const studentGradeLevelAliases = getGradeLevelForStudent(studentGradeLevel).map(
-    normalizeEligibilityValue
-  );
+  // Check 1: Direct year level match (e.g., "GRADE 1" matches "Grade 1")
+  if (studentYearLevel) {
+    const normalizedYear = normalizeYearLevel(studentYearLevel);
+    if (eligibleLevels.includes(normalizedYear)) {
+      return true;
+    }
+  }
 
-  return eligibleLevels.some((level) => studentGradeLevelAliases.includes(level));
+  // Check 2: Category alias match (e.g., "BED" matches a Grade School student)
+  const categoryAliases = getGradeLevelForStudent(studentGradeLevel).map(normalizeEligibilityValue);
+
+  return eligibleLevels.some((level) => categoryAliases.includes(level));
 }
 
 export function isProgramEligibleForScholarship(
@@ -119,16 +144,19 @@ export function isProgramEligibleForScholarship(
 }
 
 export function isScholarshipEligibleForStudent(
-  student: { gradeLevel?: string | null; program?: string | null },
+  student: { gradeLevel?: string | null; program?: string | null; yearLevel?: string | null },
   scholarship: { eligibleGradeLevels?: string | null; eligiblePrograms?: string | null }
 ): boolean {
   return (
-    isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels) &&
-    isProgramEligibleForScholarship(student.program, scholarship.eligiblePrograms)
+    isGradeLevelEligibleForScholarship(
+      student.gradeLevel,
+      scholarship.eligibleGradeLevels,
+      student.yearLevel
+    ) && isProgramEligibleForScholarship(student.program, scholarship.eligiblePrograms)
   );
 }
 
-const GRADE_LEVEL_ELIGIBILITY_ALIASES = {
+const GRADE_LEVEL_CATEGORY_ALIASES = {
   GRADE_SCHOOL: [
     'GRADE_SCHOOL',
     'GRADE SCHOOL',
@@ -139,30 +167,18 @@ const GRADE_LEVEL_ELIGIBILITY_ALIASES = {
     'ELEMENTARY',
     'GRADE SCHOOL DEPARTMENT',
     'GS',
-    'GRADE 1',
-    'GRADE 2',
-    'GRADE 3',
-    'GRADE 4',
-    'GRADE 5',
-    'GRADE 6',
   ],
   JUNIOR_HIGH: [
     'JUNIOR_HIGH',
     'JUNIOR HIGH',
     'JUNIOR HIGH SCHOOL',
     'JHS',
-    'GRADE 7',
-    'GRADE 8',
-    'GRADE 9',
-    'GRADE 10',
   ],
   SENIOR_HIGH: [
     'SENIOR_HIGH',
     'SENIOR HIGH',
     'SENIOR HIGH SCHOOL',
     'SHS',
-    'GRADE 11',
-    'GRADE 12',
   ],
   COLLEGE: [
     'COLLEGE',

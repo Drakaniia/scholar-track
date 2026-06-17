@@ -349,12 +349,12 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
     ? 'flex flex-col gap-6'
     : `${DIALOG_BODY_CLASS} flex flex-col gap-6`;
   const currentGradeLevel = form.watch('gradeLevel') || selectedGradeLevel;
+  const currentYearLevel = form.watch('yearLevel') || '';
   const currentProgram = form.watch('program') || '';
   const defaultAssignmentAcademicYearId = activeAcademicYear?.id ?? null;
-  const selectedAcademicYearStartYear = getAcademicYearStartYear(academicYearFormData.year);
-  const hasValidAcademicYearStartYear =
-    !!selectedAcademicYearStartYear &&
-    academicYearStartYearInput === String(selectedAcademicYearStartYear);
+
+  const selectedAcademicYearStartYear = getAcademicYearStartYear(academicYearStartYearInput);
+  const hasValidAcademicYearStartYear = selectedAcademicYearStartYear !== null;
 
   // Fetch scholarships on component mount
   useEffect(() => {
@@ -391,7 +391,11 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
         return (
           !scholarship ||
           isScholarshipEligibleForStudent(
-            { gradeLevel: currentGradeLevel, program: currentProgram },
+            { 
+              gradeLevel: currentGradeLevel, 
+              yearLevel: currentYearLevel,
+              program: currentProgram 
+            },
             scholarship
           )
         );
@@ -399,7 +403,7 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
 
       return eligibleScholarships.length === prev.length ? prev : eligibleScholarships;
     });
-  }, [currentGradeLevel, currentProgram, scholarships]);
+  }, [currentGradeLevel, currentYearLevel, currentProgram, scholarships]);
 
   useEffect(() => {
     // Populate fees from defaultValues when editing - only run once when editing mode changes
@@ -595,10 +599,15 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
     if (alreadySelected) return;
     if (
       !isScholarshipEligibleForStudent(
-        { gradeLevel: currentGradeLevel, program: currentProgram },
+        { 
+          gradeLevel: currentGradeLevel, 
+          yearLevel: currentYearLevel,
+          program: currentProgram 
+        },
         scholarship
       )
     ) {
+      toast.error('Student is not eligible for this scholarship.');
       return;
     }
 
@@ -727,7 +736,11 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
       );
 
       const matchesStudentEligibility = isScholarshipEligibleForStudent(
-        { gradeLevel: currentGradeLevel, program: currentProgram },
+        { 
+          gradeLevel: currentGradeLevel, 
+          yearLevel: currentYearLevel,
+          program: currentProgram 
+        },
         scholarship
       );
 
