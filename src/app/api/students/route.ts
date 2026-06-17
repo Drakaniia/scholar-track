@@ -485,6 +485,7 @@ export async function POST(request: NextRequest) {
     });
 
     queryOptimizer.invalidatePattern('students-list');
+    queryOptimizer.invalidatePattern('scholarships-list');
     queryOptimizer.invalidatePattern('dashboard');
 
     if (payload.isBatch) {

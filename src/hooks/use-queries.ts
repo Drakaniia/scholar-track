@@ -100,6 +100,7 @@ interface ScholarshipFilters {
   type?: string;
   source?: string;
   status?: string;
+  academicYearId?: string | number;
   page?: number;
   limit?: number;
 }
@@ -541,6 +542,7 @@ export function useCreateStudent() {
     onSuccess: () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       toast.success('Student created successfully');
     },
@@ -610,6 +612,7 @@ export function useUpdateStudent() {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.students.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.students.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       toast.success('Student updated successfully');
     },

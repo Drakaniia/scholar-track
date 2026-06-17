@@ -285,6 +285,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           {
             gradeLevel: body.gradeLevel,
             program: currentStudent.program,
+            yearLevel: body.yearLevel || currentStudent.yearLevel,
           },
           currentScholarships.map((ss) => ({
             id: ss.scholarshipId,
@@ -376,6 +377,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Invalidate cache
     queryOptimizer.invalidatePattern('students-list');
+    queryOptimizer.invalidatePattern('scholarships-list');
     queryOptimizer.invalidatePattern('dashboard');
 
     // Build response with scholarship removal information
