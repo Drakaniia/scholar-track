@@ -959,6 +959,7 @@ export default function ScholarshipsPage() {
                     miscellaneousFee: editingScholarship.miscellaneousFee,
                     laboratoryFee: editingScholarship.laboratoryFee,
                     otherFee: editingScholarship.otherFee,
+                    academicYearId: editingScholarship.academicYearId ?? null,
                   }
                 : undefined
             }

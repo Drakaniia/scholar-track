@@ -260,6 +260,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         totalFees > 0 ? Number((amountSubsidy / totalFees).toFixed(4)) : 0;
     }
 
+    // ---- DIAGNOSTIC: log incoming request data ----
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] body keys:', Object.keys(body));
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] body.data === undefined:', body.data === undefined);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] body.data typeof:', typeof body.data);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] scholarshipId:', scholarshipId);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updateData fields provided:', Object.keys(updateData).filter(k => !['action'].includes(k)));
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData keys:', Object.keys(prismaData));
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData.scholarshipName:', prismaData.scholarshipName);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData.amount:', prismaData.amount);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData.amountSubsidy:', prismaData.amountSubsidy);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData.eligiblePrograms:', prismaData.eligiblePrograms);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] prismaData.academicYearId:', prismaData.academicYearId);
+    // ---- END DIAGNOSTIC ----
+
     let scholarship;
     try {
       scholarship = await prisma.scholarship.update({
@@ -277,6 +291,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         { status: 500 }
       );
     }
+
+    // ---- DIAGNOSTIC: log DB result ----
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] DB update succeeded');
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updated row scholarshipName:', scholarship?.scholarshipName);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updated row amount:', scholarship?.amount);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updated row amountSubsidy:', scholarship?.amountSubsidy);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updated row eligiblePrograms:', scholarship?.eligiblePrograms);
+    console.log('[SCHOLARSHIP_UPDATE_DIAG] updated row academicYearId:', scholarship?.academicYearId);
+    // ---- END DIAGNOSTIC ----
 
     // If amountSubsidy or fee fields were updated, sync with existing student fees.
     // Important: when only `amountSubsidy` changes, we should NOT overwrite existing

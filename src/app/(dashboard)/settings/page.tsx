@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 
 import {
@@ -722,6 +723,7 @@ export default function SettingsPage() {
   const [academicYearTotalPages, setAcademicYearTotalPages] = useState(0);
   const [academicYearPage] = useState(1);
   const [isSubmittingAcademicYear, setIsSubmittingAcademicYear] = useState(false);
+  const queryClient = useQueryClient();
   const [isAutoPromoting] = useState(false);
   const [isUndoingPromotion, setIsUndoingPromotion] = useState(false);
   const [isSavingTransitionDecisions, setIsSavingTransitionDecisions] = useState(false);
@@ -1971,6 +1973,7 @@ export default function SettingsPage() {
 
       if (result.success) {
         toast.success('Academic year settings saved successfully');
+        invalidateAcademicYearsCache();
         fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to save academic year');
@@ -1999,6 +2002,7 @@ export default function SettingsPage() {
 
       if (result.success) {
         toast.success('Academic year deleted successfully');
+        invalidateAcademicYearsCache();
         fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to delete academic year');
@@ -2010,6 +2014,22 @@ export default function SettingsPage() {
       setIsSubmittingAcademicYear(false);
     }
   };
+
+  const handleEditAcademicYear = (ay: AcademicYear) => {
+    setActiveAcademicYearId(ay.id);
+    setActiveAcademicYear(ay.isActive ? ay : null);
+    setAcademicYearFormData({
+      year: ay.year,
+      startDate: formatDateForInput(ay.startDate),
+      endDate: formatDateForInput(ay.endDate),
+      semester: ay.semester || '1ST',
+      promotionDate: formatDateForInput(ay.promotionDate),
+    });
+  };
+
+  const invalidateAcademicYearsCache = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['academicYears'] });
+  }, [queryClient]);
 
   const handleSetActiveAcademicYear = async (id: number, isActive: boolean) => {
     try {
@@ -2024,6 +2044,7 @@ export default function SettingsPage() {
 
       if (result.success) {
         toast.success('Active academic year updated successfully');
+        invalidateAcademicYearsCache();
         fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to update active academic year');
@@ -2117,6 +2138,7 @@ export default function SettingsPage() {
         toast.success(result.message || 'Last promotion undone successfully');
         setPromotionRun(null);
         setPromotionPreview(null);
+        invalidateAcademicYearsCache();
         fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to undo promotion');
@@ -3546,6 +3568,14 @@ export default function SettingsPage() {
                                       disabled={ay.isActive}
                                     >
                                       {ay.isActive ? 'Active' : 'Set Active'}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleEditAcademicYear(ay)}
+                                      title="Edit academic year"
+                                    >
+                                      <Pencil className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       variant="ghost"

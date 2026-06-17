@@ -131,6 +131,8 @@ export function ScholarshipForm({
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>(
     defaultValues?.eligiblePrograms?.split(',').map((p) => p.trim()) || []
   );
+  const [showCustomProgramInput, setShowCustomProgramInput] = useState(false);
+  const [customProgramName, setCustomProgramName] = useState('');
   const [selectedGrantType, setSelectedGrantType] = useState<GrantType>(
     defaultValues?.grantType || 'FULL'
   );
@@ -243,6 +245,31 @@ export function ScholarshipForm({
     const updated = selectedPrograms.includes(program)
       ? selectedPrograms.filter((p) => p !== program)
       : [...selectedPrograms, program];
+    setSelectedPrograms(updated);
+    form.setValue('eligiblePrograms', updated.join(','));
+  };
+
+  const handleCustomProgramToggle = () => {
+    setShowCustomProgramInput((prev) => !prev);
+    setCustomProgramName('');
+  };
+
+  const handleCustomProgramNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomProgramName(e.target.value);
+  };
+
+  const handleCustomProgramAdd = () => {
+    const trimmed = customProgramName.trim();
+    if (trimmed && !selectedPrograms.includes(trimmed)) {
+      const updated = [...selectedPrograms, trimmed];
+      setSelectedPrograms(updated);
+      form.setValue('eligiblePrograms', updated.join(','));
+      setCustomProgramName('');
+    }
+  };
+
+  const handleRemoveCustomProgram = (program: string) => {
+    const updated = selectedPrograms.filter((p) => p !== program);
     setSelectedPrograms(updated);
     form.setValue('eligiblePrograms', updated.join(','));
   };
@@ -573,7 +600,69 @@ export function ScholarshipForm({
                   </Label>
                 </div>
               ))}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="program-other"
+                  checked={showCustomProgramInput}
+                  onCheckedChange={handleCustomProgramToggle}
+                />
+                <Label htmlFor="program-other" className="text-sm font-normal cursor-pointer">
+                  Other
+                </Label>
+              </div>
             </div>
+            {showCustomProgramInput && (
+              <div className="flex gap-2 items-start">
+                <Input
+                  placeholder="Enter custom program"
+                  value={customProgramName}
+                  onChange={handleCustomProgramNameChange}
+                  className="flex-1 placeholder:text-muted-foreground/50"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCustomProgramAdd();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCustomProgramAdd}
+                  disabled={!customProgramName.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+            )}
+            {/* Show custom programs as removable badges */}
+            {selectedPrograms.filter(
+              (p) => !['BS Education', 'BA Education', 'BS Computer Science', 'BS Information Technology', 'BS Nursing', 'BS Accountancy'].includes(p)
+            ).length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedPrograms
+                  .filter(
+                    (p) => !['BS Education', 'BA Education', 'BS Computer Science', 'BS Information Technology', 'BS Nursing', 'BS Accountancy'].includes(p)
+                  )
+                  .map((program) => (
+                    <div
+                      key={program}
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                    >
+                      {program}
+                      <button
+                        type="button"
+                        className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-primary/20"
+                        onClick={() => handleRemoveCustomProgram(program)}
+                        aria-label={`Remove ${program}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
 
