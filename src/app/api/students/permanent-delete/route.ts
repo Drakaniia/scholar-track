@@ -6,18 +6,45 @@ import { getSession, logAudit } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { queryOptimizer } from '@/lib/query-optimizer';
 
-const permanentDeleteStudentsSchema = z.object({
+type PermanentDeleteFilters = {
+  archived?: boolean;
+};
+
+const permanentDeleteByIdsSchema = z.object({
   ids: z.array(z.number().int().positive()).min(1, 'Select at least one archived student'),
 });
 
-async function readJsonBody(request: NextRequest): Promise<unknown> {
+const permanentDeleteSelectAllSchema = z.object({
+  selectAll: z.literal(true),
+  filters: z.object({
+    archived: z.boolean().optional(),
+  }),
+});
+
+async function parseBody(request: NextRequest) {
   try {
-    return await request.json();
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return null;
+    const body = await request.json();
+
+    if (body.selectAll === true) {
+      const parsed = permanentDeleteSelectAllSchema.safeParse(body);
+      if (!parsed.success) {
+        return { success: false as const, error: 'Invalid selectAll payload', status: 400 as const };
+      }
+      return { success: true as const, mode: 'selectAll' as const, filters: parsed.data.filters };
     }
-    throw error;
+
+    const parsed = permanentDeleteByIdsSchema.safeParse(body);
+    if (!parsed.success) {
+      return {
+        success: false as const,
+        error: 'Provide either a non-empty ids array or selectAll: true with filters',
+        status: 400 as const,
+      };
+    }
+
+    return { success: true as const, mode: 'ids' as const, ids: Array.from(new Set(parsed.data.ids)) };
+  } catch {
+    return { success: false as const, error: 'Invalid request body', status: 400 as const };
   }
 }
 
@@ -29,27 +56,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
-    const body = await readJsonBody(request);
-    const parsedBody = permanentDeleteStudentsSchema.safeParse(body);
-
-    if (!parsedBody.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid delete request', details: parsedBody.error.issues },
-        { status: 400 }
-      );
+    const parsed = await parseBody(request);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: parsed.error }, { status: parsed.status });
     }
 
-    const studentIds = Array.from(new Set(parsedBody.data.ids));
-    const archivedStudents = await prisma.student.findMany({
-      where: { id: { in: studentIds }, isArchived: true },
-      select: { id: true, firstName: true, lastName: true },
-    });
+    let studentIds: number[];
+    let archivedSnapshot: { id: number; firstName: string; lastName: string }[];
 
-    if (archivedStudents.length !== studentIds.length) {
-      return NextResponse.json(
-        { success: false, error: 'Only archived students can be permanently deleted' },
-        { status: 400 }
-      );
+    if (parsed.mode === 'selectAll') {
+      const where: Record<string, unknown> = {};
+      if (parsed.filters.archived === true) {
+        where.isArchived = true;
+      }
+
+      const allArchived = await prisma.student.findMany({
+        where,
+        select: { id: true, firstName: true, lastName: true },
+      });
+
+      if (allArchived.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'No archived students found matching the filters' },
+          { status: 400 }
+        );
+      }
+
+      studentIds = allArchived.map((s) => s.id);
+      archivedSnapshot = allArchived;
+    } else {
+      studentIds = parsed.ids;
+      archivedSnapshot = await prisma.student.findMany({
+        where: { id: { in: studentIds }, isArchived: true },
+        select: { id: true, firstName: true, lastName: true },
+      });
+
+      if (archivedSnapshot.length !== studentIds.length) {
+        return NextResponse.json(
+          { success: false, error: 'Only archived students can be permanently deleted' },
+          { status: 400 }
+        );
+      }
     }
 
     const deleteResult = await prisma.$transaction(async (tx) => {
@@ -77,7 +124,7 @@ export async function POST(request: NextRequest) {
       undefined,
       {
         deletedCount: deleteResult.count,
-        students: archivedStudents.map((student) => ({
+        students: archivedSnapshot.map((student) => ({
           id: student.id,
           name: `${student.firstName} ${student.lastName}`,
         })),
