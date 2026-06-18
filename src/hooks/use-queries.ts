@@ -164,8 +164,6 @@ interface Student {
     scholarshipId: number;
     academicYearId: number | null;
     awardDate: string;
-    startTerm: string;
-    endTerm: string;
     grantAmount: number;
     scholarshipStatus: string;
     academicYearRel?: {
