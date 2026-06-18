@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 
 import { workbookToBuffer } from '@/lib/excel';
 import prisma from '@/lib/prisma';
+import { formatAcademicYearDisplay } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
@@ -366,14 +367,16 @@ function currentAcademicYear(date = new Date()) {
 
 function resolveDisplayYears(years: string[]) {
   const cleanedYears = Array.from(new Set(years.filter(Boolean)));
-  const sortedYears = sortAcademicYears(cleanedYears);
+  // Normalize all years to display format (e.g., "2024" -> "2024-2025")
+  const normalizedYears = cleanedYears.map(formatAcademicYearDisplay);
+  const sortedYears = sortAcademicYears(normalizedYears);
   const resolved = sortedYears.length > 0 ? sortedYears.slice(-3) : [currentAcademicYear()];
 
   while (resolved.length < 3) {
     resolved.unshift(previousAcademicYear(resolved[0]));
   }
 
-  return sortAcademicYears(resolved).slice(-3);
+  return sortAcademicYears(resolved).slice(-3).map(formatAcademicYearDisplay);
 }
 
 function formatCount(value: number, showZero = false) {
