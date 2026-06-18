@@ -72,7 +72,7 @@ import {
 } from '@/hooks/use-queries';
 import { canManageStudentsAndScholarships, isAdminRole } from '@/lib/rbac';
 import { getCoveredTermsLabel } from '@/lib/terms';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatAcademicYearDisplay, formatCurrency } from '@/lib/utils';
 import type {
   AcademicYear,
   CreateScholarshipInput,
@@ -469,8 +469,11 @@ export default function ScholarshipsPage() {
     setAcademicYearFilter('all');
   };
   const selectedAcademicYearLabel =
-    academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year ||
-    'Selected year';
+    academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year
+      ? formatAcademicYearDisplay(
+          academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year || ''
+        )
+      : 'Selected year';
   const scholarshipActiveFilters: ActiveFilter[] = [
     ...(search.trim()
       ? [
@@ -579,7 +582,7 @@ export default function ScholarshipsPage() {
               <SelectItem value="all">All Years</SelectItem>
               {academicYears.map((academicYear) => (
                 <SelectItem key={academicYear.id} value={String(academicYear.id)}>
-                  {academicYear.year}
+                  {formatAcademicYearDisplay(academicYear.year)}
                   {academicYear.isActive ? ' (Active)' : ''}
                 </SelectItem>
               ))}

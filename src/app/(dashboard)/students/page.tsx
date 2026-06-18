@@ -86,7 +86,7 @@ import {
   canManageStudentsAndScholarships,
   isAdminRole,
 } from '@/lib/rbac';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatAcademicYearDisplay, formatCurrency } from '@/lib/utils';
 import {
   AcademicYear,
   CreateStudentInput,
@@ -994,8 +994,11 @@ export default function StudentsPage() {
       : scholarships.find((scholarship) => scholarship.id.toString() === scholarshipFilter)
           ?.scholarshipName || 'Selected scholarship';
   const selectedAcademicYearLabel =
-    academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year ||
-    'Selected year';
+    academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year
+      ? formatAcademicYearDisplay(
+          academicYears.find((academicYear) => String(academicYear.id) === academicYearFilter)?.year || ''
+        )
+      : 'Selected year';
   const studentActiveFilters: ActiveFilter[] = [
     ...(search.trim()
       ? [
@@ -1256,9 +1259,9 @@ export default function StudentsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Years</SelectItem>
-              {academicYears.map((academicYear) => (
+                {academicYears.map((academicYear) => (
                 <SelectItem key={academicYear.id} value={String(academicYear.id)}>
-                  {academicYear.year}
+                  {formatAcademicYearDisplay(academicYear.year)}
                   {academicYear.isActive ? ' (Active)' : ''}
                 </SelectItem>
               ))}
