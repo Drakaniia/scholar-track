@@ -280,8 +280,8 @@ export default function ReportsPage() {
   // Check if student has data (fees or scholarships) for the selected academic year
   const hasAcademicYearData = (student: DetailedStudent): boolean => {
     if (academicYearFilter === 'all') return true;
-    // Check fee records
-    if (student.fees?.some((fee) => fee.academicYear === academicYearFilter)) return true;
+    // Check fee records (by stored string or resolved via academicYearId)
+    if (student.fees?.some((fee) => fee.academicYear === academicYearFilter || (fee.academicYearId && yearById.get(fee.academicYearId) === academicYearFilter))) return true;
     // Check scholarship records by academic year ID
     if (student.scholarships?.some((ss) => {
       if (!ss.academicYearId) return false;
@@ -417,13 +417,27 @@ export default function ReportsPage() {
   ) => {
     if (!fees || fees.length === 0) return null;
 
-    // Filter by selected academic year if specified
+    // Filter by selected academic year if specified (check stored string OR resolve via academicYearId)
     const workingFees =
       selectedYear && selectedYear !== 'all'
-        ? fees.filter((fee) => fee.academicYear === selectedYear)
+        ? fees.filter((fee) => fee.academicYear === selectedYear || (fee.academicYearId && yearById.get(fee.academicYearId) === selectedYear))
         : fees;
 
-    if (workingFees.length === 0) return null;
+    if (workingFees.length === 0) {
+      // Fallback: student has orphan fees (empty academicYear + null academicYearId) that can't
+      // match any year filter. Include them to avoid empty fee columns for existing broken data.
+      if (selectedYear && selectedYear !== 'all') {
+        const orphanFees = fees.filter((fee) => !fee.academicYear && !fee.academicYearId);
+        if (orphanFees.length > 0) {
+          // Assign orphan fees to the selected year so they aggregate correctly
+          return aggregateFeesByAcademicYear(
+            orphanFees.map((fee) => ({ ...fee, academicYear: selectedYear })),
+            selectedYear
+          );
+        }
+      }
+      return null;
+    }
 
     // Group by academic year and return the most recent
     const feesByYear: Record<
@@ -440,7 +454,7 @@ export default function ReportsPage() {
     > = {};
 
     workingFees.forEach((fee) => {
-      const year = fee.academicYear || 'Unknown';
+      const year = fee.academicYear || (fee.academicYearId && yearById.get(fee.academicYearId)) || 'Unknown';
       if (!feesByYear[year]) {
         feesByYear[year] = {
           tuitionFee: 0,
