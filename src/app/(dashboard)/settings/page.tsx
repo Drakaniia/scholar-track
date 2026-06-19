@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
   AlertCircle,
@@ -23,6 +23,7 @@ import {
   Lock,
   Monitor,
   Pencil,
+  Plus,
   RotateCcw,
   Save,
   Search,
@@ -68,8 +69,12 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAcademicYearPromotionStatus } from '@/lib/academic-year-promotion-reminder';
+import { markActiveAcademicYear, upsertAcademicYear } from '@/lib/academic-year-ui-updates';
 import { clientCache, fetchWithCache } from '@/lib/cache';
-import { getPromotionDecisionOptions, isStudentTransitionDecision } from '@/lib/promotion-decisions';
+import {
+  getPromotionDecisionOptions,
+  isStudentTransitionDecision,
+} from '@/lib/promotion-decisions';
 import { formatCurrency } from '@/lib/utils';
 import {
   GRADE_LEVEL_LABELS,
@@ -505,6 +510,7 @@ interface AcademicYearFormData {
   endDate: string;
   semester: string;
   promotionDate: string;
+  isActive: boolean;
 }
 
 interface AuditLog {
@@ -588,6 +594,7 @@ function getDefaultAcademicYearFormData(now = new Date()): AcademicYearFormData 
     endDate,
     semester: '1ST',
     promotionDate: endDate,
+    isActive: true,
   };
 }
 
@@ -707,9 +714,7 @@ export default function SettingsPage() {
   const [selectedArchivedScholarshipIds, setSelectedArchivedScholarshipIds] = useState<number[]>(
     []
   );
-  const [archiveDeleteTarget, setArchiveDeleteTarget] = useState<ArchivedDeleteTarget | null>(
-    null
-  );
+  const [archiveDeleteTarget, setArchiveDeleteTarget] = useState<ArchivedDeleteTarget | null>(null);
   const [isDeletingArchivedItem, setIsDeletingArchivedItem] = useState(false);
   const [studentPage, setStudentPage] = useState(1);
   const [studentTotal, setStudentTotal] = useState(0);
@@ -856,6 +861,7 @@ export default function SettingsPage() {
               endDate: formatDateForInput(existingDefaultAcademicYear.endDate),
               semester: existingDefaultAcademicYear.semester || '1ST',
               promotionDate: formatDateForInput(existingDefaultAcademicYear.promotionDate),
+              isActive: existingDefaultAcademicYear.isActive,
             }
           : fallbackFormData
       );
@@ -1590,7 +1596,8 @@ export default function SettingsPage() {
     currentVisibleCount: number,
     deletedIds: number[],
     currentPage: number
-  ) => (deletedIds.length >= currentVisibleCount && currentPage > 1 ? currentPage - 1 : currentPage);
+  ) =>
+    deletedIds.length >= currentVisibleCount && currentPage > 1 ? currentPage - 1 : currentPage;
 
   const openArchiveDeleteDialog = (
     kind: ArchivedDeleteKind,
@@ -1650,7 +1657,13 @@ export default function SettingsPage() {
 
     setIsBulkUnarchivingArchived(true);
     try {
-      let payload: { studentIds: number[]; action: 'unarchive' } | { selectAll: true; action: 'unarchive'; filters: Record<string, string | boolean | undefined> };
+      let payload:
+        | { studentIds: number[]; action: 'unarchive' }
+        | {
+            selectAll: true;
+            action: 'unarchive';
+            filters: Record<string, string | boolean | undefined>;
+          };
 
       if (studentSelectAllAcrossPages) {
         payload = {
@@ -1842,9 +1855,7 @@ export default function SettingsPage() {
         setScholarshipTotalPages(Math.ceil(nextTotal / ARCHIVED_ITEMS_PAGE_SIZE));
 
         toast.success(
-          `${deletedCount} archived ${
-            deletedCount === 1 ? 'scholarship' : 'scholarships'
-          } deleted`
+          `${deletedCount} archived ${deletedCount === 1 ? 'scholarship' : 'scholarships'} deleted`
         );
         void fetchArchivedScholarships(nextPage);
       } else {
@@ -2014,7 +2025,7 @@ export default function SettingsPage() {
 
   const handleAcademicYearFormChange = (
     field: keyof typeof academicYearFormData,
-    value: string
+    value: string | boolean
   ) => {
     setAcademicYearFormData((current) => ({
       ...current,
@@ -2036,7 +2047,7 @@ export default function SettingsPage() {
       endDate: academicYearFormData.endDate,
       semester: academicYearFormData.semester || selectedAcademicYear?.semester || '1ST',
       promotionDate: academicYearFormData.promotionDate || null,
-      isActive: true,
+      isActive: academicYearFormData.isActive,
     };
 
     try {
@@ -2054,9 +2065,31 @@ export default function SettingsPage() {
       const result = await res.json();
 
       if (result.success) {
+        const savedAcademicYear = result.data as AcademicYear | undefined;
         toast.success('Academic year settings saved successfully');
+        if (savedAcademicYear?.id) {
+          setAcademicYears((current) => upsertAcademicYear(current, savedAcademicYear));
+          setActiveAcademicYearId(savedAcademicYear.id);
+          setActiveAcademicYear((current) =>
+            savedAcademicYear.isActive
+              ? savedAcademicYear
+              : current?.id === savedAcademicYear.id
+                ? null
+                : current
+          );
+          setAcademicYearFormData({
+            year: savedAcademicYear.year,
+            startDate: formatDateForInput(savedAcademicYear.startDate),
+            endDate: formatDateForInput(savedAcademicYear.endDate),
+            semester: savedAcademicYear.semester || '1ST',
+            promotionDate: formatDateForInput(savedAcademicYear.promotionDate),
+            isActive: savedAcademicYear.isActive,
+          });
+        }
         invalidateAcademicYearsCache();
-        fetchAcademicYears(academicYearPage);
+        if (!savedAcademicYear?.id) {
+          void fetchAcademicYears(academicYearPage);
+        }
       } else {
         toast.error(result.error || 'Failed to save academic year');
       }
@@ -2085,7 +2118,7 @@ export default function SettingsPage() {
       if (result.success) {
         toast.success('Academic year deleted successfully');
         invalidateAcademicYearsCache();
-        fetchAcademicYears(academicYearPage);
+        void fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to delete academic year');
       }
@@ -2106,6 +2139,16 @@ export default function SettingsPage() {
       endDate: formatDateForInput(ay.endDate),
       semester: ay.semester || '1ST',
       promotionDate: formatDateForInput(ay.promotionDate),
+      isActive: ay.isActive,
+    });
+  };
+
+  const handleAddAcademicYear = () => {
+    setActiveAcademicYearId(null);
+    setActiveAcademicYear(null);
+    setAcademicYearFormData({
+      ...getDefaultAcademicYearFormData(),
+      isActive: false,
     });
   };
 
@@ -2125,9 +2168,25 @@ export default function SettingsPage() {
       const result = await res.json();
 
       if (result.success) {
+        const savedAcademicYear = result.data as AcademicYear | undefined;
         toast.success('Active academic year updated successfully');
+        setAcademicYears((current) => markActiveAcademicYear(current, id));
+        if (savedAcademicYear?.id) {
+          setActiveAcademicYear(savedAcademicYear);
+          setActiveAcademicYearId(savedAcademicYear.id);
+          setAcademicYearFormData({
+            year: savedAcademicYear.year,
+            startDate: formatDateForInput(savedAcademicYear.startDate),
+            endDate: formatDateForInput(savedAcademicYear.endDate),
+            semester: savedAcademicYear.semester || '1ST',
+            promotionDate: formatDateForInput(savedAcademicYear.promotionDate),
+            isActive: savedAcademicYear.isActive,
+          });
+        }
         invalidateAcademicYearsCache();
-        fetchAcademicYears(academicYearPage);
+        if (!savedAcademicYear?.id) {
+          void fetchAcademicYears(academicYearPage);
+        }
       } else {
         toast.error(result.error || 'Failed to update active academic year');
       }
@@ -2221,7 +2280,7 @@ export default function SettingsPage() {
         setPromotionRun(null);
         setPromotionPreview(null);
         invalidateAcademicYearsCache();
-        fetchAcademicYears(academicYearPage);
+        void fetchAcademicYears(academicYearPage);
       } else {
         toast.error(result.error || 'Failed to undo promotion');
       }
@@ -2258,7 +2317,9 @@ export default function SettingsPage() {
   const canUndoPromotion = Boolean(activeAcademicYear?.promotionProcessedAt);
   const allArchivedStudentsSelected =
     archivedStudents.length > 0 && selectedArchivedStudentIds.length === archivedStudents.length;
-  const effectiveArchivedCount = studentSelectAllAcrossPages ? studentTotal : selectedArchivedStudentIds.length;
+  const effectiveArchivedCount = studentSelectAllAcrossPages
+    ? studentTotal
+    : selectedArchivedStudentIds.length;
   const showArchivedSelectAllBanner =
     allArchivedStudentsSelected &&
     !studentSelectAllAcrossPages &&
@@ -3011,7 +3072,9 @@ export default function SettingsPage() {
                             variant="outline"
                             size="sm"
                             disabled={
-                              (selectedArchivedStudentIds.length === 0 && !studentSelectAllAcrossPages) || isBulkUnarchivingArchived
+                              (selectedArchivedStudentIds.length === 0 &&
+                                !studentSelectAllAcrossPages) ||
+                              isBulkUnarchivingArchived
                             }
                             onClick={handleBulkUnarchiveArchived}
                           >
@@ -3031,7 +3094,9 @@ export default function SettingsPage() {
                             variant="destructive"
                             size="sm"
                             disabled={
-                              (selectedArchivedStudentIds.length === 0 && !studentSelectAllAcrossPages) || isDeletingArchivedItem
+                              (selectedArchivedStudentIds.length === 0 &&
+                                !studentSelectAllAcrossPages) ||
+                              isDeletingArchivedItem
                             }
                             onClick={() =>
                               studentSelectAllAcrossPages
@@ -3045,7 +3110,9 @@ export default function SettingsPage() {
                                     'student',
                                     selectedArchivedStudentIds,
                                     `${selectedArchivedStudentIds.length} selected archived ${
-                                      selectedArchivedStudentIds.length === 1 ? 'student' : 'students'
+                                      selectedArchivedStudentIds.length === 1
+                                        ? 'student'
+                                        : 'students'
                                     }`
                                   )
                             }
@@ -3059,8 +3126,8 @@ export default function SettingsPage() {
                       {showArchivedSelectAllBanner && (
                         <div className="flex items-center justify-between bg-amber-50 px-4 py-2 text-sm -mt-3 mb-4">
                           <span className="text-amber-900">
-                            All <strong>{archivedStudents.length}</strong> archived student{archivedStudents.length !== 1 ? 's' : ''}{' '}
-                            on this page selected.
+                            All <strong>{archivedStudents.length}</strong> archived student
+                            {archivedStudents.length !== 1 ? 's' : ''} on this page selected.
                           </span>
                           <Button
                             variant="ghost"
@@ -3068,7 +3135,8 @@ export default function SettingsPage() {
                             className="font-medium text-amber-900 hover:bg-amber-100 hover:text-amber-950"
                             onClick={() => setStudentSelectAllAcrossPages(true)}
                           >
-                            Select all <strong>{studentTotal}</strong> archived student{studentTotal !== 1 ? 's' : ''} across all pages
+                            Select all <strong>{studentTotal}</strong> archived student
+                            {studentTotal !== 1 ? 's' : ''} across all pages
                           </Button>
                         </div>
                       )}
@@ -3314,9 +3382,7 @@ export default function SettingsPage() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => handleUnarchiveScholarship(scholarship.id)}
-                                      disabled={
-                                        unarchivingItem === `scholarship-${scholarship.id}`
-                                      }
+                                      disabled={unarchivingItem === `scholarship-${scholarship.id}`}
                                     >
                                       {unarchivingItem === `scholarship-${scholarship.id}` ? (
                                         <>
@@ -3406,7 +3472,8 @@ export default function SettingsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                Delete archived {archiveDeleteTarget?.kind === 'student' ? 'student' : 'scholarship'}
+                Delete archived{' '}
+                {archiveDeleteTarget?.kind === 'student' ? 'student' : 'scholarship'}
               </DialogTitle>
               <DialogDescription>
                 Permanently delete {archiveDeleteTarget?.label}? This removes the archived record
@@ -3487,16 +3554,18 @@ export default function SettingsPage() {
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <h3 className="text-base font-semibold">Current Academic Year Settings</h3>
+                        <h3 className="text-base font-semibold">
+                          {activeAcademicYearId ? 'Edit Academic Year' : 'Add Academic Year'}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
-                          {activeAcademicYear
-                            ? 'Editing the active academic year'
-                            : activeAcademicYearId
-                              ? 'Editing the default academic year'
-                              : 'Default academic year values are ready to save'}
+                          {activeAcademicYearId
+                            ? academicYearFormData.isActive
+                              ? 'Editing the active academic year'
+                              : 'Editing an inactive academic year'
+                            : 'Create a new academic year and choose whether it becomes active'}
                         </p>
                       </div>
-                      {activeAcademicYear && (
+                      {activeAcademicYearId && academicYearFormData.isActive && (
                         <Badge variant="default" className="bg-green-600">
                           Active
                         </Badge>
@@ -3628,16 +3697,47 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
+                    <div className="flex items-center gap-2 rounded-md border p-3">
+                      <Checkbox
+                        id="currentAcademicYearActive"
+                        checked={academicYearFormData.isActive}
+                        onCheckedChange={(checked) =>
+                          handleAcademicYearFormChange('isActive', checked === true)
+                        }
+                      />
+                      <Label
+                        htmlFor="currentAcademicYearActive"
+                        className="cursor-pointer font-normal"
+                      >
+                        Set as active academic year
+                      </Label>
+                    </div>
+
                     <div className="flex justify-end">
                       <Button type="submit" variant="gradient" disabled={isSubmittingAcademicYear}>
                         <Save className="h-4 w-4" />
-                        {isSubmittingAcademicYear ? 'Saving...' : 'Save Settings'}
+                        {isSubmittingAcademicYear
+                          ? 'Saving...'
+                          : activeAcademicYearId
+                            ? 'Save Changes'
+                            : 'Create Academic Year'}
                       </Button>
                     </div>
                   </form>
 
                   <div className="space-y-3">
-                    <h3 className="text-base font-semibold">Academic Year History</h3>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-base font-semibold">Academic Year History</h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddAcademicYear}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Academic Year
+                      </Button>
+                    </div>
                     {academicYears.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <GraduationCap className="mx-auto h-10 w-10 mb-2 opacity-50" />
@@ -3788,8 +3888,8 @@ export default function SettingsPage() {
                 {isDialogPromotionProcessing ? 'Promotion in Progress' : 'Review Promotion'}
               </DialogTitle>
               <DialogDescription>
-                Preview the promotion rules. Student processing now happens in Promotion Level, where
-                admins select continuing students and archive the rest of the cohort.
+                Preview the promotion rules. Student processing now happens in Promotion Level,
+                where admins select continuing students and archive the rest of the cohort.
               </DialogDescription>
             </DialogHeader>
             {!promotionPreview ? (
@@ -3946,8 +4046,8 @@ export default function SettingsPage() {
                             </>
                           ) : (
                             <>
-                              Open Promotion Level to select the students continuing at Bosco/FSE. Students
-                              left unchecked in the chosen cohort will be archived.
+                              Open Promotion Level to select the students continuing at Bosco/FSE.
+                              Students left unchecked in the chosen cohort will be archived.
                             </>
                           )}
                         </p>
