@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
+import { resolveAcademicYearForFee } from '@/lib/academic-year-utils';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import {
@@ -14,7 +15,6 @@ import {
 import { canManageStudentFees, canManageStudentsAndScholarships } from '@/lib/rbac';
 import { validateMultipleStudentScholarshipEligibility } from '@/lib/scholarship-validation';
 import { scholarshipCoversTerm } from '@/lib/terms';
-import { resolveAcademicYearForFee } from '@/lib/academic-year-utils';
 import { SEPARATED_STUDENT_STATUSES } from '@/types';
 
 const nullablePositiveIntSchema = z.preprocess(
@@ -452,6 +452,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/students - Create a new student
 export async function POST(request: NextRequest) {
+  let isBatchRequest = false;
+
   try {
     const session = await getSession();
 
@@ -460,6 +462,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = parseCreateStudentsPayload(await request.json());
+    isBatchRequest = payload.isBatch;
 
     if (payload.students.some((student) => student.fees) && !canManageStudentFees(session.role)) {
       return NextResponse.json(
@@ -516,7 +519,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating student:', error);
+    console.error(isBatchRequest ? 'Error creating students:' : 'Error creating student:', error);
     if (
       error instanceof Error &&
       (error.message === 'Invalid academic year' || error.message === 'Academic year not found')
@@ -532,7 +535,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 409 });
     }
     return NextResponse.json(
-      { success: false, error: 'Failed to create student' },
+      {
+        success: false,
+        error: isBatchRequest ? 'Failed to create students' : 'Failed to create student',
+      },
       { status: 500 }
     );
   }
