@@ -6,8 +6,6 @@ import { keepPreviousData } from '@tanstack/react-query';
 import {
   Archive,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   GraduationCap,
   Pencil,
@@ -24,6 +22,7 @@ import {
   FilterCard,
   FilterField,
   FilterSearchField,
+  Pagination,
 } from '@/components/shared';
 import {
   COMPACT_DIALOG_CONTENT_CLASS,
@@ -843,31 +842,12 @@ export default function ScholarshipsPage() {
 
           {/* Pagination Controls */}
           {showPagination && (
-            <div className="mt-4 flex items-center justify-between border-t pt-4">
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {totalPages} ({total} total)
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1 || listLoading}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page === totalPages || listLoading}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalCount={total}
+              onPageChange={setPage}
+            />
           )}
         </CardContent>
       </Card>

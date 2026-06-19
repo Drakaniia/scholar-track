@@ -11,3 +11,5 @@ export {
   AnimatedProgressBar,
   StaggeredReveal,
 } from './gsap-animations';
+export { Pagination, getPaginationRange } from './pagination';
+export type { PaginationProps, PageItem } from './pagination';

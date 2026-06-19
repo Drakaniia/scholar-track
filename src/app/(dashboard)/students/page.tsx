@@ -9,8 +9,6 @@ import {
   Award,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   Layers,
   Loader2,
@@ -29,6 +27,7 @@ import {
   FilterCard,
   FilterField,
   FilterSearchField,
+  Pagination,
 } from '@/components/shared';
 import {
   COMPACT_DIALOG_CONTENT_CLASS,
@@ -1461,31 +1460,12 @@ export default function StudentsPage() {
 
           {/* Pagination Controls */}
           {!loading && students.length > 0 && (
-            <div className="mt-4 flex items-center justify-between border-t pt-4 px-4 pb-4">
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {totalPages} ({total} total)
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page === totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalCount={total}
+              onPageChange={setPage}
+            />
           )}
         </CardContent>
       </Card>
