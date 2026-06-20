@@ -8,11 +8,17 @@ declare global {
 
 // Create adapter for Prisma v7 with connection pooling
 // Use DIRECT_DATABASE_URL for native PostgreSQL connection (not Prisma Accelerate)
+const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
+
+// Supabase uses self-signed certificates, so we need to allow unauthorized SSL
+const isSupabase = connectionString.includes('supabase.co');
+
 const pool = new Pool({
-  connectionString: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL,
+  connectionString,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
+  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 const adapter = new PrismaPg(pool);
