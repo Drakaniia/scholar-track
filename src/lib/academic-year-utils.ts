@@ -11,23 +11,35 @@ export interface AcademicYearOption {
  * year strings that may have been stored in fee data when no active academic
  * year was configured).
  *
- * Counts reflect how many fee records reference each academic year.
+ * Counts reflect how many fee records AND scholarship academic year assignments
+ * reference each academic year.
  */
 export function deriveAcademicYearOptions(
   academicYears: Array<{ id: number; year: string }>,
-  fees: Array<{ academicYear: string }>
+  fees: Array<{ academicYear: string }>,
+  scholarshipAcademicYearIds: (number | null | undefined)[] = [],
+  yearById?: Map<number, string>
 ): AcademicYearOption[] {
   const tableYears = new Set(academicYears.map((ay) => ay.year));
   const countMap = new Map<string, number>();
 
-  // Only count fees whose academicYear matches a real AcademicYear table entry
+  // Count fee records whose academicYear matches a real AcademicYear table entry
   for (const fee of fees) {
     if (tableYears.has(fee.academicYear)) {
       countMap.set(fee.academicYear, (countMap.get(fee.academicYear) || 0) + 1);
     }
   }
 
-  // Include ALL table years (even those with 0 fees)
+  // Count scholarship academic year assignments
+  for (const id of scholarshipAcademicYearIds) {
+    if (id == null) continue; // skip null/undefined
+    const year = yearById?.get(id);
+    if (year && tableYears.has(year)) {
+      countMap.set(year, (countMap.get(year) || 0) + 1);
+    }
+  }
+
+  // Include ALL table years (even those with 0 counts)
   return academicYears
     .filter((ay) => ay.year)
     .sort((a, b) => b.year.localeCompare(a.year))

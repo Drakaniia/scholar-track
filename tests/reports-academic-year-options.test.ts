@@ -54,4 +54,66 @@ describe('deriveAcademicYearOptions', () => {
     expect(options[0].year).toBe('2024-2025');
     expect(options[1].year).toBe('2023-2024');
   });
+
+  // --- NEW TESTS for scholarship-based counting ---
+
+  it('counts scholarship academic year assignments when fees are empty', () => {
+    const academicYears = [
+      { id: 1, year: '2024-2025' },
+    ];
+    const yearById = new Map<number, string>([[1, '2024-2025']]);
+
+    const options = deriveAcademicYearOptions(academicYears, [], [], yearById);
+
+    expect(options[0]).toMatchObject({ year: '2024-2025', count: 0 });
+  });
+
+  it('counts scholarship academic year IDs toward the academic year count', () => {
+    const academicYears = [
+      { id: 1, year: '2024-2025' },
+      { id: 2, year: '2023-2024' },
+    ];
+    const yearById = new Map<number, string>([
+      [1, '2024-2025'],
+      [2, '2023-2024'],
+    ]);
+
+    // 3 scholarship assignments for 2024-2025, 1 for 2023-2024
+    const scholarshipAcademicYearIds = [1, 1, 1, 2];
+
+    const options = deriveAcademicYearOptions(academicYears, [], scholarshipAcademicYearIds, yearById);
+
+    expect(options.find((o) => o.year === '2024-2025')!.count).toBe(3);
+    expect(options.find((o) => o.year === '2023-2024')!.count).toBe(1);
+  });
+
+  it('combines fee and scholarship counts for the same academic year', () => {
+    const academicYears = [
+      { id: 1, year: '2024-2025' },
+    ];
+    const yearById = new Map<number, string>([[1, '2024-2025']]);
+    const fees: FeeLike[] = [
+      { academicYear: '2024-2025' },
+      { academicYear: '2024-2025' },
+    ];
+    const scholarshipAcademicYearIds = [1, 1, 1]; // 3 scholarship assignments
+
+    const options = deriveAcademicYearOptions(academicYears, fees, scholarshipAcademicYearIds, yearById);
+
+    // 2 fee records + 3 scholarship assignments = 5
+    expect(options[0]).toMatchObject({ year: '2024-2025', count: 5 });
+  });
+
+  it('ignores null/undefined scholarship academic year IDs', () => {
+    const academicYears = [
+      { id: 1, year: '2024-2025' },
+    ];
+    const yearById = new Map<number, string>([[1, '2024-2025']]);
+    const scholarshipAcademicYearIds = [1, null, undefined, 1] as (number | null | undefined)[];
+
+    const options = deriveAcademicYearOptions(academicYears, [], scholarshipAcademicYearIds, yearById);
+
+    // Only 2 valid IDs (1 and 1)
+    expect(options[0]).toMatchObject({ year: '2024-2025', count: 2 });
+  });
 });
