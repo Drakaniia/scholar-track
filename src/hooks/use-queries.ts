@@ -179,6 +179,7 @@ interface Student {
       scholarshipName: string;
       type: string;
       source: string;
+      amountSubsidy: number;
     };
   }>;
 }

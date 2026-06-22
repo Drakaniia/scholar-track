@@ -44,6 +44,7 @@ interface DetailedStudent {
       scholarshipName: string;
       type: string;
       source: string;
+      amountSubsidy: number;
     };
   }>;
   fees: Array<{
@@ -270,12 +271,13 @@ export default function ReportsPage() {
         hasAcademicYearData(s) &&
         s.gradeLevel === gradeLevel &&
         (scholarshipType === 'No Scholarship'
-          ? fundingTypeFilter === 'all' && (!s.scholarships || s.scholarships.length === 0)
-          : s.scholarships?.some(
-              (ss) =>
-                ss.scholarship?.type === scholarshipType &&
-                scholarshipMatchesFundingFilter(ss.scholarship?.source)
-            ))
+        ? fundingTypeFilter === 'all' && (!s.scholarships || s.scholarships.length === 0)
+        : s.scholarships?.some(
+            (ss) =>
+              scholarshipMatchesAcademicYear(ss) &&
+              ss.scholarship?.type === scholarshipType &&
+              scholarshipMatchesFundingFilter(ss.scholarship?.source)
+          ))
     );
   };
 
@@ -295,6 +297,7 @@ export default function ReportsPage() {
           .flatMap((student) => student.scholarships || [])
           .filter(
             (ss) =>
+              scholarshipMatchesAcademicYear(ss) &&
               ss.scholarship?.type === scholarshipType &&
               scholarshipMatchesFundingFilter(ss.scholarship?.source)
           )
@@ -319,7 +322,7 @@ export default function ReportsPage() {
       const matchingSources = detailedStudents
         .filter((s) => s.gradeLevel === gradeLevel && hasAcademicYearData(s))
         .flatMap((s) => s.scholarships || [])
-        .filter((ss) => ss.scholarship?.type === type)
+        .filter((ss) => scholarshipMatchesAcademicYear(ss) && ss.scholarship?.type === type)
         .map((ss) => ss.scholarship?.source)
         .filter(Boolean);
 
@@ -334,6 +337,7 @@ export default function ReportsPage() {
     if (!student.scholarships || student.scholarships.length === 0) return false;
 
     return student.scholarships?.some((ss) =>
+      scholarshipMatchesAcademicYear(ss) &&
       scholarshipMatchesFundingFilter(ss.scholarship?.source)
     );
   };
@@ -363,14 +367,23 @@ export default function ReportsPage() {
     return map;
   }, [academicYearsData]);
 
-  // Derive academic year options from the AcademicYear table only.
-  // This deliberately ignores phantom year strings that may exist in fee data
-  // (created by a date-based fallback when no active academic year was configured).
+  // Derive academic year options from the AcademicYear table,
+  // counting both fee records AND scholarship academic year assignments.
+  // This ensures the dropdown counts stay in sync when a student's
+  // scholarship is assigned to a different academic year.
   const academicYearOptions = useMemo(() => {
     const academicYears = (academicYearsData?.data || []) as Array<{ id: number; year: string }>;
     const allFees = detailedStudents.flatMap((s) => s.fees || []);
-    return deriveAcademicYearOptions(academicYears, allFees);
-  }, [detailedStudents, academicYearsData]);
+    const scholarshipAcademicYearIds = detailedStudents.flatMap(
+      (s) => s.scholarships?.map((ss) => ss.academicYearId) ?? []
+    );
+    return deriveAcademicYearOptions(
+      academicYears,
+      allFees,
+      scholarshipAcademicYearIds,
+      yearById
+    );
+  }, [detailedStudents, academicYearsData, yearById]);
 
   const exportSourceFilter =
     fundingTypeFilter === 'internal'
@@ -455,22 +468,32 @@ export default function ReportsPage() {
     return feesByYear[sortedYears[0]];
   };
 
-  // Calculate percent subsidy from aggregated annual data
-  const calculateAnnualPercentSubsidy = (aggregatedFees: {
-    tuitionFee: number;
-    otherFee: number;
-    miscellaneousFee: number;
-    laboratoryFee: number;
-    amountSubsidy: number;
-  }) => {
-    const totalFees =
-      Number(aggregatedFees.tuitionFee) +
-      Number(aggregatedFees.otherFee) +
-      Number(aggregatedFees.miscellaneousFee) +
-      Number(aggregatedFees.laboratoryFee);
+  // Compute total fixed scholarship amountSubsidy for a student
+  // This only includes scholarships matching the selected academic year filter,
+  // so subsidy amounts stay consistent with the current view.
+  const getTotalScholarshipSubsidy = (student: DetailedStudent): number => {
+    if (!student.scholarships || student.scholarships.length === 0) return 0;
+    return student.scholarships.reduce((sum, ss) => {
+      if (!scholarshipMatchesAcademicYear(ss)) return sum;
+      return sum + Number(ss.scholarship?.amountSubsidy || 0);
+    }, 0);
+  };
+
+  // Calculate percent subsidy from total fees and scholarship's fixed subsidy
+  const calculatePercentSubsidyFromSubsidy = (
+    totalFees: number,
+    subsidyAmount: number
+  ) => {
     return totalFees > 0
-      ? Number((Number(aggregatedFees.amountSubsidy) / totalFees).toFixed(4))
+      ? Number((subsidyAmount / totalFees).toFixed(4))
       : 0;
+  };
+
+  // Check if a specific scholarship record belongs to the selected academic year
+  const scholarshipMatchesAcademicYear = (ss: DetailedStudent['scholarships'][0]): boolean => {
+    if (academicYearFilter === 'all') return true;
+    if (!ss.academicYearId) return false;
+    return yearById.get(ss.academicYearId) === academicYearFilter;
   };
 
   if (loading) {
@@ -613,6 +636,7 @@ export default function ReportsPage() {
                   detailedStudents
                     .filter((s) => s.gradeLevel === gradeLevel && hasAcademicYearData(s))
                     .flatMap((s) => s.scholarships || [])
+                    .filter((ss) => scholarshipMatchesAcademicYear(ss))
                     .map((ss) => ss.scholarship?.type)
                     .filter(Boolean) as string[]
                 ),
@@ -729,9 +753,13 @@ export default function ReportsPage() {
                                       Number(aggregatedFees.miscellaneousFee) +
                                       Number(aggregatedFees.laboratoryFee)
                                     : 0;
-                                  const percentSubsidy = aggregatedFees
-                                    ? calculateAnnualPercentSubsidy(aggregatedFees)
-                                    : 0;
+                                  // Use the scholarship's fixed amountSubsidy (not fee-level)
+                                  // so it remains constant regardless of academic year filter
+                                  const scholarshipSubsidy = getTotalScholarshipSubsidy(student);
+                                  const percentSubsidy = calculatePercentSubsidyFromSubsidy(
+                                    totalFees,
+                                    scholarshipSubsidy
+                                  );
 
                                   return (
                                     <TableRow key={student.id}>
@@ -774,13 +802,13 @@ export default function ReportsPage() {
                                         {formatCurrency(totalFees)}
                                       </TableCell>
                                       <TableCell className="text-right text-green-600 font-semibold">
-                                        {aggregatedFees
-                                          ? formatCurrency(Number(aggregatedFees.amountSubsidy))
+                                        {totalFees > 0 || scholarshipSubsidy > 0
+                                          ? formatCurrency(scholarshipSubsidy)
                                           : '-'}
                                       </TableCell>
                                       <TableCell className="text-right">
                                         <Badge variant="secondary" className="text-xs">
-                                          {aggregatedFees ? `${percentSubsidy.toFixed(2)}` : '-'}
+                                          {totalFees > 0 ? `${percentSubsidy.toFixed(2)}` : '-'}
                                         </Badge>
                                       </TableCell>
                                       <TableCell className="text-right">
@@ -801,7 +829,7 @@ export default function ReportsPage() {
                                         )}
                                       </TableCell>
                                       <TableCell className="text-right font-semibold">
-                                        {aggregatedFees ? `${percentSubsidy.toFixed(2)}` : '-'}
+                                        {totalFees > 0 ? `${percentSubsidy.toFixed(2)}` : '-'}
                                       </TableCell>
                                     </TableRow>
                                   );
@@ -819,11 +847,18 @@ export default function ReportsPage() {
                                           s.fees,
                                           academicYearFilter
                                         );
-                                        const percentSubsidy = aggregatedFees
-                                          ? calculateAnnualPercentSubsidy(aggregatedFees)
+                                        const totalFees = aggregatedFees
+                                          ? Number(aggregatedFees.tuitionFee) +
+                                            Number(aggregatedFees.otherFee) +
+                                            Number(aggregatedFees.miscellaneousFee) +
+                                            Number(aggregatedFees.laboratoryFee)
                                           : 0;
-                                        const numberOfStudents = 1;
-                                        return sum + percentSubsidy * numberOfStudents;
+                                        const scholarshipSubsidy = getTotalScholarshipSubsidy(s);
+                                        const fse = calculatePercentSubsidyFromSubsidy(
+                                          totalFees,
+                                          scholarshipSubsidy
+                                        );
+                                        return sum + fse;
                                       }, 0)
                                       .toFixed(2)}
                                   </TableCell>
