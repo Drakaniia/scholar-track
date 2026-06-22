@@ -105,8 +105,14 @@ scholarship-tracking-system/
 │   └── TANSTACK-QUERY-GUIDE.md # TanStack Query guide
 ├── changelog/                  # Change documentation
 ├── scripts/                    # Utility scripts
+│   ├── README.md               # Scripts documentation
+│   ├── TESTS.md                # Test scripts documentation
 │   ├── add-indexes.ts          # Database index creation
-│   └── test-scholarship-api.ts # API testing
+│   ├── backup-data.ts          # Data backup and export CLI
+│   ├── delete-student-data.ts  # Student data reset tool
+│   ├── diagnose-academic-year-issue.ts  # Academic year diagnostics
+│   ├── fix-paeb-data.ts        # PAEB data fix utility
+│   └── test-scholarship-api.ts # API integration testing
 └── tests/                      # Test files
 ```
 
@@ -201,6 +207,7 @@ npm start
 | `npm run db:add-indexes` | Apply performance indexes                     |
 | `npm run erd:generate`   | Generate ERD visualization                    |
 | `npm run erd:view`       | Open ERD in browser                           |
+| `npm run db:backup`      | Manage data backups (list, create, export)    |
 | `npm run clean`          | Clean node_modules and .next, reinstall       |
 
 ## Initial Users
@@ -496,6 +503,24 @@ For detailed TanStack Query guide, see `docs/TANSTACK-QUERY-GUIDE.md`
 - **Performance Guide**: `docs/PERFORMANCE-OPTIMIZATION.md` - Performance optimization
 - **TanStack Query Guide**: `docs/TANSTACK-QUERY-GUIDE.md` - Data fetching patterns
 - **Change Logs**: `changelog/` - Feature history and migrations
+- **Scripts**: `scripts/README.md` - Utility scripts documentation
+
+### Data Backup
+
+The project includes a CLI backup tool at `scripts/backup-data.ts`:
+
+```bash
+npm run db:backup -- --list                    # View recent backup snapshots
+npm run db:backup -- --export-all              # Export all tables to local JSON files
+npm run db:backup -- --create students         # Create DB backup of a specific table
+npm run db:backup -- --help                    # Full usage guide
+```
+
+- Database backup records are stored in the `backups` table (see `Backup` model in schema)
+- Local exports are saved to `backups/backup-<timestamp>/` with per-table JSON files and a `manifest.json`
+- Valid tables for backup: students, scholarships, disbursements, student_scholarships, student_fees, academic_years
+
+For full documentation, see `scripts/README.md`.
 
 ## Deployment (Vercel)
 
