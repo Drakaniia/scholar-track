@@ -68,7 +68,7 @@ export function DashboardHero({
                 <SelectValue placeholder="All Levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 {GRADE_LEVELS.map((level) => (
                   <SelectItem key={level} value={level}>
                     {GRADE_LEVEL_LABELS[level]}

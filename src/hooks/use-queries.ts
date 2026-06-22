@@ -404,7 +404,7 @@ export function useDashboardStats(
       if (source && source !== 'all') {
         params.append('source', source);
       }
-      if (gradeLevel) {
+      if (gradeLevel && gradeLevel !== 'all') {
         params.append('gradeLevel', gradeLevel);
       }
       const url = `/api/dashboard${params.toString() ? `?${params.toString()}` : ''}`;
@@ -930,7 +930,7 @@ export function useDeleteScholarship() {
 export function useScholarshipFlow(
   source = 'all',
   startYear?: number,
-  gradeLevel = '',
+  gradeLevel = 'all',
   options?: Partial<UseQueryOptions<ApiResponse<ScholarshipFlowData>, Error>>
 ) {
   return useQuery<ApiResponse<ScholarshipFlowData>, Error>({
@@ -944,7 +944,7 @@ export function useScholarshipFlow(
         params.set('endYear', String(getScholarshipFlowEndYear(startYear)));
       }
 
-      if (gradeLevel) {
+      if (gradeLevel && gradeLevel !== 'all') {
         params.set('gradeLevel', gradeLevel);
       }
 

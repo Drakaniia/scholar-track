@@ -14,7 +14,7 @@ function DashboardContent() {
   const [scholarshipSourceFilter, setScholarshipSourceFilter] = useState<string>(
     searchParams.get('source') || 'all'
   );
-  const [gradeLevelFilter, setGradeLevelFilter] = useState<string>('');
+  const [gradeLevelFilter, setGradeLevelFilter] = useState<string>('all');
 
   const { data: statsData, isLoading } = useDashboardStats(
     scholarshipSourceFilter,
