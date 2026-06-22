@@ -156,6 +156,16 @@ function getStudentCountLabel(count: number) {
   return `${count} ${count === 1 ? 'student' : 'students'}`;
 }
 
+function getScholarshipStudentCount(
+  scholarship: ScholarshipWithCount,
+  filteredStudentCounts: Record<number, number> | null
+): number {
+  if (filteredStudentCounts && filteredStudentCounts[scholarship.id] !== undefined) {
+    return filteredStudentCounts[scholarship.id];
+  }
+  return (scholarship as ScholarshipWithCount)._count?.students || 0;
+}
+
 function ScholarshipFact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0 rounded-md border border-slate-200 bg-white px-2.5 py-2">
@@ -367,11 +377,17 @@ export default function ScholarshipsPage() {
   });
 
   const [counts, setCounts] = useState<ScholarshipCounts>({ total: 0, internal: 0, external: 0 });
+  const [academicYearCounts, setAcademicYearCounts] = useState<Record<string, number>>({});
+  const [filteredStudentCounts, setFilteredStudentCounts] = useState<Record<number, number> | null>(null);
 
   // Update counts when filter options data changes
   useEffect(() => {
     if (filterOptionsData?.data) {
-      setCounts(filterOptionsData.data as ScholarshipCounts);
+      const data = filterOptionsData.data as ScholarshipCounts & { academicYearCounts?: Record<string, number> };
+      setCounts(data);
+      if (data.academicYearCounts) {
+        setAcademicYearCounts(data.academicYearCounts);
+      }
     }
   }, [filterOptionsData]);
 
@@ -381,6 +397,10 @@ export default function ScholarshipsPage() {
       setScholarships((scholarshipsData.data || []) as ScholarshipWithCount[]);
       setTotal(scholarshipsData.total || 0);
       setTotalPages(scholarshipsData.totalPages || 1);
+      setFilteredStudentCounts(
+        (scholarshipsData as { filteredStudentCounts?: Record<number, number> })
+          .filteredStudentCounts || null
+      );
     }
   }, [scholarshipsData]);
 
@@ -397,6 +417,10 @@ export default function ScholarshipsPage() {
   useEffect(() => {
     // Reset to page 1 when filter changes
     setPage(1);
+    // Reset filtered counts when academic year filter changes
+    if (academicYearFilter === 'all') {
+      setFilteredStudentCounts(null);
+    }
   }, [sourceFilter, eligibleGradeLevelsFilter, academicYearFilter, debouncedSearch]);
 
   const handleCreate = async (data: CreateScholarshipInput) => {
@@ -639,9 +663,10 @@ export default function ScholarshipsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Academic Years</SelectItem>
-              {(academicYearsData?.data || []).map((ay: { id: number; year: string }) => (
+              {(academicYearsData?.data || []).map((ay: { id: number; year: string; isActive?: boolean }) => (
                 <SelectItem key={ay.id} value={String(ay.id)}>
                   {ay.year}
+                  {ay.isActive ? ' (Active)' : ''} ({academicYearCounts[String(ay.id)] ?? 0})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -661,6 +686,11 @@ export default function ScholarshipsPage() {
                 <Badge variant="outline" className="text-sm">
                   Total: {counts.total}
                 </Badge>
+                {(academicYearFilter !== 'all') && (
+                  <Badge variant="outline" className="text-sm text-amber-600 border-amber-300">
+                    Filtered by year
+                  </Badge>
+                )}
                 <Badge variant="default" className="text-sm">
                   Internal: {counts.internal}
                 </Badge>
@@ -690,7 +720,7 @@ export default function ScholarshipsPage() {
             <>
               <div className="grid gap-3 xl:hidden">
                 {scholarships.map((scholarship) => {
-                  const studentCount = (scholarship as ScholarshipWithCount)._count?.students || 0;
+                  const studentCount = getScholarshipStudentCount(scholarship, filteredStudentCounts);
 
                   return (
                     <div
@@ -901,7 +931,7 @@ export default function ScholarshipsPage() {
                         </TableCell>
                         <TableCell className={SCHOLARSHIP_TABLE_CELL_CLASS}>
                           {getStudentCountLabel(
-                            (scholarship as ScholarshipWithCount)._count?.students || 0
+                            getScholarshipStudentCount(scholarship, filteredStudentCounts)
                           )}
                         </TableCell>
                         <TableCell className={SCHOLARSHIP_TABLE_CELL_CLASS}>
@@ -996,6 +1026,7 @@ export default function ScholarshipsPage() {
             <DialogDescription>
               Are you sure you want to archive &quot;{deletingScholarship?.scholarshipName}&quot;?
               {(() => {
+                // Always show global student count in delete dialog (not filtered by academic year)
                 const count = (deletingScholarship as ScholarshipWithCount)?._count?.students;
                 return (
                   count !== undefined &&
