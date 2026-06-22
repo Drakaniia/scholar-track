@@ -576,6 +576,7 @@ export default function StudentsPage() {
   const [dynamicScholarshipCounts, setDynamicScholarshipCounts] = useState<Record<string, number>>(
     {}
   );
+  const [academicYearCounts, setAcademicYearCounts] = useState<Record<string, number>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -697,6 +698,7 @@ export default function StudentsPage() {
           scholarship: number;
         };
         dynamicScholarshipCounts: Record<string, number>;
+        academicYearCounts: Record<string, number>;
       };
       setPrograms(data.programs || []);
       setScholarships(data.scholarships || []);
@@ -711,6 +713,7 @@ export default function StudentsPage() {
         scholarship: data.facetTotals?.scholarship || 0,
       });
       setDynamicScholarshipCounts(data.dynamicScholarshipCounts || {});
+      setAcademicYearCounts(data.academicYearCounts || {});
     }
   }, [filterOptionsData]);
 
@@ -1247,11 +1250,11 @@ export default function StudentsPage() {
               <SelectValue placeholder="Academic Year" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Years</SelectItem>
+              <SelectItem value="all">All Academic Years</SelectItem>
               {academicYears.map((academicYear) => (
                 <SelectItem key={academicYear.id} value={String(academicYear.id)}>
                   {formatAcademicYearDisplay(academicYear.year)}
-                  {academicYear.isActive ? ' (Active)' : ''}
+                  {academicYear.isActive ? ' (Active)' : ''} ({academicYearCounts[String(academicYear.id)] ?? 0})
                 </SelectItem>
               ))}
             </SelectContent>
