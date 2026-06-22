@@ -111,6 +111,7 @@ type StudentMutationData = {
   status: string;
   birthDate?: Date | null;
   termType?: TermType;
+  academicYearId?: number | null;
   fees?: {
     tuitionFee: number;
     otherFee: number;
@@ -341,6 +342,7 @@ function getStudentFormDefaultValues(
     status: student.status,
     birthDate: student.birthDate ? new Date(student.birthDate) : undefined,
     termType: student.termType,
+    academicYearId: student.academicYearId ?? null,
     fees:
       student.fees && student.fees.length > 0
         ? {
@@ -786,6 +788,7 @@ export default function StudentsPage() {
     status: data.status,
     birthDate: data.birthDate || null,
     termType: data.termType,
+    academicYearId: data.academicYearId ?? null,
     fees: data.fees
       ? {
           tuitionFee: Number(data.fees.tuitionFee) || 0,

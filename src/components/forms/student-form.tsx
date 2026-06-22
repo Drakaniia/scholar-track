@@ -268,6 +268,7 @@ const STUDENT_CHANGE_LABELS = {
 
 function getFirstAcademicYearId(data?: Partial<CreateStudentInput>) {
   return (
+    data?.academicYearId ??
     data?.fees?.academicYearId ??
     data?.scholarships?.find((scholarship) => scholarship.academicYearId)?.academicYearId ??
     null
@@ -775,6 +776,7 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
       const submitData: CreateStudentInput = {
         ...data,
         program,
+        academicYearId: effectiveStudentAcademicYearId,
         scholarships:
           selectedScholarships.length > 0
             ? selectedScholarships.map((scholarship) => ({
