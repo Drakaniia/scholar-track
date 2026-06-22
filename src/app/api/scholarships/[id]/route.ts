@@ -73,6 +73,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const scholarshipId = parseInt(id);
+    const searchParams = request.nextUrl.searchParams;
+    const academicYearIdParam = searchParams.get('academicYearId');
+    const parsedAcademicYearId = academicYearIdParam ? parseInt(academicYearIdParam) : null;
 
     const scholarship = await prisma.scholarship.findUnique({
       where: { id: scholarshipId },
@@ -113,6 +116,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         createdAt: true,
         updatedAt: true,
         students: {
+          where: parsedAcademicYearId
+            ? { academicYearId: parsedAcademicYearId }
+            : undefined,
           include: {
             student: {
               select: {
