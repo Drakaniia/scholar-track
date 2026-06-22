@@ -787,12 +787,18 @@ export function useScholarships(
 
 export function useScholarship(
   id: number,
+  academicYearId?: number | null,
   options?: Partial<UseQueryOptions<ApiResponse<Scholarship>, Error>>
 ) {
   return useQuery<ApiResponse<Scholarship>, Error>({
-    queryKey: queryKeys.scholarships.detail(id),
+    queryKey: [...queryKeys.scholarships.detail(id), academicYearId || 'all'],
     queryFn: async () => {
-      const response = await fetch(`/api/scholarships/${id}`, { credentials: 'include' });
+      const params = new URLSearchParams();
+      if (academicYearId) {
+        params.append('academicYearId', String(academicYearId));
+      }
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const response = await fetch(`/api/scholarships/${id}${query}`, { credentials: 'include' });
       if (!response.ok) {
         throw new Error('Failed to fetch scholarship');
       }

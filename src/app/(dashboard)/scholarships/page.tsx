@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { keepPreviousData } from '@tanstack/react-query';
 import {
@@ -61,6 +61,7 @@ import {
 } from '@/components/ui/table';
 import { useDebounce } from '@/hooks/use-debounce';
 import {
+  useAcademicYears,
   useCreateScholarship,
   useDeleteScholarship,
   useScholarship,
@@ -294,6 +295,8 @@ export default function ScholarshipsPage() {
   const debouncedSearch = useDebounce(search, 300);
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [eligibleGradeLevelsFilter, setEligibleGradeLevelsFilter] = useState<string>('all');
+  const [academicYearFilter, setAcademicYearFilter] = useState<string>('all');
+  const [dialogAcademicYearIdFilter, setDialogAcademicYearIdFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingScholarship, setEditingScholarship] = useState<Scholarship | null>(null);
@@ -318,6 +321,8 @@ export default function ScholarshipsPage() {
       source: sourceFilter === 'all' ? undefined : sourceFilter,
       eligibleGradeLevels:
         eligibleGradeLevelsFilter === 'all' ? undefined : eligibleGradeLevelsFilter,
+      academicYearId:
+        academicYearFilter === 'all' ? undefined : academicYearFilter,
       page,
       limit: 10,
     },
@@ -326,6 +331,7 @@ export default function ScholarshipsPage() {
 
   const { data: scholarshipDetail, isLoading: detailLoading } = useScholarship(
     selectedScholarship?.id || 0,
+    dialogAcademicYearIdFilter && dialogAcademicYearIdFilter !== 'all' ? Number(dialogAcademicYearIdFilter) : null,
     { enabled: !!selectedScholarship?.id }
   );
 
@@ -333,9 +339,31 @@ export default function ScholarshipsPage() {
   const updateScholarshipMutation = useUpdateScholarship();
   const deleteScholarshipMutation = useDeleteScholarship();
 
+  // Fetch academic years for filter dropdowns
+  const { data: academicYearsData } = useAcademicYears();
+
+  // Build a lookup from academic year ID to year string
+  const yearById = useMemo(() => {
+    const map = new Map<number, string>();
+    if (academicYearsData?.data) {
+      academicYearsData.data.forEach((ay: { id: number; year: string }) => {
+        if (ay.year) map.set(ay.id, ay.year);
+      });
+    }
+    return map;
+  }, [academicYearsData]);
+
+  // Get the display label for the currently selected academic year (for active filters)
+  const selectedAcademicYearLabel = useMemo(() => {
+    if (academicYearFilter === 'all') return '';
+    const id = Number(academicYearFilter);
+    return yearById.get(id) || academicYearFilter;
+  }, [academicYearFilter, yearById]);
+
   // TanStack Query hook for filter options
   const { data: filterOptionsData } = useScholarshipFilterOptions({
     source: sourceFilter,
+    ...(academicYearFilter && academicYearFilter !== 'all' ? { academicYearId: academicYearFilter } : {}),
   });
 
   const [counts, setCounts] = useState<ScholarshipCounts>({ total: 0, internal: 0, external: 0 });
@@ -369,7 +397,7 @@ export default function ScholarshipsPage() {
   useEffect(() => {
     // Reset to page 1 when filter changes
     setPage(1);
-  }, [sourceFilter, eligibleGradeLevelsFilter, debouncedSearch]);
+  }, [sourceFilter, eligibleGradeLevelsFilter, academicYearFilter, debouncedSearch]);
 
   const handleCreate = async (data: CreateScholarshipInput) => {
     setSubmitting(true);
@@ -445,6 +473,7 @@ export default function ScholarshipsPage() {
     setDetailDialogOpen(true);
     setLoadingDetail(true);
     setShowAllAssignedStudents(false);
+    setDialogAcademicYearIdFilter('all');
     // useScholarship hook will fetch automatically due to enabled: !!selectedScholarship?.id
   };
 
@@ -457,6 +486,7 @@ export default function ScholarshipsPage() {
     setSearch('');
     setSourceFilter('all');
     setEligibleGradeLevelsFilter('all');
+    setAcademicYearFilter('all');
   };
   const scholarshipActiveFilters: ActiveFilter[] = [
     ...(search.trim()
@@ -491,6 +521,16 @@ export default function ScholarshipsPage() {
                 eligibleGradeLevelsFilter as keyof typeof GRADE_LEVEL_LABELS
               ] || eligibleGradeLevelsFilter,
             onRemove: () => setEligibleGradeLevelsFilter('all'),
+          },
+        ]
+      : []),
+    ...(academicYearFilter !== 'all'
+      ? [
+          {
+            key: 'academicYear',
+            label: 'Academic Year',
+            value: selectedAcademicYearLabel,
+            onRemove: () => setAcademicYearFilter('all'),
           },
         ]
       : []),
@@ -583,6 +623,25 @@ export default function ScholarshipsPage() {
                 <SelectItem key={source} value={source}>
                   {SCHOLARSHIP_SOURCE_LABELS[source]}{' '}
                   {source === 'INTERNAL' ? `(${counts.internal})` : `(${counts.external})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+
+        <FilterField label="Academic Year">
+          <Select
+            value={academicYearFilter}
+            onValueChange={setAcademicYearFilter}
+          >
+            <SelectTrigger className="h-10 w-full justify-between bg-white text-sm">
+              <SelectValue placeholder="Filter by academic year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Academic Years</SelectItem>
+              {(academicYearsData?.data || []).map((ay: { id: number; year: string }) => (
+                <SelectItem key={ay.id} value={String(ay.id)}>
+                  {ay.year}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -982,6 +1041,31 @@ export default function ScholarshipsPage() {
               <ScholarshipDetailSkeleton />
             ) : selectedScholarship ? (
               <div className="space-y-6">
+                {/* Academic Year Filter for Detail Dialog */}
+                <div className="flex items-center justify-end">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                      Filter by Academic Year
+                    </label>
+                    <Select
+                      value={dialogAcademicYearIdFilter}
+                      onValueChange={setDialogAcademicYearIdFilter}
+                    >
+                      <SelectTrigger className="h-9 w-[200px] text-sm">
+                        <SelectValue placeholder="Select academic year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Academic Years</SelectItem>
+                        {(academicYearsData?.data || []).map((ay: { id: number; year: string }) => (
+                          <SelectItem key={ay.id} value={String(ay.id)}>
+                            {ay.year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 {/* Scholarship Information */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Scholarship Details</h3>
