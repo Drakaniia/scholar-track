@@ -446,6 +446,7 @@ export interface StudentFilterOptions {
   };
   filteredTotal?: number;
   dynamicScholarshipCounts?: Record<string, number>;
+  academicYearCounts?: Record<string, number>;
 }
 
 // ============================================

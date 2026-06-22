@@ -336,6 +336,32 @@ export async function GET(request: NextRequest) {
     const programFacetTotal = programAgg.reduce((sum, item) => sum + item._count.id, 0);
     const statusFacetTotal = statusAgg.reduce((sum, item) => sum + item._count.id, 0);
 
+    // Count unique students per academic year (across all relations)
+    const academicYearFacetWhere = buildStudentWhere(filters, ['academicYearId']);
+    const [allAcademicYears, ...academicYearCountsArray] = await Promise.all([
+      prisma.academicYear.findMany({ select: { id: true } }),
+      ...(await prisma.academicYear.findMany({ select: { id: true } })).map((ay) =>
+        prisma.student.count({
+          where: {
+            AND: [
+              academicYearFacetWhere,
+              {
+                OR: [
+                  { academicYearId: ay.id },
+                  { fees: { some: { academicYearId: ay.id } } },
+                  { scholarships: { some: { academicYearId: ay.id } } },
+                ],
+              },
+            ],
+          },
+        })
+      ),
+    ]);
+    const academicYearCounts: Record<string, number> = {};
+    allAcademicYears.forEach((ay, index) => {
+      academicYearCounts[String(ay.id)] = academicYearCountsArray[index];
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -347,6 +373,7 @@ export async function GET(request: NextRequest) {
           gradeLevelCounts,
           statusCounts,
           dynamicScholarshipCounts,
+          academicYearCounts,
           scholarships: scholarshipsData,
           studentsWithoutScholarship,
           facetTotals: {
