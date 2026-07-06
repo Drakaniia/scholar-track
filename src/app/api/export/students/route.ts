@@ -11,13 +11,14 @@ import prisma from '@/lib/prisma';
 export const runtime = 'nodejs';
 
 const GRADE_LEVEL_LABELS: Record<string, string> = {
+  KINDERGARTEN: 'Kindergarten',
   GRADE_SCHOOL: 'Grade School',
   JUNIOR_HIGH: 'Junior High',
   SENIOR_HIGH: 'Senior High',
   COLLEGE: 'College',
 };
 
-const GRADE_LEVELS = ['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'];
+const GRADE_LEVELS = ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'];
 const NO_SCHOLARSHIP = 'No Scholarship';
 const SCHOLARSHIP_ACRONYMS = new Set([
   'CHED',
