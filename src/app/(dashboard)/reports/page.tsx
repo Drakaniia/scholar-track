@@ -62,13 +62,14 @@ interface DetailedStudent {
 }
 
 const GRADE_LEVEL_LABELS: Record<string, string> = {
+  KINDERGARTEN: 'Kindergarten',
   GRADE_SCHOOL: 'Grade School',
   JUNIOR_HIGH: 'Junior High',
   SENIOR_HIGH: 'Senior High',
   COLLEGE: 'College',
 };
 
-const GRADE_LEVELS = ['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'];
+const GRADE_LEVELS = ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'];
 const SCHOLARSHIP_ACRONYMS = new Set([
   'CHED',
   'CMSP',
@@ -280,7 +281,7 @@ export default function ReportsPage() {
         ? fundingTypeFilter === 'all' && (!s.scholarships || s.scholarships.length === 0)
         : s.scholarships?.some(
             (ss) =>
-              scholarshipMatchesAcademicYear(ss) &&
+               scholarshipMatchesAcademicYear(ss) &&
               ss.scholarship?.type === scholarshipType &&
               scholarshipMatchesFundingFilter(ss.scholarship?.source)
           ))

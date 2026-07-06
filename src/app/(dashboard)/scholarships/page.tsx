@@ -619,13 +619,15 @@ export default function ScholarshipsPage() {
               <SelectItem value="all">All Levels</SelectItem>
               {GRADE_LEVELS.map((level) => {
                 const shortLabel =
-                  level === 'GRADE_SCHOOL'
-                    ? 'BED'
-                    : level === 'JUNIOR_HIGH'
-                      ? 'JHS'
-                      : level === 'SENIOR_HIGH'
-                        ? 'SHS'
-                        : 'College';
+                  level === 'KINDERGARTEN'
+                    ? 'K'
+                    : level === 'GRADE_SCHOOL'
+                      ? 'BED'
+                      : level === 'JUNIOR_HIGH'
+                        ? 'JHS'
+                        : level === 'SENIOR_HIGH'
+                          ? 'SHS'
+                          : 'College';
                 return (
                   <SelectItem key={level} value={level}>
                     {GRADE_LEVEL_LABELS[level]} ({shortLabel})

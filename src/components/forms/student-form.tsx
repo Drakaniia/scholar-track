@@ -1227,6 +1227,39 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
           </div>
         )}
 
+        {/* Kindergarten Fields */}
+        {selectedGradeLevel === 'KINDERGARTEN' && (
+          <div className="space-y-3">
+            <Label htmlFor={fieldId('yearLevel')} className="text-sm font-medium">
+              Year Level
+            </Label>
+            <Controller
+              name="yearLevel"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue('program', value);
+                  }}
+                >
+                  <SelectTrigger id={fieldId('yearLevel')} className="h-10">
+                    <SelectValue placeholder="Select year level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEAR_LEVELS.KINDERGARTEN.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+        )}
+
         {/* Grade School Fields */}
         {selectedGradeLevel === 'GRADE_SCHOOL' && (
           <div className="space-y-3">
