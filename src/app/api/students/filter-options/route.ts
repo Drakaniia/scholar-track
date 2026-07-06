@@ -7,6 +7,7 @@ import { buildSearchWhere } from '@/lib/query-optimizer';
 import { SEPARATED_STUDENT_STATUSES, YEAR_LEVELS } from '@/types';
 
 const SCHOOL_YEAR_LEVELS = [
+  ...YEAR_LEVELS.KINDERGARTEN,
   ...YEAR_LEVELS.GRADE_SCHOOL,
   ...YEAR_LEVELS.JUNIOR_HIGH,
   ...YEAR_LEVELS.SENIOR_HIGH,
@@ -194,15 +195,17 @@ export async function GET(request: NextRequest) {
       population,
     };
     const canonicalProgramOptions =
-      gradeLevel === 'GRADE_SCHOOL'
-        ? YEAR_LEVELS.GRADE_SCHOOL
-        : gradeLevel === 'JUNIOR_HIGH'
-          ? YEAR_LEVELS.JUNIOR_HIGH
-          : gradeLevel === 'SENIOR_HIGH'
-            ? YEAR_LEVELS.SENIOR_HIGH
-            : !gradeLevel || gradeLevel === 'all'
-              ? SCHOOL_YEAR_LEVELS
-              : [];
+      gradeLevel === 'KINDERGARTEN'
+        ? YEAR_LEVELS.KINDERGARTEN
+        : gradeLevel === 'GRADE_SCHOOL'
+          ? YEAR_LEVELS.GRADE_SCHOOL
+          : gradeLevel === 'JUNIOR_HIGH'
+            ? YEAR_LEVELS.JUNIOR_HIGH
+            : gradeLevel === 'SENIOR_HIGH'
+              ? YEAR_LEVELS.SENIOR_HIGH
+              : !gradeLevel || gradeLevel === 'all'
+                ? SCHOOL_YEAR_LEVELS
+                : [];
 
     const filteredWhere = buildStudentWhere(filters);
     const gradeLevelFacetWhere = buildStudentWhere(filters, ['gradeLevel']);

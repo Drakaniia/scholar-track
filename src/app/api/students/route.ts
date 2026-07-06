@@ -65,7 +65,7 @@ const createStudentInputSchema = z.object({
   firstName: requiredString('First name is required'),
   middleInitial: z.string().optional(),
   program: requiredString('Program is required'),
-  gradeLevel: z.enum(['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'], {
+  gradeLevel: z.enum(['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE', 'KINDERGARTEN'], {
     required_error: 'Grade level is required',
     invalid_type_error: 'Grade level is required',
   }),

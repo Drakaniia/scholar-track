@@ -59,6 +59,10 @@ export function isValidPhoneNumber(phone: string): boolean {
 export function getGradeLevelForStudent(studentGradeLevel: string): string[] {
   const normalizedGradeLevel = normalizeEligibilityValue(studentGradeLevel);
 
+  if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.KINDERGARTEN)) {
+    return [...GRADE_LEVEL_CATEGORY_ALIASES.KINDERGARTEN];
+  }
+
   if (isKnownGradeLevel(normalizedGradeLevel, GRADE_LEVEL_CATEGORY_ALIASES.GRADE_SCHOOL)) {
     return [...GRADE_LEVEL_CATEGORY_ALIASES.GRADE_SCHOOL];
   }
@@ -157,6 +161,19 @@ export function isScholarshipEligibleForStudent(
 }
 
 const GRADE_LEVEL_CATEGORY_ALIASES = {
+  KINDERGARTEN: [
+    'KINDERGARTEN',
+    'KINDER',
+    'PREP',
+    'PREPARATORY',
+    'K',
+    'PRESCHOOL',
+    'BED',
+    'BASIC_EDUCATION',
+    'BASIC EDUCATION',
+    'ELEMENTARY',
+    'GS',
+  ],
   GRADE_SCHOOL: [
     'GRADE_SCHOOL',
     'GRADE SCHOOL',
@@ -167,6 +184,9 @@ const GRADE_LEVEL_CATEGORY_ALIASES = {
     'ELEMENTARY',
     'GRADE SCHOOL DEPARTMENT',
     'GS',
+    'KINDERGARTEN',
+    'KINDER',
+    'PREP',
   ],
   JUNIOR_HIGH: [
     'JUNIOR_HIGH',
