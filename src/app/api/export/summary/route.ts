@@ -16,9 +16,10 @@ const METRIC_COLUMNS = [
   { count: 15, fse: 17, percent: 18, totalStudents: 18 },
 ] as const;
 
-const GRADE_LEVELS = ['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'] as const;
+const GRADE_LEVELS = ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'] as const;
 
 const GRADE_LEVEL_LABELS: Record<(typeof GRADE_LEVELS)[number], string> = {
+  KINDERGARTEN: 'Kindergarten',
   GRADE_SCHOOL: 'Grade School',
   JUNIOR_HIGH: 'Junior High',
   SENIOR_HIGH: 'Senior High',
@@ -132,7 +133,7 @@ function includesCollege(scholarship: ScholarshipRecord) {
 
 function isBasicEducation(scholarship: ScholarshipRecord) {
   return eligibleLevels(scholarship).some((level) =>
-    ['GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH'].includes(level)
+    ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH'].includes(level)
   );
 }
 
