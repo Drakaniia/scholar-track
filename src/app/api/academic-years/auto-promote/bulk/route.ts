@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promoteSelectedStudents } from '@/lib/academic-year-service';
 import { verifyToken } from '@/lib/auth';
 import { isStudentTransitionDecision } from '@/lib/promotion-decisions';
+import { queryOptimizer } from '@/lib/query-optimizer';
 import type { StudentTransitionDecision } from '@/types';
 
 const MAX_BULK_PROMOTION_STUDENTS = 500;
@@ -129,6 +130,11 @@ export async function POST(request: NextRequest) {
           )
         : await promoteSelectedStudents(studentIds, payload.id, undefined, cohortStudentIds);
     const processedCount = result.promotedCount + result.archivedCount;
+
+    // Invalidate server-side dashboard detailed cache so Reports page reflects new academic year assignments
+    if (result.success) {
+      queryOptimizer.invalidatePattern('dashboard-detailed');
+    }
 
     return NextResponse.json(
       {
