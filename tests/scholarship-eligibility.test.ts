@@ -74,4 +74,43 @@ describe('scholarship eligibility helpers', () => {
     expect(isGradeLevelEligibleForScholarship('JUNIOR_HIGH', eligibility, 'Grade 7')).toBe(true);
     expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', eligibility, 'Grade 2')).toBe(false);
   });
+
+  it('includes KINDERGARTEN in the GRADE_LEVELS constant', async () => {
+    const { GRADE_LEVELS } = await import('@/types');
+    expect(GRADE_LEVELS).toContain('KINDERGARTEN');
+  });
+
+  it('has a label for KINDERGARTEN', async () => {
+    const { GRADE_LEVEL_LABELS } = await import('@/types');
+    expect(GRADE_LEVEL_LABELS['KINDERGARTEN']).toBeDefined();
+    expect(GRADE_LEVEL_LABELS['KINDERGARTEN']).toBe('Kindergarten');
+  });
+
+  it('has year levels defined for KINDERGARTEN', async () => {
+    const { YEAR_LEVELS } = await import('@/types');
+    expect(YEAR_LEVELS['KINDERGARTEN']).toBeDefined();
+    expect(YEAR_LEVELS['KINDERGARTEN']).toContain('Kindergarten');
+  });
+
+  it('recognizes Kindergarten student for scholarship eligibility via alias K', () => {
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'KINDERGARTEN')).toBe(true);
+  });
+
+  it('recognizes Kindergarten student for scholarship via broad category aliases', () => {
+    // Kindergarten is part of Basic Education so BED should match
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'BED')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'BASIC_EDUCATION')).toBe(true);
+  });
+
+  it('does not match Kindergarten with unrelated grade levels', () => {
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'SHS')).toBe(false);
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'COLLEGE')).toBe(false);
+    // GRADE_SCHOOL (Grades 1-6) is separate from Kindergarten
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'GRADE_SCHOOL')).toBe(false);
+  });
+
+  it('direct year level match works for Kindergarten', () => {
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'Kindergarten', 'Kindergarten')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Kindergarten', 'Kindergarten')).toBe(true);
+  });
 });

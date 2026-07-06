@@ -6,6 +6,7 @@ const prismaMock = vi.hoisted(() => ({
   academicYear: {
     findFirst: vi.fn(),
     findMany: vi.fn(),
+    findUnique: vi.fn(),
   },
   $transaction: vi.fn(),
 }));
@@ -14,6 +15,7 @@ const txMock = vi.hoisted(() => ({
   academicYear: {
     update: vi.fn(),
     updateMany: vi.fn(),
+    findUnique: vi.fn(),
   },
   auditLog: {
     create: vi.fn(),
@@ -108,6 +110,7 @@ describe('promoteSelectedStudents', () => {
       promotionDate: new Date('2026-05-22T00:00:00.000Z'),
       promotionProcessedAt: null,
     });
+    txMock.academicYear.findUnique.mockResolvedValue(null);
     txMock.auditLog.create.mockResolvedValue({});
     txMock.auditLog.createMany.mockResolvedValue({ count: 0 });
     txMock.backup.create.mockResolvedValue({});
@@ -414,6 +417,48 @@ describe('promoteSelectedStudents', () => {
       error: 'This student is archived and cannot be promoted.',
     });
     expect(txMock.student.update).not.toHaveBeenCalled();
+  });
+
+  it('promotes selected students and updates their academicYearId to the next academic year', async () => {
+    txMock.academicYear.findUnique.mockResolvedValueOnce({ id: 2 });
+    txMock.student.findMany.mockResolvedValueOnce([
+      activeStudent({
+        id: 2,
+        firstName: 'Grade',
+        lastName: 'Six',
+        gradeLevel: 'GRADE_SCHOOL',
+        yearLevel: 'Grade 6',
+        transitionDecision: 'CONTINUE_NEXT_LEVEL',
+      }),
+      activeStudent({
+        id: 11,
+        firstName: 'Grade',
+        lastName: 'Eleven',
+        gradeLevel: 'SENIOR_HIGH',
+        yearLevel: 'Grade 11',
+        program: 'STEM',
+        transitionDecision: 'CONTINUE_NEXT_LEVEL',
+      }),
+    ]);
+
+    const { promoteSelectedStudents } = await import('@/lib/academic-year-service');
+    const result = await promoteSelectedStudents([2, 11], 23);
+
+    expect(result).toMatchObject({
+      success: true,
+      selectedCount: 2,
+      promotedCount: 2,
+    });
+    // Verify the next academic year was looked up: 2026-2027 → 2027-2028
+    expect(txMock.academicYear.findUnique).toHaveBeenCalledWith({
+      where: { year: '2027-2028' },
+      select: { id: true },
+    });
+    // Verify promoted students had their academicYearId updated to the next year
+    expect(txMock.student.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: [2, 11] } },
+      data: { academicYearId: 2 },
+    });
   });
 
   it('explains when a selected Grade 12 student is marked as not continuing to college', async () => {
