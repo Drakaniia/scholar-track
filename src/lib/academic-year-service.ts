@@ -295,6 +295,17 @@ export function resolvePromotionTarget(student: PromotionStudentInput): Promotio
     }
   }
 
+  if (student.gradeLevel === 'KINDERGARTEN') {
+    const decisionTarget = getDecisionGateTarget(student, transitionDecision);
+    if (decisionTarget) return decisionTarget;
+
+    return {
+      action: 'PROMOTE',
+      gradeLevel: 'GRADE_SCHOOL',
+      yearLevel: 'Grade 1',
+    };
+  }
+
   if (student.gradeLevel === 'COLLEGE') {
     const collegeYear = parseCollegeYearNumber(student.yearLevel);
 
@@ -346,6 +357,10 @@ export function getNextYearLevel(
     if (currentGrade === 12) {
       return { nextYearLevel: '1st Year', isGraduating: false };
     }
+  }
+
+  if (gradeLevel === 'KINDERGARTEN') {
+    return { nextYearLevel: 'Grade 1', isGraduating: false };
   }
 
   if (gradeLevel === 'COLLEGE') {
@@ -457,6 +472,7 @@ function buildPromotionBackupCreateInput(params: {
     transitionDecisionBy: number | null;
     separatedAt: Date | null;
     separationReason: string | null;
+    academicYearId: number | null;
   };
   scholarships?: Array<Record<string, unknown>>;
   disbursements?: Array<Record<string, unknown>>;
@@ -520,6 +536,18 @@ function buildAcademicRecordForTransition(params: {
   };
 }
 
+/**
+ * Computes the next academic year string from a year like "2024-2025".
+ * e.g., "2024-2025" → "2025-2026"
+ * Returns null if the input doesn't match the expected format.
+ */
+function getNextAcademicYearString(currentYear: string): string | null {
+  const match = currentYear.match(/^(\d{4})-/);
+  if (!match) return null;
+  const startYear = parseInt(match[1], 10);
+  return `${startYear + 1}-${startYear + 2}`;
+}
+
 function getDatePartsInManila(date: Date) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Manila',
@@ -549,6 +577,10 @@ function normalizeStudentRestoreData(student: Record<string, unknown>) {
     graduationStatus: student.graduationStatus ? String(student.graduationStatus) : null,
     graduatedAt: student.graduatedAt ? new Date(String(student.graduatedAt)) : null,
     isArchived: Boolean(student.isArchived),
+    academicYearId:
+      student.academicYearId === null || student.academicYearId === undefined
+        ? null
+        : Number(student.academicYearId),
     transitionDecision: student.transitionDecision ? String(student.transitionDecision) : null,
     transitionDecisionAt: student.transitionDecisionAt
       ? new Date(String(student.transitionDecisionAt))
@@ -895,6 +927,7 @@ export async function promoteSelectedStudents(
         transitionDecisionBy: true,
         separatedAt: true,
         separationReason: true,
+        academicYearId: true,
       },
     });
     const studentsById = new Map(students.map((student) => [student.id, student]));
@@ -1131,29 +1164,27 @@ export async function promoteSelectedStudents(
         action: 'ARCHIVE',
         success: true,
       });
-    }
-
-    auditRows.push(
-      buildAuditCreateInput(
-        userId || null,
-        'MANUAL_SELECTED_PROMOTE_STUDENTS',
-        'SYSTEM',
-        undefined,
-        {
-          academicYear: activeAcademicYear.year,
-          academicYearId: activeAcademicYear.id,
-          cohortCount: cohortIds.length,
-          selectedCount: selectedIds.length,
-          promotedCount,
-          graduatedCount,
-          archivedCount,
-          skippedCount,
-          errorCount,
-          source: 'MANUAL_SELECTED',
-          errors: errors.length > 0 ? errors : undefined,
-        }
-      )
-    );
+    }      auditRows.push(
+        buildAuditCreateInput(
+          userId || null,
+          'MANUAL_SELECTED_PROMOTE_STUDENTS',
+          'SYSTEM',
+          undefined,
+          {
+            academicYear: activeAcademicYear.year,
+            academicYearId: activeAcademicYear.id,
+            cohortCount: cohortIds.length,
+            selectedCount: selectedIds.length,
+            promotedCount,
+            graduatedCount,
+            archivedCount,
+            skippedCount,
+            errorCount,
+            source: 'MANUAL_SELECTED',
+            errors: errors.length > 0 ? errors : undefined,
+          }
+        )
+      );
 
     if (backupRows.length > 0) {
       await tx.backup.createMany({ data: backupRows });
@@ -1168,6 +1199,22 @@ export async function promoteSelectedStudents(
         where: { id: update.studentId },
         data: update.data,
       });
+    }
+
+    // Update promoted students' academicYearId to the next academic year
+    const nextYearString = getNextAcademicYearString(activeAcademicYear.year);
+    if (nextYearString && promotionStudentUpdates.length > 0) {
+      const nextAcademicYear = await tx.academicYear.findUnique({
+        where: { year: nextYearString },
+        select: { id: true },
+      });
+      if (nextAcademicYear) {
+        const promotedStudentIds = promotionStudentUpdates.map((u) => u.studentId);
+        await tx.student.updateMany({
+          where: { id: { in: promotedStudentIds } },
+          data: { academicYearId: nextAcademicYear.id },
+        });
+      }
     }
 
     if (archivedStudentIds.length > 0) {
@@ -1326,9 +1373,26 @@ export async function promoteStudent(studentId: number, userId?: number) {
     return updated;
   }
 
+  const activeAcademicYear = await getActiveAcademicYear();
+  const updateData = buildPromotionUpdate(target);
+
+  // Update the student's academicYearId to the next academic year
+  if (activeAcademicYear) {
+    const nextYearString = getNextAcademicYearString(activeAcademicYear.year);
+    if (nextYearString) {
+      const nextAcademicYear = await prisma.academicYear.findUnique({
+        where: { year: nextYearString },
+        select: { id: true },
+      });
+      if (nextAcademicYear) {
+        updateData.academicYearId = nextAcademicYear.id;
+      }
+    }
+  }
+
   const updated = await prisma.student.update({
     where: { id: studentId },
-    data: buildPromotionUpdate(target),
+    data: updateData,
   });
 
   await logAudit(userId || null, 'MANUAL_PROMOTE_STUDENT', 'STUDENT', student.id, {
@@ -1337,6 +1401,7 @@ export async function promoteStudent(studentId: number, userId?: number) {
     previousYearLevel: student.yearLevel,
     newGradeLevel: target.gradeLevel,
     newYearLevel: target.yearLevel,
+    newAcademicYearId: updateData.academicYearId ?? null,
     reason: 'Manual promotion',
   });
 
