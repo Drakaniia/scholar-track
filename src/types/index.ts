@@ -292,9 +292,10 @@ export interface StudentFeesInput {
 // ============================================
 // ENUM VALUES
 // ============================================
-export type GradeLevel = 'GRADE_SCHOOL' | 'JUNIOR_HIGH' | 'SENIOR_HIGH' | 'COLLEGE';
+export type GradeLevel = 'KINDERGARTEN' | 'GRADE_SCHOOL' | 'JUNIOR_HIGH' | 'SENIOR_HIGH' | 'COLLEGE';
 
 export const GRADE_LEVELS: GradeLevel[] = [
+  'KINDERGARTEN',
   'GRADE_SCHOOL',
   'JUNIOR_HIGH',
   'SENIOR_HIGH',
@@ -302,6 +303,7 @@ export const GRADE_LEVELS: GradeLevel[] = [
 ] as const;
 
 export const GRADE_LEVEL_LABELS: Record<GradeLevel, string> = {
+  KINDERGARTEN: 'Kindergarten',
   GRADE_SCHOOL: 'Grade School',
   JUNIOR_HIGH: 'Junior High School',
   SENIOR_HIGH: 'Senior High School',
@@ -309,6 +311,7 @@ export const GRADE_LEVEL_LABELS: Record<GradeLevel, string> = {
 };
 
 export const YEAR_LEVELS: Record<GradeLevel, string[]> = {
+  KINDERGARTEN: ['Kindergarten'],
   GRADE_SCHOOL: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
   JUNIOR_HIGH: ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
   SENIOR_HIGH: ['Grade 11', 'Grade 12'],

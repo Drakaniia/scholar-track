@@ -30,6 +30,11 @@ export const STATUS_COLORS = {
 
 // Education Level Descriptions
 export const EDUCATION_LEVEL_INFO = {
+  Kindergarten: {
+    description: 'Kindergarten / Preparatory education',
+    yearLevels: ['Kindergarten'],
+    termType: 'SEMESTER' as const,
+  },
   'Grade School': {
     description: 'Elementary education (Grades 1-6)',
     yearLevels: ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
