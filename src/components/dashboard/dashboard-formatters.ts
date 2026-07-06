@@ -3,6 +3,7 @@ import { SCHOLARSHIP_SOURCES, SCHOLARSHIP_SOURCE_LABELS } from '@/types';
 import type { ScholarshipSource } from '@/types';
 
 const DASHBOARD_GRADE_LEVEL_LABELS = {
+  KINDERGARTEN: 'Kindergarten',
   GRADE_SCHOOL: 'Grade School',
   JUNIOR_HIGH: 'Junior High',
   SENIOR_HIGH: 'Senior High',
