@@ -1,6 +1,6 @@
 {
   "name": "scholarship-tracking-system",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack -p 8080",
@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:file": "vitest run",
     "test:api": "npx tsx scripts/test-scholarship-api.ts",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
