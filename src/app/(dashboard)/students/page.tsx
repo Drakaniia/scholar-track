@@ -369,11 +369,13 @@ function getStudentFormDefaultValues(
 function StudentsTableLoading({
   canManageStudents,
   isAdmin,
+  showProgramColumn,
 }: {
   canManageStudents: boolean;
   isAdmin: boolean;
+  showProgramColumn: boolean;
 }) {
-  const bodyColumns = canManageStudents ? 7 : 6;
+  const bodyColumns = (canManageStudents ? 7 : 6) - (showProgramColumn ? 0 : 1);
 
   return (
     <div className="overflow-x-auto">
@@ -384,7 +386,7 @@ function StudentsTableLoading({
             <TableHead>Name</TableHead>
             <TableHead>Grade Level</TableHead>
             <TableHead>Year Level</TableHead>
-            <TableHead>Program</TableHead>
+            {showProgramColumn && <TableHead>Program</TableHead>}
             <TableHead>Status</TableHead>
             <TableHead>Scholarships</TableHead>
             {canManageStudents && <TableHead className="text-right">Actions</TableHead>}
@@ -1343,7 +1345,11 @@ export default function StudentsPage() {
           )}
 
           {loading ? (
-            <StudentsTableLoading canManageStudents={canManageStudents} isAdmin={isAdmin} />
+            <StudentsTableLoading
+              canManageStudents={canManageStudents}
+              isAdmin={isAdmin}
+              showProgramColumn={gradeLevelFilter === 'COLLEGE'}
+            />
           ) : students.length === 0 ? (
             <div className="flex h-48 flex-col items-center justify-center text-muted-foreground">
               <p>No students found</p>
@@ -1367,7 +1373,9 @@ export default function StudentsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Grade Level</TableHead>
                     <TableHead>Year Level</TableHead>
-                    <TableHead>Program</TableHead>
+                    {gradeLevelFilter === 'COLLEGE' && (
+                      <TableHead>Program</TableHead>
+                    )}
                     <TableHead>Status</TableHead>
                     <TableHead>Scholarships</TableHead>
                     {canManageStudents && <TableHead className="text-right">Actions</TableHead>}
@@ -1402,7 +1410,9 @@ export default function StudentsPage() {
                         <Badge variant="outline">{GRADE_LEVEL_LABELS[student.gradeLevel]}</Badge>
                       </TableCell>
                       <TableCell>{student.yearLevel}</TableCell>
-                      <TableCell>{student.program}</TableCell>
+                      {gradeLevelFilter === 'COLLEGE' && (
+                        <TableCell>{student.program}</TableCell>
+                      )}
                       <TableCell>
                         <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
                           {student.status}
