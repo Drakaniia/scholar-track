@@ -13,7 +13,7 @@ The Entity Relationship Diagram (ERD) is generated using `prisma-erd-generator` 
 To generate the ERD locally:
 
 ```bash
-npm run erd:generate
+pnpm run erd:generate
 ```
 
 This command uses `prisma/schema-with-erd.prisma` which includes the ERD generator configuration.
@@ -23,7 +23,7 @@ This command uses `prisma/schema-with-erd.prisma` which includes the ERD generat
 After generation, you can view the ERD:
 
 ```bash
-npm run erd:view
+pnpm run erd:view
 ```
 
 Or open `docs/index.html` in your browser.
@@ -45,5 +45,5 @@ When you make schema changes:
 
 1. Update `prisma/schema.prisma` (main schema)
 2. Copy changes to `prisma/schema-with-erd.prisma`
-3. Run `npm run erd:generate` to regenerate the ERD
+3. Run `pnpm run erd:generate` to regenerate the ERD
 4. Commit both schema files and the updated `docs/ERD.svg`
