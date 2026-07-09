@@ -54,28 +54,11 @@ describe('summary export route', () => {
     const sheet = workbook.getWorksheet('Grade School');
     expect(sheet).toBeDefined();
 
-    // Header row: columns 8, 12, 16 should have 3 unique consecutive years
+    // Header row: column 8 should have the single unique year
     const year1 = sheet?.getCell(1, 8).text;
-    const year2 = sheet?.getCell(1, 12).text;
-    const year3 = sheet?.getCell(1, 16).text;
 
-    // No duplicates
-    expect(year1).not.toBe(year2);
-    expect(year2).not.toBe(year3);
-    expect(year1).not.toBe(year3);
-
-    // Should resolve to 3 consecutive years: 2024-2025, 2025-2026, 2026-2027
-    // (2026-2027 is the only real year, so it pads back 2 years)
-    const uniqueYears = [year1, year2, year3].filter(Boolean);
-    expect(uniqueYears).toHaveLength(3);
-    expect(uniqueYears).toContain('2026-2027');
-    // The 3 years should be consecutive: parse start years should differ by 1
-    const startYears = [year1, year2, year3]
-      .filter(Boolean)
-      .map((y) => parseInt(y!.match(/^(\d{4})/)![1], 10))
-      .sort((a, b) => a - b);
-    expect(startYears[1] - startYears[0]).toBe(1);
-    expect(startYears[2] - startYears[1]).toBe(1);
+    // Should resolve to just 1 year: 2026-2027 (no padding)
+    expect(year1).toBe('2026-2027');
   });
 
   it('exports the sample-style summary workbook as XLSX', async () => {
@@ -272,14 +255,55 @@ describe('summary export route', () => {
     expect(sheet).toBeDefined();
 
     // Only 2024-2025 data should be included, 2 students with fees in that year
-    // Column 16 (0-indexed 15) = METRIC_COLUMNS[2].count = third (most recent) year
-    expect(sheet?.getCell(3, 16).text).toBe('2');
+    // With 2 years resolved (2023-2024, 2024-2025), the second year group starts at column 12
+    expect(sheet?.getCell(3, 12).text).toBe('2');
 
-    // First and second year columns should be empty (no data for 2022-2023, 2023-2024)
-    // Column 8 (0-indexed 7) = METRIC_COLUMNS[0].count = first year
+    // First year column should be empty (no data for 2023-2024)
+    // Column 8 = first year group count column
     expect(sheet?.getCell(3, 8).text).toBe('');
-    // Column 12 (0-indexed 11) = METRIC_COLUMNS[1].count = second year
-    expect(sheet?.getCell(3, 12).text).toBe('');
+  });
+
+  it('includes ALL academic years as columns (not capped at 3) when 4+ years exist', async () => {
+    prismaMock.studentFees.findMany.mockResolvedValueOnce([
+      {
+        studentId: 1,
+        academicYear: '2027-2028',
+        student: { gradeLevel: 'GRADE_SCHOOL' },
+      },
+    ]);
+    prismaMock.academicYear.findMany.mockResolvedValueOnce([
+      { year: '2024-2025' },
+      { year: '2025-2026' },
+      { year: '2026-2027' },
+      { year: '2027-2028' },
+    ]);
+    prismaMock.scholarship.findMany.mockResolvedValueOnce([]);
+
+    const { GET } = await import('@/app/api/export/summary/route');
+    const response = await GET(new NextRequest('http://localhost/api/export/summary?format=xlsx'));
+
+    expect(response.status).toBe(200);
+
+    const workbook = await loadWorkbookFromBuffer(await response.arrayBuffer());
+    const sheet = workbook.getWorksheet('Grade School');
+    expect(sheet).toBeDefined();
+
+    // 7 base columns + 4 columns per year × 4 years = 23 total columns
+    // Year headers should be in merged cells starting at Excel columns:
+    // 2024-2025 → col 8, 2025-2026 → col 12, 2026-2027 → col 16, 2027-2028 → col 20
+    expect(sheet?.getCell(1, 8).text).toBe('2024-2025');
+    expect(sheet?.getCell(1, 12).text).toBe('2025-2026');
+    expect(sheet?.getCell(1, 16).text).toBe('2026-2027');
+    expect(sheet?.getCell(1, 20).text).toBe('2027-2028');
+
+    // Total students row should also have 4 year columns
+    // Column 10 = %FSE col for year 0, Column 14 = %FSE for year 1,
+    // Column 18 = %FSE for year 2, Column 22 = %FSE for year 3
+    // These should exist as cells
+    expect(sheet?.getCell(1, 10)).toBeDefined();
+    expect(sheet?.getCell(1, 14)).toBeDefined();
+    expect(sheet?.getCell(1, 18)).toBeDefined();
+    expect(sheet?.getCell(1, 22)).toBeDefined();
   });
 
   it('prevents browser caching of export data with no-store headers', async () => {
