@@ -143,7 +143,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                   aria-current={isActive ? 'page' : undefined}
                   onClick={() => onMobileClose?.()}
                   className={cn(
-                    'flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors',
+                    'link-hover link-hover--slide flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-emerald-50 text-emerald-900 ring-1 ring-inset ring-emerald-200'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
@@ -225,7 +225,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                   prefetch={true}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors',
+                    'link-hover link-hover--slide flex h-9 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-white text-emerald-800 shadow-sm ring-1 ring-inset ring-emerald-100'
                       : 'text-slate-600 hover:bg-white hover:text-slate-950'
