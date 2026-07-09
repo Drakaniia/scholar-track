@@ -26,9 +26,10 @@
     "delete-sample-data:live": "npx tsx scripts/delete-imported-data.ts --live",
     "erd:generate": "PRISMA_SCHEMA=prisma/schema-with-erd.prisma prisma generate",
     "erd:view": "start docs/index.html",
-    "clean": "rm -rf node_modules .next && npm install"
+    "clean": "rm -rf node_modules .next && pnpm install"
   },
   "dependencies": {
+    "@base-ui/react": "^1.6.0",
     "@gsap/react": "^2.1.2",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
