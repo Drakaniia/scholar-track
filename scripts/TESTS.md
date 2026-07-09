@@ -8,10 +8,10 @@ Run unit tests using Vitest:
 
 ```bash
 # Run all tests
-npm run test
+pnpm run test
 
 # Run tests in watch mode (auto-rerun on file changes)
-npm run test:watch
+pnpm run test:watch
 ```
 
 ### Test Files
@@ -23,12 +23,12 @@ npm run test:watch
 Run integration tests that make actual HTTP requests to the API:
 
 ```bash
-npm run test:api
+pnpm run test:api
 ```
 
 **Prerequisites:**
 
-- Development server must be running (`npm run dev`)
+- Development server must be running (`pnpm run dev`)
 - `TEST_ADMIN_PASSWORD` must be set for the admin test account
 - Optionally set `TEST_ADMIN_USERNAME` if the test admin account uses a different username
 
