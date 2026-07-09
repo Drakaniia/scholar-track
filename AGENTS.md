@@ -122,13 +122,13 @@ scholarship-tracking-system/
 
 - **Node.js** 18.x or higher
 - **PostgreSQL** 14.x or higher (or use the configured Prisma Accelerate URL)
-- **npm** or **yarn**
+- **pnpm**, **npm**, or **yarn**
 
 ### Installation
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 ```
 
 ### Environment Setup
@@ -161,20 +161,20 @@ SEED_STAFF_PASSWORD="set-a-unique-staff-password"
 npx prisma db push
 
 # Apply database indexes for performance optimization
-npm run db:add-indexes
+pnpm run db:add-indexes
 
 # Seed the database with initial data
-npm run db:seed
+pnpm run db:seed
 
 # (Optional) Open Prisma Studio for visual database management
-npm run db:studio
+pnpm run db:studio
 ```
 
 ### Development Server
 
 ```bash
 # Start development server on port 8080 with webpack
-npm run dev
+pnpm run dev
 ```
 
 Access at: `http://localhost:8080`
@@ -183,36 +183,36 @@ Access at: `http://localhost:8080`
 
 ```bash
 # Generate Prisma client and build
-npm run build
+pnpm run build
 
 # Start production server
-npm start
+pnpm start
 ```
 
 ### Available Scripts
 
 | Command                  | Description                                   |
 | ------------------------ | --------------------------------------------- |
-| `npm run dev`            | Start development server (port 8080, webpack) |
-| `npm run build`          | Generate Prisma client + production build     |
-| `npm start`              | Start production server                       |
-| `npm run lint`           | Run ESLint                                    |
-| `npm run typecheck`      | TypeScript type checking                      |
-| `npm run test`           | Run Vitest tests                              |
-| `npm run test:watch`     | Run tests in watch mode                       |
-| `npm run test:api`       | Test scholarship API endpoints                |
-| `npm run db:push`        | Push Prisma schema to database                |
-| `npm run db:seed`        | Seed database with initial data               |
-| `npm run db:studio`      | Open Prisma Studio                            |
-| `npm run db:add-indexes` | Apply performance indexes                     |
-| `npm run erd:generate`   | Generate ERD visualization                    |
-| `npm run erd:view`       | Open ERD in browser                           |
-| `npm run db:backup`      | Manage data backups (list, create, export)    |
-| `npm run clean`          | Clean node_modules and .next, reinstall       |
+| `pnpm run dev`           | Start development server (port 8080, webpack) |
+| `pnpm run build`         | Generate Prisma client + production build     |
+| `pnpm start`             | Start production server                       |
+| `pnpm run lint`          | Run ESLint                                    |
+| `pnpm run typecheck`     | TypeScript type checking                      |
+| `pnpm run test`          | Run Vitest tests                              |
+| `pnpm run test:watch`    | Run tests in watch mode                       |
+| `pnpm run test:api`      | Test scholarship API endpoints                |
+| `pnpm run db:push`       | Push Prisma schema to database                |
+| `pnpm run db:seed`       | Seed database with initial data               |
+| `pnpm run db:studio`     | Open Prisma Studio                            |
+| `pnpm run db:add-indexes`| Apply performance indexes                     |
+| `pnpm run erd:generate`  | Generate ERD visualization                    |
+| `pnpm run erd:view`      | Open ERD in browser                           |
+| `pnpm run db:backup`     | Manage data backups (list, create, export)    |
+| `pnpm run clean`         | Clean node_modules and .next, reinstall       |
 
 ## Initial Users
 
-The seed scripts create initial admin and staff users, but they do not use public shared passwords. Set `SEED_ADMIN_PASSWORD` and `SEED_STAFF_PASSWORD` in the environment before running `npm run db:seed`.
+The seed scripts create initial admin and staff users, but they do not use public shared passwords. Set `SEED_ADMIN_PASSWORD` and `SEED_STAFF_PASSWORD` in the environment before running `pnpm run db:seed`.
 
 ## Database Schema
 
@@ -308,7 +308,7 @@ The seed scripts create initial admin and staff users, but they do not use publi
 
 - Unit tests with **Vitest**
 - Test files alongside source: `*.test.ts`
-- Test API endpoints with `npm run test:api`
+- Test API endpoints with `pnpm run test:api`
 
 ## Key Architecture Decisions
 
@@ -357,7 +357,7 @@ npx prisma migrate dev --name [migration_name]
 
 ```bash
 # Apply performance indexes
-npm run db:add-indexes
+pnpm run db:add-indexes
 
 # Update query planner statistics (PostgreSQL)
 # Run in database client:
@@ -370,10 +370,10 @@ ANALYZE scholarships;
 
 ```bash
 # Open Prisma Studio
-npm run db:studio
+pnpm run db:studio
 
 # View ERD
-npm run erd:view
+pnpm run erd:view
 ```
 
 ## Role-Based Access Control (RBAC)
@@ -469,8 +469,8 @@ For detailed TanStack Query guide, see `docs/TANSTACK-QUERY-GUIDE.md`
 | Prisma client not generated | Run `npx prisma generate`                                         |
 | Database connection error   | Verify `DATABASE_URL` in `.env`, check connection pool parameters |
 | Auth not working            | Clear cookies, ensure JWT_SECRET matches                          |
-| Build fails                 | Run `npm run typecheck` to identify TS errors                     |
-| Slow queries                | Run `npm run db:add-indexes` to apply performance indexes         |
+| Build fails                 | Run `pnpm run typecheck` to identify TS errors                     |
+| Slow queries                | Run `pnpm run db:add-indexes` to apply performance indexes         |
 | Prisma retry warnings       | Check DATABASE_URL parameters, reduce `connection_limit`          |
 
 ### Performance Issues
@@ -510,10 +510,10 @@ For detailed TanStack Query guide, see `docs/TANSTACK-QUERY-GUIDE.md`
 The project includes a CLI backup tool at `scripts/backup-data.ts`:
 
 ```bash
-npm run db:backup -- --list                    # View recent backup snapshots
-npm run db:backup -- --export-all              # Export all tables to local JSON files
-npm run db:backup -- --create students         # Create DB backup of a specific table
-npm run db:backup -- --help                    # Full usage guide
+pnpm run db:backup -- --list                    # View recent backup snapshots
+pnpm run db:backup -- --export-all              # Export all tables to local JSON files
+pnpm run db:backup -- --create students         # Create DB backup of a specific table
+pnpm run db:backup -- --help                    # Full usage guide
 ```
 
 - Database backup records are stored in the `backups` table (see `Backup` model in schema)
@@ -542,7 +542,7 @@ NEXTAUTH_SECRET=<secure-random-string>
 
 - [ ] Set unique seed/admin passwords in environment variables
 - [ ] Configure connection pooling for production database
-- [ ] Apply database indexes (`npm run db:add-indexes`)
+- [ ] Apply database indexes (`pnpm run db:add-indexes`)
 - [ ] Set appropriate `connection_limit` based on plan
 - [ ] Enable error tracking and monitoring
 - [ ] Review and update RBAC settings
@@ -572,8 +572,8 @@ When contributing to this project:
 2. Use TypeScript strictly with proper typing
 3. Write tests for new features
 4. Update documentation for new features
-5. Run type checking: `npm run typecheck`
-6. Run tests: `npm run test`
+5. Run type checking: `pnpm run typecheck`
+6. Run tests: `pnpm run test`
 7. Check for performance implications
 8. Ensure RBAC is properly implemented
 9. Add database indexes for new queries

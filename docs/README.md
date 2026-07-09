@@ -21,8 +21,8 @@ Welcome to the ScholarTrack documentation. This directory contains all comprehen
 ### Viewing the ERD
 
 ```bash
-npm run erd:view      # Open ERD in browser
-npm run erd:generate  # Regenerate from Prisma schema
+pnpm run erd:view      # Open ERD in browser
+pnpm run erd:generate  # Regenerate from Prisma schema
 ```
 
 Available ERD themes (configurable in `prisma/schema.prisma`): `default`, `forest`, `dark`, `neutral`.

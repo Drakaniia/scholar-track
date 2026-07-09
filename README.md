@@ -6,6 +6,7 @@
     <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
     <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
     <img alt="Prisma" src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+    <img alt="pnpm" src="https://img.shields.io/badge/pnpm-F69220?style=for-the-badge&logo=pnpm&logoColor=white" />
   </p>
   <img src="public/images/mainReadme.png" alt="ScholarTrack logo"  />
 </div>
@@ -90,14 +91,14 @@ Export endpoints are available for:
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Set up your .env file (see docs/SETUP.md)
 # Seed database
-npm run db:seed
+pnpm run db:seed
 
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 Visit **[http://localhost:8080](http://localhost:8080)** to log in.
