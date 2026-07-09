@@ -9,12 +9,21 @@ import { formatAcademicYearDisplay } from '@/lib/utils';
 
 export const runtime = 'nodejs';
 
-const COLUMN_COUNT = 19;
-const METRIC_COLUMNS = [
-  { count: 7, fse: 9, percent: 10, totalStudents: 10 },
-  { count: 11, fse: 13, percent: 14, totalStudents: 14 },
-  { count: 15, fse: 17, percent: 18, totalStudents: 18 },
-] as const;
+const BASE_COLUMNS = 7;
+const COLUMNS_PER_YEAR = 4;
+
+function getColumnCount(yearCount: number): number {
+  return BASE_COLUMNS + COLUMNS_PER_YEAR * yearCount;
+}
+
+function getMetricColumns(yearCount: number) {
+  return Array.from({ length: yearCount }, (_, i) => ({
+    count: BASE_COLUMNS + COLUMNS_PER_YEAR * i,
+    fse: BASE_COLUMNS + COLUMNS_PER_YEAR * i + 2,
+    percent: BASE_COLUMNS + COLUMNS_PER_YEAR * i + 3,
+    totalStudents: BASE_COLUMNS + COLUMNS_PER_YEAR * i + 3,
+  }));
+}
 
 const GRADE_LEVELS = ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'] as const;
 
@@ -334,8 +343,8 @@ const EXTERNAL_HIED_ROWS: TemplateRow[] = [
   },
 ];
 
-function createRow(cells: Record<number, string> = {}) {
-  const row = Array<string>(COLUMN_COUNT).fill('');
+function createRow(cells: Record<number, string> = {}, columnCount: number) {
+  const row = Array<string>(columnCount).fill('');
   Object.entries(cells).forEach(([column, value]) => {
     row[Number(column)] = value;
   });
@@ -354,12 +363,6 @@ function sortAcademicYears(years: string[]) {
   });
 }
 
-function previousAcademicYear(year: string) {
-  const start = parseAcademicYearStart(year);
-  if (!Number.isFinite(start)) return year;
-  return `${start - 1}-${start}`;
-}
-
 function currentAcademicYear(date = new Date()) {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -372,13 +375,8 @@ function resolveDisplayYears(years: string[]) {
   const normalizedYears = years.filter(Boolean).map(formatAcademicYearDisplay);
   const uniqueYears = [...new Set(normalizedYears)];
   const sortedYears = sortAcademicYears(uniqueYears);
-  const resolved = sortedYears.length > 0 ? sortedYears.slice(-3) : [currentAcademicYear()];
-
-  while (resolved.length < 3) {
-    resolved.unshift(previousAcademicYear(resolved[0]));
-  }
-
-  return sortAcademicYears(resolved).slice(-3);
+  // Return ALL unique academic years — no cap, no artificial padding
+  return sortedYears.length > 0 ? sortedYears : [currentAcademicYear()];
 }
 
 function formatCount(value: number, showZero = false) {
@@ -579,8 +577,9 @@ function addMetricCells(
   options: { showZero?: boolean; grandTotals?: Record<string, SummaryMetric> } = {},
   percentMetrics?: Record<string, SummaryMetric>
 ) {
+  const metricColumns = getMetricColumns(years.length);
   years.forEach((year, index) => {
-    const columns = METRIC_COLUMNS[index];
+    const columns = metricColumns[index];
     const metric = metrics[year] ?? { count: 0, fse: 0 };
     const pctMetric = percentMetrics?.[year] ?? metric;
     const grandTotal = options.grandTotals?.[year];
@@ -659,31 +658,24 @@ function buildSummaryRows(
   const usedIds = new Set<number>();
   const rows: SummaryRow[] = [];
 
-  rows.push({
-    kind: 'heading',
-    cells: createRow({
-      0: 'SCHOLARSHIP',
-      4: 'GRANT',
-      7: years[0],
-      11: years[1],
-      15: years[2],
-    }),
+  const columnCount = getColumnCount(years.length);
+
+  const headingCells: Record<number, string> = { 0: 'SCHOLARSHIP', 4: 'GRANT' };
+  years.forEach((year, i) => {
+    headingCells[BASE_COLUMNS + COLUMNS_PER_YEAR * i] = year;
   });
-  rows.push({
-    kind: 'section',
-    cells: createRow({
-      0: 'INTERNALLY FUNDED',
-      7: 'NO. OF STUDENTS',
-      9: 'FSE',
-      10: '% FSE',
-      11: 'NO. OF STUDENTS',
-      13: 'FSE',
-      14: '% FSE',
-      15: 'NO. OF STUDENT',
-      17: 'FSE',
-      18: '%FSE',
-    }),
+  rows.push({ kind: 'heading', cells: createRow(headingCells, columnCount) });
+
+  const sectionCells: Record<number, string> = { 0: 'INTERNALLY FUNDED' };
+  years.forEach((_, i) => {
+    const countCol = BASE_COLUMNS + COLUMNS_PER_YEAR * i;
+    const fseCol = countCol + 2;
+    const pctCol = countCol + 3;
+    sectionCells[countCol] = 'NO. OF STUDENTS';
+    sectionCells[fseCol] = 'FSE';
+    sectionCells[pctCol] = '% FSE';
   });
+  rows.push({ kind: 'section', cells: createRow(sectionCells, columnCount) });
 
   const internalTemplateRows = [
     ...takeTemplateScholarships(INTERNAL_ROWS, scholarships, usedIds),
@@ -742,52 +734,53 @@ function buildSummaryRows(
     const row = createRow({
       0: template.label,
       [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    });
+    }, columnCount);
     addMetricCells(row, years, internalMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, internalMetrics[idx].percentMetrics);
     rows.push({ kind: 'data', cells: row });
   });
 
-  const internalTotalRow = createRow({ 2: 'TOTAL:' });
+  const internalTotalRow = createRow({ 2: 'TOTAL:' }, columnCount);
   addMetricCells(internalTotalRow, years, internalTotals, totalStudentsByYear, { showZero: true, grandTotals }, internalPctTotals);
   rows.push({ kind: 'total', cells: internalTotalRow });
 
-  rows.push({ kind: 'section', cells: createRow({ 0: 'EXTERNALLY FUNDED ' }) });
-  rows.push({ kind: 'heading', cells: createRow({ 0: 'BED' }) });
+  rows.push({ kind: 'section', cells: createRow({ 0: 'EXTERNALLY FUNDED ' }, columnCount) });
+  rows.push({ kind: 'heading', cells: createRow({ 0: 'BED' }, columnCount) });
 
   bedTemplateRows.forEach(({ template, scholarships: schols }, idx) => {
     const row = createRow({
       0: template.label,
       [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    });
+    }, columnCount);
     addMetricCells(row, years, bedMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, bedMetrics[idx].percentMetrics);
     rows.push({ kind: 'data', cells: row });
   });
 
-  rows.push({ kind: 'heading', cells: createRow({ 0: 'HIED' }) });
+  rows.push({ kind: 'heading', cells: createRow({ 0: 'HIED' }, columnCount) });
 
   hiedTemplateRows.forEach(({ template, scholarships: schols }, idx) => {
     const row = createRow({
       0: template.label,
       [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    });
+    }, columnCount);
     addMetricCells(row, years, hiedMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, hiedMetrics[idx].percentMetrics);
     rows.push({ kind: 'data', cells: row });
   });
 
-  const externalTotalRow = createRow({ 2: 'TOTAL:' });
+  const externalTotalRow = createRow({ 2: 'TOTAL:' }, columnCount);
   addMetricCells(externalTotalRow, years, externalTotals, totalStudentsByYear, {
     showZero: true,
     grandTotals,
   }, externalPctTotals);
   rows.push({ kind: 'total', cells: externalTotalRow });
 
-  const grandTotalRow = createRow({ 1: 'GRAND TOTAL:' });
+  const grandTotalRow = createRow({ 1: 'GRAND TOTAL:' }, columnCount);
   addMetricCells(grandTotalRow, years, grandTotals, totalStudentsByYear, { showZero: true, grandTotals }, grandPctTotals);
   rows.push({ kind: 'grand', cells: grandTotalRow });
 
-  const studentTotalRow = createRow({ 0: 'TOTAL OF STRUDENTS:' });
+  const metricColumns = getMetricColumns(years.length);
+  const studentTotalRow = createRow({ 0: 'TOTAL OF STRUDENTS:' }, columnCount);
   years.forEach((year, index) => {
-    studentTotalRow[METRIC_COLUMNS[index].totalStudents] = formatCount(
+    studentTotalRow[metricColumns[index].totalStudents] = formatCount(
       totalStudentsByYear[year] ?? 0,
       true
     );
@@ -797,8 +790,10 @@ function buildSummaryRows(
   return rows;
 }
 
-function resolveStyle(kind: SummaryRow['kind'], rowIndex: number, columnIndex: number) {
-  const isMetricColumn = METRIC_COLUMNS.some(({ count, fse, percent }) =>
+function resolveStyle(kind: SummaryRow['kind'], rowIndex: number, columnIndex: number, columnCount: number) {
+  const yearCount = (columnCount - BASE_COLUMNS) / COLUMNS_PER_YEAR;
+  const metricColumns = getMetricColumns(yearCount);
+  const isMetricColumn = metricColumns.some(({ count, fse, percent }) =>
     ([count, fse, percent] as number[]).includes(columnIndex)
   );
 
@@ -910,31 +905,42 @@ function applyCellStyle(cell: ExcelJS.Cell, styleId: number) {
   }
 }
 
-async function buildWorkbook(sheets: Array<{ name: string; rows: SummaryRow[] }>) {
+async function buildWorkbook(sheets: Array<{ name: string; years: string[]; rows: SummaryRow[] }>) {
   const workbook = new ExcelJS.Workbook();
 
-  sheets.forEach(({ name, rows }) => {
+  sheets.forEach(({ name, years, rows }) => {
     const worksheet = workbook.addWorksheet(safeSheetName(name));
 
-    worksheet.columns = [24, 12, 12, 14, 24, 18, 12, 16, 4, 10, 9, 16, 4, 10, 9, 16, 4, 10, 9].map(
-      (width) => ({ width })
-    );
+    const yearCount = years.length;
+    const columnCount = getColumnCount(yearCount);
+
+    // Build column widths: 7 base widths + 4 per year
+    const baseWidths = [24, 12, 12, 14, 24, 18, 12];
+    const yearWidths = [16, 4, 10, 9];
+    const widths = [...baseWidths];
+    for (let i = 0; i < yearCount; i++) {
+      widths.push(...yearWidths);
+    }
+    worksheet.columns = widths.map((width) => ({ width }));
 
     rows.forEach((summaryRow, rowIndex) => {
       const worksheetRow = worksheet.addRow(summaryRow.cells);
       worksheetRow.height = 18;
 
-      for (let columnIndex = 0; columnIndex < COLUMN_COUNT; columnIndex += 1) {
+      for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
         applyCellStyle(
           worksheetRow.getCell(columnIndex + 1),
-          resolveStyle(summaryRow.kind, rowIndex, columnIndex)
+          resolveStyle(summaryRow.kind, rowIndex, columnIndex, columnCount)
         );
       }
     });
 
-    worksheet.mergeCells(1, 8, 1, 11);
-    worksheet.mergeCells(1, 12, 1, 15);
-    worksheet.mergeCells(1, 16, 1, 19);
+    // Dynamically merge cells for each year group in the header row (1-indexed)
+    for (let i = 0; i < yearCount; i++) {
+      const startCol = 8 + COLUMNS_PER_YEAR * i;
+      const endCol = startCol + COLUMNS_PER_YEAR - 1;
+      worksheet.mergeCells(1, startCol, 1, endCol);
+    }
   });
 
   return workbookToBuffer(workbook);
@@ -1062,7 +1068,10 @@ export async function GET(request: NextRequest) {
         rows: buildSummaryRows(gradeScholarships, years, totalStudentsByYear),
       };
     });
-    const buffer = await buildWorkbook(sheets);
+    const buffer = await buildWorkbook(sheets.map((sheet) => ({
+      ...sheet,
+      years,
+    })));
 
     return new NextResponse(buffer, {
       headers: {
