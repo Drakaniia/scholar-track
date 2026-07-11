@@ -46,12 +46,6 @@ export function AuditLogViewer() {
     resourceTypes: string[];
   }>({ actions: [], resourceTypes: [] });
 
-  useEffect(() => {
-    fetchAuditLogFilterOptions();
-    fetchAuditLogs(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchAuditLogFilterOptions = async () => {
     try {
       const res = await fetch('/api/audit-logs/filter-options', { credentials: 'include' });
@@ -104,6 +98,16 @@ export function AuditLogViewer() {
       setLoadingAuditLogs(false);
     }
   };
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchAuditLogFilterOptions();
+    });
+    queueMicrotask(() => {
+      fetchAuditLogs(1);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAuditLogFilterChange = (key: string, value: string) => {
     setAuditLogFilters((prev) => ({ ...prev, [key]: value }));

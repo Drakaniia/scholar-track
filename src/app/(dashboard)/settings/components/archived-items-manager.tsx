@@ -58,12 +58,6 @@ export function ArchivedItemsManager() {
   const [scholarshipTotal, setScholarshipTotal] = useState(0);
   const [scholarshipTotalPages, setScholarshipTotalPages] = useState(0);
 
-  useEffect(() => {
-    fetchArchivedStudents(1);
-    fetchArchivedScholarships(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchArchivedStudents = async (page = 1) => {
     setLoadingArchived(true);
     setStudentSelectAllAcrossPages(false);
@@ -134,6 +128,15 @@ export function ArchivedItemsManager() {
       setLoadingArchived(false);
     }
   };
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchArchivedStudents(1);
+    });
+    queueMicrotask(() => {
+      fetchArchivedScholarships(1);
+    });
+  }, []);
 
   const handleUnarchiveStudent = async (studentId: number) => {
     setUnarchivingItem(`student-${studentId}`);

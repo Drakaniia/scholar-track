@@ -35,11 +35,6 @@ export function ProfileEditor() {
   >({});
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchProfile = async () => {
     setLoadingProfile(true);
     try {
@@ -62,6 +57,12 @@ export function ProfileEditor() {
       setLoadingProfile(false);
     }
   };
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchProfile();
+    });
+  }, []);
 
   const validateProfileForm = (): boolean => {
     const newErrors: Partial<Record<keyof ProfileFormData, string>> = {};
