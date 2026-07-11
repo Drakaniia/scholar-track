@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import { FileDown, FileSpreadsheet, FileText, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,7 +62,7 @@ export function ExportButton({
   className,
   extraItems = [],
 }: ExportButtonProps) {
-  const handleExport = async (
+  const handleExport = useCallback(async (
     format: ExportFormat,
     exportEndpoint = endpoint,
     exportFilename = filename
@@ -101,7 +103,7 @@ export function ExportButton({
       toast.dismiss();
       toast.error('Failed to export');
     }
-  };
+  }, [endpoint, filename]);
 
   if (formats.length === 1 && extraItems.length === 0) {
     const format = formats[0];
