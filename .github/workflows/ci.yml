@@ -13,6 +13,9 @@ concurrency:
 env:
   PNPM_VERSION: 10
   NODE_VERSION: 20
+  # Dummy values for prisma generate — does not connect to the database
+  DIRECT_DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
 jobs:
   lint:
