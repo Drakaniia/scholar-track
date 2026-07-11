@@ -76,6 +76,9 @@ export function DotPattern({
   const id = useId()
   const containerRef = useRef<SVGSVGElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+  const [dots, setDots] = useState<
+    Array<{ x: number; y: number; delay: number; duration: number }>
+  >([])
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -90,23 +93,32 @@ export function DotPattern({
     return () => window.removeEventListener("resize", updateDimensions)
   }, [])
 
-  const dots = Array.from(
-    {
-      length:
-        Math.ceil(dimensions.width / width) *
-        Math.ceil(dimensions.height / height),
-    },
-    (_, i) => {
-      const col = i % Math.ceil(dimensions.width / width)
-      const row = Math.floor(i / Math.ceil(dimensions.width / width))
-      return {
-        x: col * width + cx + x,
-        y: row * height + cy + y,
-        delay: Math.random() * 5,
-        duration: Math.random() * 3 + 2,
-      }
+  useEffect(() => {
+    if (dimensions.width === 0 || dimensions.height === 0) {
+      queueMicrotask(() => {
+        setDots([])
+      })
+      return
     }
-  )
+    const cols = Math.ceil(dimensions.width / width)
+    const rows = Math.ceil(dimensions.height / height)
+    const count = cols * rows
+
+    queueMicrotask(() => {
+      setDots(
+        Array.from({ length: count }, (_, i) => {
+          const col = i % cols
+          const row = Math.floor(i / cols)
+          return {
+            x: col * width + cx + x,
+            y: row * height + cy + y,
+            delay: Math.random() * 5,
+            duration: Math.random() * 3 + 2,
+          }
+        })
+      )
+    })
+  }, [dimensions, width, height, cx, cy, x, y])
 
   return (
     <svg
