@@ -460,7 +460,9 @@ export default function RegistryPage() {
   }, [user, isAdmin, router]);
 
   useEffect(() => {
-    setPage(1);
+    queueMicrotask(() => {
+      setPage(1);
+    });
   }, [debouncedSearch, lane, registryYearLevel, status]);
 
   const fetchRegistry = useCallback(async () => {
@@ -512,7 +514,9 @@ export default function RegistryPage() {
   }, [debouncedSearch, lane, page, registryYearLevel, status]);
 
   useEffect(() => {
-    fetchRegistry();
+    queueMicrotask(() => {
+      fetchRegistry();
+    });
   }, [fetchRegistry]);
 
   const fetchPromotionPreview = useCallback(async () => {
@@ -552,12 +556,18 @@ export default function RegistryPage() {
   }, []);
 
   useEffect(() => {
-    fetchPromotionPreview();
+    queueMicrotask(() => {
+      fetchPromotionPreview();
+    });
   }, [fetchPromotionPreview]);
 
   useEffect(() => {
-    setPromotionQueuePage(1);
-    setSelectedStudentIds(new Set());
+    queueMicrotask(() => {
+      setPromotionQueuePage(1);
+    });
+    queueMicrotask(() => {
+      setSelectedStudentIds(new Set());
+    });
   }, [promotionFilter, promotionYearLevel]);
 
   const handleDecisionChange = (studentId: number, decision: StudentTransitionDecision) => {
@@ -654,6 +664,7 @@ export default function RegistryPage() {
     () => bulkPromotionResult?.results.filter((result) => !result.success) || [],
     [bulkPromotionResult]
   );
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const promotionActionBlocker = useMemo(() => {
     if (!isAdmin) return 'Administrator access is required for bulk promotion.';
     if (promotionLoading) return null;
@@ -717,10 +728,6 @@ export default function RegistryPage() {
       return next;
     });
   };
-
-  useEffect(() => {
-    setPromotionQueuePage((current) => Math.min(current, promotionQueueTotalPages));
-  }, [promotionQueueTotalPages]);
 
   const handleOpenBulkDialog = () => {
     setBulkPromotionMessage(null);
