@@ -11,7 +11,7 @@ import { DashboardKpiStrip } from '@/components/dashboard/dashboard-kpi-strip';
 import type { DashboardData } from '@/components/dashboard/dashboard-types';
 import { RecentAwards } from '@/components/dashboard/recent-awards';
 import { ScholarshipChart } from '@/components/dashboard/scholarship-chart';
-import { ScholarshipTypePanel } from '@/components/dashboard/scholarship-type-panel';
+import { ProgramMixDonut } from '@/components/dashboard/program-mix-donut';
 import { StudentsChart } from '@/components/dashboard/students-chart';
 
 interface DashboardOverviewProps {
@@ -58,7 +58,7 @@ export function DashboardOverview({
             title="Student Mix"
             description="Enrollment distribution by level"
           />
-          <ScholarshipTypePanel data={scholarshipTypeData} sourceLabel={sourceLabel} />
+          <ProgramMixDonut data={scholarshipTypeData} sourceLabel={sourceLabel} />
         </div>
       </section>
 
