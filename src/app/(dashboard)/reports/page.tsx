@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { FileSpreadsheet, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -171,11 +171,6 @@ function formatScholarshipType(type: string) {
 }
 
 export default function ReportsPage() {
-  const [detailedStudents, setDetailedStudents] = useState<DetailedStudent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [scholarshipNamesByGradeAndType, setScholarshipNamesByGradeAndType] = useState<
-    Record<string, Record<string, string[]>>
-  >({});
   const [gradeLevelFilter, setGradeLevelFilter] = useState<string>('all');
   const [academicYearFilter, setAcademicYearFilter] = useState<string>('all');
   const [fundingTypeFilter, setFundingTypeFilter] = useState<'all' | 'internal' | 'external'>(
@@ -193,51 +188,47 @@ export default function ReportsPage() {
   // Fetch all academic years defined in the system
   const { data: academicYearsData } = useAcademicYears();
 
-  // Update state when TanStack Query data changes
-  useEffect(() => {
-    if (detailedData) {
-      setDetailedStudents(detailedData.data);
-      setLoading(false);
+  // Derive state from TanStack Query data instead of syncing via effect
+  const detailedStudents: DetailedStudent[] = detailedData?.data ?? [];
+  const loading = !detailedData;
 
-      // Extract unique scholarship names per grade level and type
-      const namesByGradeAndType: Record<string, Record<string, Set<string>>> = {};
+  const scholarshipNamesByGradeAndType = useMemo(() => {
+    if (!detailedData) return {};
+    const namesByGradeAndType: Record<string, Record<string, Set<string>>> = {};
 
-      detailedData.data.forEach((student: DetailedStudent) => {
-        const gradeLevel = student.gradeLevel;
-        if (!namesByGradeAndType[gradeLevel]) {
-          namesByGradeAndType[gradeLevel] = {};
+    detailedData.data.forEach((student: DetailedStudent) => {
+      const gradeLevel = student.gradeLevel;
+      if (!namesByGradeAndType[gradeLevel]) {
+        namesByGradeAndType[gradeLevel] = {};
+      }
+      if (!student.scholarships || student.scholarships.length === 0) {
+        if (!namesByGradeAndType[gradeLevel]['No Scholarship']) {
+          namesByGradeAndType[gradeLevel]['No Scholarship'] = new Set();
         }
-
-        if (!student.scholarships || student.scholarships.length === 0) {
-          if (!namesByGradeAndType[gradeLevel]['No Scholarship']) {
-            namesByGradeAndType[gradeLevel]['No Scholarship'] = new Set();
-          }
-          namesByGradeAndType[gradeLevel]['No Scholarship'].add('Unassigned');
-        } else {
-          student.scholarships.forEach((ss: DetailedStudent['scholarships'][0]) => {
-            if (ss.scholarship?.type && ss.scholarship?.scholarshipName) {
-              const type = ss.scholarship.type;
-              if (!namesByGradeAndType[gradeLevel][type]) {
-                namesByGradeAndType[gradeLevel][type] = new Set();
-              }
-              namesByGradeAndType[gradeLevel][type].add(ss.scholarship.scholarshipName);
+        namesByGradeAndType[gradeLevel]['No Scholarship'].add('Unassigned');
+      } else {
+        student.scholarships.forEach((ss: DetailedStudent['scholarships'][0]) => {
+          if (ss.scholarship?.type && ss.scholarship?.scholarshipName) {
+            const type = ss.scholarship.type;
+            if (!namesByGradeAndType[gradeLevel][type]) {
+              namesByGradeAndType[gradeLevel][type] = new Set();
             }
-          });
-        }
-      });
-
-      // Convert Sets to sorted arrays
-      const sortedNamesByGradeAndType: Record<string, Record<string, string[]>> = {};
-      Object.keys(namesByGradeAndType).forEach((grade) => {
-        sortedNamesByGradeAndType[grade] = {};
-        Object.keys(namesByGradeAndType[grade]).forEach((type) => {
-          sortedNamesByGradeAndType[grade][type] = Array.from(
-            namesByGradeAndType[grade][type]
-          ).sort();
+            namesByGradeAndType[gradeLevel][type].add(ss.scholarship.scholarshipName);
+          }
         });
+      }
+    });
+
+    const sortedNamesByGradeAndType: Record<string, Record<string, string[]>> = {};
+    Object.keys(namesByGradeAndType).forEach((grade) => {
+      sortedNamesByGradeAndType[grade] = {};
+      Object.keys(namesByGradeAndType[grade]).forEach((type) => {
+        sortedNamesByGradeAndType[grade][type] = Array.from(
+          namesByGradeAndType[grade][type]
+        ).sort();
       });
-      setScholarshipNamesByGradeAndType(sortedNamesByGradeAndType);
-    }
+    });
+    return sortedNamesByGradeAndType;
   }, [detailedData]);
 
   // Handle manual refresh
@@ -364,7 +355,7 @@ export default function ReportsPage() {
   };
 
   // Build academicYearId → year string map from the AcademicYear table
-  const yearById = useMemo(() => {
+  const yearById = (() => {
     const map = new Map<number, string>();
     if (academicYearsData?.data) {
       academicYearsData.data.forEach((ay) => {
@@ -372,13 +363,13 @@ export default function ReportsPage() {
       });
     }
     return map;
-  }, [academicYearsData]);
+  })();
 
   // Derive academic year options from the AcademicYear table,
   // counting both fee records AND scholarship academic year assignments.
   // This ensures the dropdown counts stay in sync when a student's
   // scholarship is assigned to a different academic year.
-  const academicYearOptions = useMemo(() => {
+  const academicYearOptions = (() => {
     const academicYears = (academicYearsData?.data || []) as Array<{ id: number; year: string }>;
     const allFees = detailedStudents.flatMap((s) => s.fees || []);
     const scholarshipAcademicYearIds = detailedStudents.flatMap(
@@ -390,7 +381,7 @@ export default function ReportsPage() {
       scholarshipAcademicYearIds,
       yearById
     );
-  }, [detailedStudents, academicYearsData, yearById]);
+  })();
 
   const exportSourceFilter =
     fundingTypeFilter === 'internal'
