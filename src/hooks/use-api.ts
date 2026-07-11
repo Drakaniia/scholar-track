@@ -43,7 +43,7 @@ export function useApi<T>(url: string, options: UseApiOptions<T> = {}): UseApiRe
 
   useEffect(() => {
     if (immediate) {
-      fetchData();
+      queueMicrotask(() => fetchData());
     }
   }, [fetchData, immediate]);
 
