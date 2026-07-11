@@ -37,7 +37,6 @@ export function DashboardOverview({
   return (
     <div className="space-y-5">
       <DashboardHero
-        stats={data.stats}
         scholarshipSourceFilter={scholarshipSourceFilter}
         onScholarshipSourceChange={onScholarshipSourceChange}
         gradeLevelFilter={gradeLevelFilter}
