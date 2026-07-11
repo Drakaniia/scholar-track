@@ -124,10 +124,6 @@ const studentsApiRouteSource = readFileSync(
   'utf8'
 );
 
-const studentDetailApiRouteSource = readFileSync(
-  join(process.cwd(), 'src/app/api/students/[id]/route.ts'),
-  'utf8'
-);
 
 const reportsPageSource = readFileSync(
   join(process.cwd(), 'src/app/(dashboard)/reports/page.tsx'),
@@ -271,7 +267,6 @@ describe('Student API: academicYearId filter on GET', () => {
     // The GET handler must filter by the student's direct academicYearId field
     // Check the source code for the academicYearId filter logic
     const getHandlerStart = studentsApiRouteSource.indexOf('// GET /api/students - Get all students');
-    const studentFindManySection = studentsApiRouteSource.indexOf('prisma.student.findMany', getHandlerStart);
     const studentCountSection = studentsApiRouteSource.indexOf('prisma.student.count', getHandlerStart);
     const getHandlerBody = studentsApiRouteSource.slice(getHandlerStart, studentCountSection);
 
@@ -371,9 +366,9 @@ describe('Student page: academic year filter with student counts', () => {
   it('uses academicYearCounts from filter options data', () => {
     // The student page must extract academicYearCounts from filterOptionsData
     // Check that the filterOptionsData processing includes academicYearCounts
-    const useEffectSection = studentsPageSource.indexOf('useEffect(() => {');
-    const filterOptionsSection = studentsPageSource.indexOf('filterOptionsData', useEffectSection);
-    const dataProcessing = studentsPageSource.slice(filterOptionsSection, filterOptionsSection + 3000);
+    const derivedSection = studentsPageSource.indexOf('academicYearCounts: Record');
+    const filterDataSection = studentsPageSource.indexOf('filterData', Math.max(0, derivedSection - 200));
+    const dataProcessing = studentsPageSource.slice(Math.max(0, filterDataSection), filterDataSection + 3000);
     
     // Must extract academicYearCounts from filter options data
     expect(dataProcessing).toContain('academicYearCounts');
