@@ -19,22 +19,16 @@ function KpiSkeleton() {
 export function DashboardLoadingState() {
   return (
     <div className="space-y-5">
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-4">
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-10 w-full max-w-lg" />
-            <Skeleton className="h-5 w-full max-w-2xl" />
-            <div className="flex flex-wrap gap-3">
-              <Skeleton className="h-10 w-48 rounded-lg" />
-              <Skeleton className="h-10 w-36 rounded-lg" />
-            </div>
+      <section className="rounded-lg border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-2xl space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-8 w-64 sm:h-10" />
+            <Skeleton className="h-5 w-full max-w-xl" />
           </div>
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-2 w-full rounded-full" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-2 w-full rounded-full" />
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Skeleton className="h-10 w-[180px] rounded-lg" />
+            <Skeleton className="h-10 w-[220px] rounded-lg" />
           </div>
         </div>
       </section>
