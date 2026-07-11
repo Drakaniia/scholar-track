@@ -102,10 +102,18 @@ function KpiCard({
 
   return (
     <Card className="group relative overflow-hidden border-slate-200 bg-white py-0 shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
+      {/* Color-coded gradient overlay */}
+      <div
+        className={cn(
+          'via-white/95 absolute inset-0 bg-gradient-to-br to-white',
+          theme.gradient
+        )}
+      />
+
       {/* Top accent bar */}
       <div className={cn('absolute inset-x-0 top-0 h-0.5', theme.accent)} />
 
-      <CardHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-1">
+      <CardHeader className="relative z-10 flex flex-row items-center justify-between px-4 pt-4 pb-1">
         <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
           {title}
         </CardTitle>
@@ -119,7 +127,7 @@ function KpiCard({
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pb-4">
+      <CardContent className="relative z-10 px-4 pb-4">
         <div className="text-xl font-bold tracking-tight text-slate-950">
           <AnimatedNumber value={value} />
         </div>
