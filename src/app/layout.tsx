@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 
 import { Providers } from '@/components/providers';
+import { DotPattern } from '@/components/ui/dot-pattern';
 import { Toaster } from '@/components/ui/sonner';
 
 import './globals.css';
@@ -24,10 +25,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <div className="relative min-h-screen">
+          <DotPattern
+            className="text-muted-foreground/15"
+            width={24}
+            height={24}
+            cx={1}
+            cy={1}
+            cr={1.2}
+          />
+          <div className="relative z-10">
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
+          </div>
+        </div>
       </body>
     </html>
   );
