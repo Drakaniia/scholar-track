@@ -6,6 +6,14 @@ import { Award } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface RecentAward {
@@ -50,55 +58,80 @@ export function RecentAwards({ awards, limit = 5 }: RecentAwardsProps) {
           View all
         </Link>
       </CardHeader>
-      <CardContent className="px-5 py-5">
-        <div className="divide-y divide-slate-100">
-          {displayAwards.map((award) => (
-            <div
-              key={award.id}
-              className="grid gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[auto_1fr_auto]"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-semibold text-slate-800">
-                {award.studentName.charAt(0)}
-              </div>
-
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate font-medium text-slate-950">{award.studentName}</p>
-                  {award.scholarshipCount && award.scholarshipCount > 1 && (
-                    <Badge
-                      className="border-amber-200 bg-amber-50 text-amber-900"
-                      variant="outline"
-                    >
-                      {award.scholarshipCount} awards
+      <CardContent className="px-0 py-0 sm:px-0">
+        {displayAwards.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-5">Student</TableHead>
+                <TableHead>Scholarship</TableHead>
+                <TableHead className="hidden sm:table-cell">Type</TableHead>
+                <TableHead className="hidden md:table-cell">Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right pr-5">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {displayAwards.map((award) => (
+                <TableRow key={award.id}>
+                  <TableCell className="px-5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-800">
+                        {award.studentName.charAt(0)}
+                      </span>
+                      <span className="truncate font-medium text-slate-950">
+                        {award.studentName}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="truncate text-sm text-slate-700">
+                        {award.scholarshipCount && award.scholarshipCount > 1
+                          ? `${award.scholarshipCount} programs`
+                          : award.scholarshipName}
+                      </span>
+                      {award.scholarshipCount && award.scholarshipCount > 1 && (
+                        <Badge
+                          className="border-amber-200 bg-amber-50 text-amber-900 text-[10px] leading-none"
+                          variant="outline"
+                        >
+                          {award.scholarshipCount}x
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    <span className="text-sm text-slate-500">{award.type}</span>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {typeof award.amount === 'number' ? (
+                      <span className="font-medium text-slate-950">
+                        {formatCurrency(award.amount)}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-slate-400">&mdash;</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={statusStyles[award.status]} variant="outline">
+                      {award.status}
                     </Badge>
-                  )}
-                  <Badge className={statusStyles[award.status]} variant="outline">
-                    {award.status}
-                  </Badge>
-                </div>
-                <p className="truncate text-sm text-slate-500">
-                  {award.scholarshipCount && award.scholarshipCount > 1
-                    ? `${award.scholarshipCount} scholarships`
-                    : award.scholarshipName}{' '}
-                  / {award.type}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 text-sm sm:block sm:text-right">
-                <span className="text-slate-500">{formatDate(award.date)}</span>
-                {typeof award.amount === 'number' && (
-                  <div className="font-semibold text-slate-950">{formatCurrency(award.amount)}</div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {displayAwards.length === 0 && (
+                  </TableCell>
+                  <TableCell className="text-right pr-5 text-slate-500">
+                    {formatDate(award.date)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="px-5 py-10">
             <div className="rounded-lg border border-dashed border-[#d4dfd9] py-10 text-center text-sm text-slate-500">
               No recent awards
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
