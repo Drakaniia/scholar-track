@@ -75,38 +75,6 @@ Export endpoints are available for:
 
 ---
 
-## Screenshots
-
-| Dashboard | Comparative Data |
-| --- | --- |
-| <img src="src/screenshots/dashboard.png" alt="ScholarTrack dashboard" /> | <img src="src/screenshots/Comparative_Data.png" alt="5 Year Comparison" /> |
-
-| Scholarship Management | Reports and Analytics |
-| --- | --- |
-| <img src="src/screenshots/scholarships.png" alt="ScholarTrack scholarship management" /> | <img src="src/screenshots/report.png" alt="ScholarTrack reports and analytics" /> |
-
----
-
-## Quick Start
-
-```bash
-# Install dependencies
-pnpm install
-
-# Set up your .env file (see docs/SETUP.md)
-# Seed database
-pnpm run db:seed
-
-# Start development server
-pnpm run dev
-```
-
-Visit **[http://localhost:8080](http://localhost:8080)** to log in.
-
-For full setup instructions, see the [Setup Guide](docs/SETUP.md).
-
----
-
 ## Documentation
 
 | Document | Description |
