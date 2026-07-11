@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   Filter,
@@ -12,7 +12,6 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,7 +62,6 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ currentUser }: UserManagementProps) {
-  const [users, setUsers] = useState<User[]>([]);
   const [updating, setUpdating] = useState<number | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -78,8 +76,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
   // Pagination state
   const [userPage, setUserPage] = useState(1);
   const [userLimit, setUserLimit] = useState(25);
-  const [userTotal, setUserTotal] = useState(0);
-  const [userTotalPages, setUserTotalPages] = useState(0);
 
   // Edit user state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -120,19 +116,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
   const usersQuery = useUsers(queryParams);
 
-  // Sync query results to local state (preserving JSX compatibility)
-  useEffect(() => {
-    if (usersQuery.data?.success) {
-      setUsers(usersQuery.data.data as User[]);
-      setUserPage(usersQuery.data.pagination.page);
-      setUserTotal(usersQuery.data.pagination.total);
-      setUserTotalPages(usersQuery.data.pagination.totalPages);
-    } else if (usersQuery.error) {
-      console.error('Error fetching users:', usersQuery.error);
-      toast.error('Failed to load users');
-    }
-  }, [usersQuery.data, usersQuery.error]);
-
+  // Derive users and total from query data instead of syncing via effect
+  const users: User[] = usersQuery.data?.success ? (usersQuery.data.data as User[]) : [];
+  const userTotal: number = usersQuery.data?.success ? usersQuery.data.pagination.total : 0;
   const loading = usersQuery.isLoading && !usersQuery.data;
 
   const applyUserFilters = () => {
