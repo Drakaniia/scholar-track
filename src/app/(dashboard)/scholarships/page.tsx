@@ -300,7 +300,6 @@ export default function ScholarshipsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const isAdmin = !authLoading && isAdminRole(user?.role);
   const canManageScholarships = !authLoading && canManageStudentsAndScholarships(user?.role);
-  const [scholarships, setScholarships] = useState<ScholarshipWithCount[]>([]);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -313,11 +312,8 @@ export default function ScholarshipsPage() {
   const [deletingScholarship, setDeletingScholarship] = useState<Scholarship | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedScholarship, setSelectedScholarship] = useState<ScholarshipDetail | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [showAllAssignedStudents, setShowAllAssignedStudents] = useState(false);
 
   // TanStack Query hooks for data fetching
@@ -376,52 +372,36 @@ export default function ScholarshipsPage() {
     ...(academicYearFilter && academicYearFilter !== 'all' ? { academicYearId: academicYearFilter } : {}),
   });
 
-  const [counts, setCounts] = useState<ScholarshipCounts>({ total: 0, internal: 0, external: 0 });
-  const [academicYearCounts, setAcademicYearCounts] = useState<Record<string, number>>({});
-  const [filteredStudentCounts, setFilteredStudentCounts] = useState<Record<number, number> | null>(null);
+  // Derive from query data instead of syncing via effects
+  const scholarships: ScholarshipWithCount[] = (scholarshipsData?.data || []) as ScholarshipWithCount[];
+  const total: number = scholarshipsData?.total || 0;
+  const totalPages: number = scholarshipsData?.totalPages || 1;
+  const filteredStudentCounts: Record<number, number> | null =
+    (scholarshipsData as { filteredStudentCounts?: Record<number, number> | null })
+      ?.filteredStudentCounts ?? null;
 
-  // Update counts when filter options data changes
-  useEffect(() => {
-    if (filterOptionsData?.data) {
-      const data = filterOptionsData.data as ScholarshipCounts & { academicYearCounts?: Record<string, number> };
-      setCounts(data);
-      if (data.academicYearCounts) {
-        setAcademicYearCounts(data.academicYearCounts);
-      }
-    }
-  }, [filterOptionsData]);
-
-  // Update state when TanStack Query data changes
-  useEffect(() => {
-    if (scholarshipsData) {
-      setScholarships((scholarshipsData.data || []) as ScholarshipWithCount[]);
-      setTotal(scholarshipsData.total || 0);
-      setTotalPages(scholarshipsData.totalPages || 1);
-      setFilteredStudentCounts(
-        (scholarshipsData as { filteredStudentCounts?: Record<number, number> })
-          .filteredStudentCounts || null
-      );
-    }
-  }, [scholarshipsData]);
-
-  useEffect(() => {
-    if (scholarshipDetail?.data && selectedScholarship) {
-      setSelectedScholarship(scholarshipDetail.data as ScholarshipDetail);
-    }
-  }, [scholarshipDetail, selectedScholarship]);
-
-  useEffect(() => {
-    setLoadingDetail(detailLoading);
-  }, [detailLoading]);
+  const counts: ScholarshipCounts = filterOptionsData?.data
+    ? (filterOptionsData.data as ScholarshipCounts)
+    : { total: 0, internal: 0, external: 0 };
+  const academicYearCounts: Record<string, number> =
+    (filterOptionsData?.data as { academicYearCounts?: Record<string, number> })
+      ?.academicYearCounts ?? {};
 
   useEffect(() => {
     // Reset to page 1 when filter changes
-    setPage(1);
-    // Reset filtered counts when academic year filter changes
-    if (academicYearFilter === 'all') {
-      setFilteredStudentCounts(null);
-    }
+    queueMicrotask(() => {
+      setPage(1);
+    });
   }, [sourceFilter, eligibleGradeLevelsFilter, academicYearFilter, debouncedSearch]);
+
+  // Sync selected scholarship with detail query data
+  useEffect(() => {
+    if (scholarshipDetail?.data && selectedScholarship) {
+      queueMicrotask(() => {
+        setSelectedScholarship(scholarshipDetail.data as ScholarshipDetail);
+      });
+    }
+  }, [scholarshipDetail, selectedScholarship]);
 
   const handleCreate = async (data: CreateScholarshipInput) => {
     setSubmitting(true);
@@ -495,7 +475,6 @@ export default function ScholarshipsPage() {
   const handleViewDetails = (scholarshipId: number) => {
     setSelectedScholarship({ id: scholarshipId } as ScholarshipDetail);
     setDetailDialogOpen(true);
-    setLoadingDetail(true);
     setShowAllAssignedStudents(false);
     setDialogAcademicYearIdFilter('all');
     // useScholarship hook will fetch automatically due to enabled: !!selectedScholarship?.id
@@ -1070,7 +1049,7 @@ export default function ScholarshipsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className={DIALOG_BODY_CLASS}>
-            {loadingDetail ? (
+            {detailLoading ? (
               <ScholarshipDetailSkeleton />
             ) : selectedScholarship ? (
               <div className="space-y-6">
