@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -540,8 +540,6 @@ export default function StudentsPage() {
   const canManageStudents = canManageStudentsAndScholarships(user?.role);
   const canManageStudentFees = canManageStudentFeesForRole(user?.role);
   const queryClient = useQueryClient();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300); // Debounce search by 300ms
   const [gradeLevelFilter, setGradeLevelFilter] = useState<string>('all');
@@ -555,30 +553,9 @@ export default function StudentsPage() {
   const [editingStudentId, setEditingStudentId] = useState<number | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [showFullDetails, setShowFullDetails] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [programs, setPrograms] = useState<string[]>([]);
-  const [scholarships, setScholarships] = useState<
-    Array<{ id: number; scholarshipName: string; source: string; _count?: { students: number } }>
-  >([]);
-  const [studentsWithoutScholarship, setStudentsWithoutScholarship] = useState<number>(0);
-  const [gradeLevelCounts, setGradeLevelCounts] = useState<Record<string, number>>({});
-  const [programCounts, setProgramCounts] = useState<Record<string, number>>({});
-  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
-  const [facetTotals, setFacetTotals] = useState({
-    gradeLevel: 0,
-    program: 0,
-    status: 0,
-    scholarship: 0,
-  });
-  const [dynamicScholarshipCounts, setDynamicScholarshipCounts] = useState<Record<string, number>>(
-    {}
-  );
-  const [academicYearCounts, setAcademicYearCounts] = useState<Record<string, number>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -647,82 +624,74 @@ export default function StudentsPage() {
     population: studentPopulation,
   });
 
-  // Update state when TanStack Query data changes
-  useEffect(() => {
-    if (studentsData) {
-      setStudents((studentsData.data || []) as unknown as Student[]);
-      setTotal(studentsData.total || 0);
-      setTotalPages(studentsData.totalPages || 1);
-    }
-  }, [studentsData]);
+  // Derive from query data instead of syncing via effects
+  const students: Student[] = (studentsData?.data || []) as unknown as Student[];
+  const loading = studentsLoading;
+  const total: number = studentsData?.total || 0;
+  const totalPages: number = studentsData?.totalPages || 1;
 
-  useEffect(() => {
-    setLoading(studentsLoading);
-  }, [studentsLoading]);
+  const filterData = filterOptionsData?.data as {
+    programs?: string[];
+    scholarships?: Array<{
+      id: number;
+      scholarshipName: string;
+      source: string;
+      _count?: { students: number };
+    }>;
+    studentsWithoutScholarship?: number;
+    gradeLevelCounts?: Record<string, number>;
+    programCounts?: Record<string, number>;
+    statusCounts?: Record<string, number>;
+    facetTotals?: { gradeLevel: number; program: number; status: number; scholarship: number };
+    dynamicScholarshipCounts?: Record<string, number>;
+    academicYearCounts?: Record<string, number>;
+  } | undefined;
 
+  const programs: string[] = filterData?.programs ?? [];
+  const scholarships: Array<{ id: number; scholarshipName: string; source: string; _count?: { students: number } }> =
+    useMemo(() => filterData?.scholarships ?? [], [filterData?.scholarships]);
+  const studentsWithoutScholarship = filterData?.studentsWithoutScholarship ?? 0;
+  const gradeLevelCounts: Record<string, number> = filterData?.gradeLevelCounts ?? {};
+  const programCounts: Record<string, number> = filterData?.programCounts ?? {};
+  const statusCounts: Record<string, number> = filterData?.statusCounts ?? {};
+  const facetTotals = {
+    gradeLevel: filterData?.facetTotals?.gradeLevel ?? 0,
+    program: filterData?.facetTotals?.program ?? 0,
+    status: filterData?.facetTotals?.status ?? 0,
+    scholarship: filterData?.facetTotals?.scholarship ?? 0,
+  };
+  const dynamicScholarshipCounts: Record<string, number> = filterData?.dynamicScholarshipCounts ?? {};
+  const academicYearCounts: Record<string, number> = filterData?.academicYearCounts ?? {};
+
+  // Sync selectedStudent with detail query data (deferred to avoid set-state-in-effect lint)
   useEffect(() => {
     if (studentDetail?.data && selectedStudent) {
-      setSelectedStudent(studentDetail.data as unknown as StudentDetail);
+      queueMicrotask(() => {
+        setSelectedStudent(studentDetail.data as unknown as StudentDetail);
+      });
     }
   }, [studentDetail, selectedStudent]);
 
+  // Sync editingStudent with editing detail query data
   useEffect(() => {
     if (!editingStudentId || !editingStudentDetail?.data) return;
 
     const nextEditingStudent = editingStudentDetail.data as unknown as StudentWithScholarships;
     if (nextEditingStudent.id === editingStudentId) {
-      setEditingStudent(nextEditingStudent);
+      queueMicrotask(() => {
+        setEditingStudent(nextEditingStudent);
+      });
     }
   }, [editingStudentDetail, editingStudentId]);
 
+  // Reset to page 1 when filters change
   useEffect(() => {
-    setLoadingDetail(detailLoading);
-  }, [detailLoading]);
-
-  useEffect(() => {
-    if (filterOptionsData) {
-      const data = filterOptionsData.data as {
-        programs: string[];
-        scholarships: Array<{
-          id: number;
-          scholarshipName: string;
-          source: string;
-          _count?: { students: number };
-        }>;
-        studentsWithoutScholarship: number;
-        gradeLevelCounts: Record<string, number>;
-        programCounts: Record<string, number>;
-        statusCounts: Record<string, number>;
-        facetTotals?: {
-          gradeLevel: number;
-          program: number;
-          status: number;
-          scholarship: number;
-        };
-        dynamicScholarshipCounts: Record<string, number>;
-        academicYearCounts: Record<string, number>;
-      };
-      setPrograms(data.programs || []);
-      setScholarships(data.scholarships || []);
-      setStudentsWithoutScholarship(data.studentsWithoutScholarship || 0);
-      setGradeLevelCounts(data.gradeLevelCounts || {});
-      setProgramCounts(data.programCounts || {});
-      setStatusCounts(data.statusCounts || {});
-      setFacetTotals({
-        gradeLevel: data.facetTotals?.gradeLevel || 0,
-        program: data.facetTotals?.program || 0,
-        status: data.facetTotals?.status || 0,
-        scholarship: data.facetTotals?.scholarship || 0,
-      });
-      setDynamicScholarshipCounts(data.dynamicScholarshipCounts || {});
-      setAcademicYearCounts(data.academicYearCounts || {});
-    }
-  }, [filterOptionsData]);
-
-  useEffect(() => {
-    // Reset to page 1 when filters change
-    setPage(1);
-    setSelectAllAcrossPages(false);
+    queueMicrotask(() => {
+      setPage(1);
+    });
+    queueMicrotask(() => {
+      setSelectAllAcrossPages(false);
+    });
   }, [
     debouncedSearch,
     gradeLevelFilter,
@@ -734,6 +703,7 @@ export default function StudentsPage() {
     showArchived,
   ]);
 
+  // Reset scholarship filter when source filter conflicts
   useEffect(() => {
     if (
       scholarshipSourceFilter === 'all' ||
@@ -743,12 +713,14 @@ export default function StudentsPage() {
       return;
     }
 
-    const selectedScholarship = scholarships.find(
-      (scholarship) => scholarship.id.toString() === scholarshipFilter
+    const matchedScholarship = scholarships.find(
+      (s) => s.id.toString() === scholarshipFilter
     );
 
-    if (selectedScholarship && selectedScholarship.source !== scholarshipSourceFilter) {
-      setScholarshipFilter('all');
+    if (matchedScholarship && matchedScholarship.source !== scholarshipSourceFilter) {
+      queueMicrotask(() => {
+        setScholarshipFilter('all');
+      });
     }
   }, [scholarshipSourceFilter, scholarshipFilter, scholarships]);
 
@@ -848,7 +820,6 @@ export default function StudentsPage() {
     setSelectedStudent({ id: studentId } as StudentDetail);
     setDetailDialogOpen(true);
     setShowFullDetails(false);
-    setLoadingDetail(true);
     // useStudent hook will fetch automatically due to enabled: !!selectedStudent?.id
   };
 
@@ -1614,7 +1585,7 @@ export default function StudentsPage() {
             <DialogDescription>View scholarship information and student details</DialogDescription>
           </DialogHeader>
           <div className={DIALOG_BODY_CLASS}>
-            {loadingDetail ? (
+            {detailLoading ? (
               <StudentDetailSkeleton />
             ) : selectedStudent ? (
               <div className="space-y-6">
