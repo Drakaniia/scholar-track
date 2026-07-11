@@ -69,7 +69,6 @@ export function AcademicYearManager() {
   const queryClient = useQueryClient();
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [loadingAcademicYears, setLoadingAcademicYears] = useState(false);
-  const [academicYearTotal, setAcademicYearTotal] = useState(0);
   const [academicYearTotalPages, setAcademicYearTotalPages] = useState(0);
   const [academicYearPage] = useState(1);
   const [isSubmittingAcademicYear, setIsSubmittingAcademicYear] = useState(false);
@@ -87,12 +86,6 @@ export function AcademicYearManager() {
     getDefaultAcademicYearFormData()
   );
   const announcedPromotionRunsRef = useRef<Set<number>>(new Set());
-
-  useEffect(() => {
-    fetchAcademicYears(1);
-    fetchPromotionRunStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const isPromotionRunActive = useCallback(
     (run: PromotionRun | null) => run?.status === 'PENDING' || run?.status === 'PROCESSING',
@@ -177,7 +170,6 @@ export function AcademicYearManager() {
           const years = listResult.data || [];
           setAcademicYears(years);
           syncAcademicYearSettingsForm(activeResult.success ? activeResult.data : null, years);
-          setAcademicYearTotal(listResult.total);
           setAcademicYearTotalPages(listResult.totalPages);
         } else {
           toast.error(listResult.error || 'Failed to fetch academic years');
@@ -247,6 +239,16 @@ export function AcademicYearManager() {
     },
     [handleIncomingPromotionRun]
   );
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchAcademicYears(1);
+    });
+    queueMicrotask(() => {
+      fetchPromotionRunStatus();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!promotionRun || !isPromotionRunActive(promotionRun)) return;
@@ -505,9 +507,6 @@ export function AcademicYearManager() {
     }
   };
 
-  const activePromotionRun =
-    promotionRun && activeAcademicYear?.id === promotionRun.academicYearId ? promotionRun : null;
-  const isActivePromotionProcessing = isPromotionRunActive(activePromotionRun);
   const dialogPromotionRun =
     promotionRun && promotionPreview?.activeAcademicYear?.id === promotionRun.academicYearId
       ? promotionRun

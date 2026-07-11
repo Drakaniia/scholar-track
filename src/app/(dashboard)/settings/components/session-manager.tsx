@@ -24,11 +24,6 @@ export function SessionManager() {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [revokingSession, setRevokingSession] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSessions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchSessions = async () => {
     setLoadingSessions(true);
     try {
@@ -47,6 +42,12 @@ export function SessionManager() {
       setLoadingSessions(false);
     }
   };
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchSessions();
+    });
+  }, []);
 
   const handleRevokeSession = async (sessionId: string) => {
     setRevokingSession(sessionId);
