@@ -23,9 +23,6 @@ describe('student list page - Program column visibility', () => {
   it('wraps the main table Program header in gradeLevelFilter === COLLEGE conditional', () => {
     // Look for the conditional pattern directly: "gradeLevelFilter === 'COLLEGE'" followed by
     // a <TableHead>Program</TableHead> within the same block expression
-    const conditionalPattern =
-      "{gradeLevelFilter === 'COLLEGE' && (\\n" +
-      '                      <TableHead>Program</TableHead>';
     expect(studentPageSource).toContain('gradeLevelFilter');
     expect(studentPageSource).toContain('COLLEGE');
     expect(studentPageSource).toContain('<TableHead>Program</TableHead>');
@@ -91,8 +88,6 @@ describe('student list page - Program column visibility', () => {
   // Test 5: The parent passes showProgramColumn prop to StudentsTableLoading
   it('passes showProgramColumn={gradeLevelFilter === "COLLEGE"} to StudentsTableLoading', () => {
     // The parent should pass showProgramColumn based on gradeLevelFilter
-    const skeletonUsage = 'StudentsTableLoading canManageStudents={canManageStudents} isAdmin={isAdmin}';
-    // The parent usage should now include the showProgramColumn prop
     expect(studentPageSource).toContain('showProgramColumn={gradeLevelFilter ===');
   });
 });
