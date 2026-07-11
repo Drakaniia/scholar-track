@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -64,24 +64,11 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { setMobileOpen } = useSidebar();
   const { user, logout } = useAuth();
-  const [displayUser, setDisplayUser] = useState<{ username: string; role: string } | null>(null);
   const isAdmin = user?.role === 'ADMIN';
 
-  // Sync user data after hydration to prevent hydration mismatch
-  useEffect(() => {
-    if (user) {
-      setDisplayUser({
-        username: user.username || 'User',
-        role: user.role,
-      });
-    } else {
-      setDisplayUser(null);
-    }
-  }, [user]);
-
   const visibleNavigationItems = navigationItems.filter((item) => !item.adminOnly || isAdmin);
-  const displayName = displayUser?.username || 'User';
-  const roleLabel = displayUser?.role || 'Guest';
+  const displayName = user?.username || 'User';
+  const roleLabel = user?.role || 'Guest';
   const avatarInitial = displayName.charAt(0).toUpperCase();
 
   const handleLogout = async () => {
