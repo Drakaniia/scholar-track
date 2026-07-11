@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useCallback, useState } from 'react';
 
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
@@ -43,6 +41,9 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
   const animationKey = data.map((item) => `${item.name}:${item.value}`).join('|');
   const isAnyActive = activeIndex >= 0;
 
+  const handleSectorEnter = useCallback((index: number) => setActiveIndex(index), []);
+  const handleSectorLeave = useCallback(() => setActiveIndex(-1), []);
+
   const renderCustomShape = useCallback(
     (props: PieSectorShapeProps) => {
       const {
@@ -67,15 +68,18 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
         <g
           style={{
             transformOrigin: `${cx}px ${cy}px`,
-            transform: isThisActive ? 'scale(1.08)' : 'scale(1)',
+            transform: isThisActive ? 'scale(1.06)' : 'scale(1)',
             opacity: isDimmed ? 0.25 : 1,
-            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+            transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+            cursor: 'pointer',
           }}
+          onMouseEnter={() => handleSectorEnter(index)}
+          onMouseLeave={handleSectorLeave}
         >
           <Sector
             cx={cx}
             cy={cy}
-            innerRadius={isThisActive ? innerRadius - 4 : innerRadius}
+            innerRadius={isThisActive ? innerRadius - 3 : innerRadius}
             outerRadius={isThisActive ? outerRadius + 8 : outerRadius}
             startAngle={startAngle}
             endAngle={endAngle}
@@ -115,14 +119,8 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
         </g>
       );
     },
-    [activeIndex, isAnyActive]
+    [activeIndex, isAnyActive, handleSectorEnter, handleSectorLeave]
   );
-
-  const handleSectorEnter = useCallback(
-    (_data: unknown, index: number) => setActiveIndex(index),
-    []
-  );
-  const handleChartLeave = useCallback(() => setActiveIndex(-1), []);
 
   return (
     <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
@@ -140,10 +138,7 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
       <CardContent className="px-5 py-5">
         {data.length > 0 ? (
           <div className="flex flex-col items-center">
-            <div
-              className="h-[240px] w-full max-w-[280px]"
-              onMouseLeave={handleChartLeave}
-            >
+            <div className="h-[240px] w-full max-w-[280px]">
               <AnimatedChart animationKey={animationKey} mode="pie">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -157,7 +152,6 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
                       stroke="#ffffff"
                       strokeWidth={3}
                       shape={renderCustomShape}
-                      onMouseEnter={handleSectorEnter}
                       isAnimationActive={false}
                     >
                       {data.map((_entry, index) => (
@@ -172,7 +166,7 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
               </AnimatedChart>
             </div>
 
-            {/* Interactive Legend */}
+            {/* Interactive Legend — hover these indicators to highlight sectors */}
             {data.length > 1 && (
               <div className="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
                 {data.map((item, index) => {
@@ -182,13 +176,16 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
                   return (
                     <span
                       key={item.name}
-                      className="inline-flex items-center gap-1.5 text-xs transition-all duration-300"
+                      className="inline-flex cursor-pointer items-center gap-1.5 text-xs transition-all duration-300"
                       style={{
                         opacity: isDimmed ? 0.35 : 1,
                         color: isThisActive
                           ? 'hsl(var(--foreground))'
                           : 'hsl(var(--muted-foreground))',
+                        transform: isThisActive ? 'scale(1.08)' : 'scale(1)',
                       }}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onMouseLeave={() => setActiveIndex(-1)}
                     >
                       <span
                         className="size-2 shrink-0 rounded-full"
@@ -197,7 +194,12 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
                             DONUT_COLORS[index % DONUT_COLORS.length],
                         }}
                       />
-                      <span style={{ fontWeight: isThisActive ? 600 : 400 }}>
+                      <span
+                        style={{
+                          fontWeight: isThisActive ? 600 : 400,
+                          transition: 'font-weight 0.2s ease',
+                        }}
+                      >
                         {item.name}
                       </span>
                     </span>
