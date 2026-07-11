@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { DollarSign, Edit, GraduationCap, Percent, Plus, Save, X } from 'lucide-react';
@@ -88,14 +88,6 @@ export function StudentFeesManager({ studentId, readOnly = false, academicYearId
       new Date().getFullYear().toString() + '-' + (new Date().getFullYear() + 1).toString(),
   });
   const [studentScholarships, setStudentScholarships] = useState<StudentScholarship[]>([]);
-  const [totalScholarshipCoverage, setTotalScholarshipCoverage] = useState({
-    tuitionFee: 0,
-    miscellaneousFee: 0,
-    laboratoryFee: 0,
-    otherFee: 0,
-    amountSubsidy: 0,
-  });
-
   // Filter fees by academic year when a filter is active
   const displayFees = academicYearIdFilter
     ? fees.filter((fee) => fee.academicYearId === academicYearIdFilter)
@@ -212,40 +204,35 @@ export function StudentFeesManager({ studentId, readOnly = false, academicYearId
   }, [studentId]);
 
   useEffect(() => {
-    fetchFees();
-    fetchStudentScholarships();
+    queueMicrotask(() => {
+      fetchFees();
+      fetchStudentScholarships();
+    });
   }, [fetchFees, fetchStudentScholarships]);
 
-  const calculateTotalScholarshipCoverage = useCallback(
-    (scholarships: StudentScholarship[], termCode: ScholarshipTerm) => {
-      const coverage = {
-        tuitionFee: 0,
-        miscellaneousFee: 0,
-        laboratoryFee: 0,
-        otherFee: 0,
-        amountSubsidy: 0,
-      };
+  const totalScholarshipCoverage = useMemo(() => {
+    const coverage = {
+      tuitionFee: 0,
+      miscellaneousFee: 0,
+      laboratoryFee: 0,
+      otherFee: 0,
+      amountSubsidy: 0,
+    };
 
-      scholarships.forEach((ss) => {
-        const sch = ss.scholarship;
-        if (!scholarshipCoversTerm(sch.coveredTerms, termCode)) {
-          return;
-        }
-        if (sch.coversTuition) coverage.tuitionFee += Number(sch.tuitionFee) || 0;
-        if (sch.coversMiscellaneous) coverage.miscellaneousFee += Number(sch.miscellaneousFee) || 0;
-        if (sch.coversLaboratory) coverage.laboratoryFee += Number(sch.laboratoryFee) || 0;
-        if (sch.coversOther) coverage.otherFee += Number(sch.otherFee) || 0;
-        coverage.amountSubsidy += Number(sch.amountSubsidy) || 0;
-      });
+    studentScholarships.forEach((ss) => {
+      const sch = ss.scholarship;
+      if (!scholarshipCoversTerm(sch.coveredTerms, activeTermCode)) {
+        return;
+      }
+      if (sch.coversTuition) coverage.tuitionFee += Number(sch.tuitionFee) || 0;
+      if (sch.coversMiscellaneous) coverage.miscellaneousFee += Number(sch.miscellaneousFee) || 0;
+      if (sch.coversLaboratory) coverage.laboratoryFee += Number(sch.laboratoryFee) || 0;
+      if (sch.coversOther) coverage.otherFee += Number(sch.otherFee) || 0;
+      coverage.amountSubsidy += Number(sch.amountSubsidy) || 0;
+    });
 
-      setTotalScholarshipCoverage(coverage);
-    },
-    []
-  );
-
-  useEffect(() => {
-    calculateTotalScholarshipCoverage(studentScholarships, activeTermCode);
-  }, [activeTermCode, calculateTotalScholarshipCoverage, studentScholarships]);
+    return coverage;
+  }, [studentScholarships, activeTermCode]);
 
   const handleEdit = (fee: StudentFees) => {
     setEditingId(fee.id);
