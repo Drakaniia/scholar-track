@@ -8,9 +8,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -43,67 +41,124 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --animate-shine: shine var(--duration) infinite linear;
-  @keyframes shine {
-    0% {
-      background-position: 0% 0%;
-    }
-    50% {
-      background-position: 100% 100%;
-    }
-    to {
-      background-position: 0% 0%;
-    }
-  }
 }
 
 :root {
   --radius: 0.625rem;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: 262.1 83.3% 57.8%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 262.1 83.3% 57.8%;
-  --radius: 0.5rem;
-  --chart-1: 262.1 83.3% 57.8%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
+
+  /* Surface & background — warm off-white base */
+  --background: oklch(0.985 0.002 160);
+  --foreground: oklch(0.15 0.008 160);
+
+  /* Card — near-white with faint warmth */
+  --card: oklch(0.995 0.001 160);
+  --card-foreground: oklch(0.15 0.008 160);
+
+  /* Popover */
+  --popover: oklch(0.995 0.001 160);
+  --popover-foreground: oklch(0.15 0.008 160);
+
+  /* Primary — refined emerald */
+  --primary: 158 72% 32%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary — subtle warm gray */
+  --secondary: 150 6% 93%;
+  --secondary-foreground: 150 12% 20%;
+
+  /* Muted */
+  --muted: 150 4% 95%;
+  --muted-foreground: 150 8% 48%;
+
+  /* Accent */
+  --accent: 150 4% 95%;
+  --accent-foreground: 150 12% 20%;
+
+  /* Destructive — rose */
+  --destructive: 350 60% 54%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders — very subtle warm */
+  --border: 150 4% 88%;
+  --input: 150 4% 88%;
+
+  /* Ring — primary at low opacity for focus */
+  --ring: 158 72% 32%;
+
+  /* Charts — light pastel palette for clarity */
+  --chart-1: 142 71% 58%;
+  --chart-2: 173 67% 50%;
+  --chart-3: 43 95% 55%;
+  --chart-4: 0 84% 70%;
+  --chart-5: 252 87% 76%;
+
+  /* Sidebar — unified with primary */
+  --sidebar: oklch(0.995 0.001 160);
+  --sidebar-foreground: oklch(0.15 0.008 160);
+  --sidebar-primary: #1a8a5c;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0.002 160);
+  --sidebar-accent-foreground: oklch(0.2 0.008 160);
+  --sidebar-border: oklch(0.92 0.004 160);
+  --sidebar-ring: #1a8a5c;
+}
+
+.dark {
+  /* Surface & background — deep warm with green undertone */
+  --background: oklch(0.18 0.006 160);
+  --foreground: oklch(0.96 0.003 160);
+
+  /* Card — slightly lighter than bg for elevation */
+  --card: oklch(0.22 0.005 160);
+  --card-foreground: oklch(0.96 0.003 160);
+
+  /* Popover */
+  --popover: oklch(0.22 0.005 160);
+  --popover-foreground: oklch(0.96 0.003 160);
+
+  /* Primary — brighter emerald to pop against dark */
+  --primary: 158 65% 45%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary — warm dark gray */
+  --secondary: 150 8% 18%;
+  --secondary-foreground: 150 8% 80%;
+
+  /* Muted */
+  --muted: 150 6% 20%;
+  --muted-foreground: 150 6% 65%;
+
+  /* Accent — subtle green hint */
+  --accent: 158 12% 22%;
+  --accent-foreground: 150 8% 85%;
+
+  /* Destructive — rose, slightly deeper */
+  --destructive: 350 55% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders — visible but subtle */
+  --border: 150 4% 25%;
+  --input: 150 4% 25%;
+
+  /* Ring — matching primary */
+  --ring: 158 65% 45%;
+
+  /* Charts — lightened for dark bg visibility */
+  --chart-1: 142 71% 45%;
+  --chart-2: 173 80% 40%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 350 89% 60%;
+  --chart-5: 213 19% 65%;
+
+  /* Sidebar — darker than main bg for visual hierarchy */
+  --sidebar: oklch(0.14 0.005 160);
+  --sidebar-foreground: oklch(0.9 0.004 160);
   --sidebar-primary: #22c55e;
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-accent: oklch(0.2 0.005 160);
+  --sidebar-accent-foreground: oklch(0.9 0.004 160);
+  --sidebar-border: oklch(0.2 0.005 160);
   --sidebar-ring: #22c55e;
-  /* Pastel Palette */
-  --pastel-purple: 262 83% 76%;
-  --pastel-blue: 200 90% 76%;
-  --pastel-pink: 330 85% 76%;
-  --pastel-orange: 30 90% 76%;
-  --pastel-green: 150 70% 76%;
-
-  --chart-1: var(--pastel-purple);
-  --chart-2: var(--pastel-blue);
-  --chart-3: var(--pastel-pink);
-  --chart-4: var(--pastel-orange);
-  --chart-5: var(--pastel-green);
 }
 
 @layer base {
@@ -112,35 +167,14 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    letter-spacing: 0.012em;
   }
-
-  [data-slot='card'] {
-    @apply text-card-foreground;
-  }
-
-  [data-slot='card'] * {
-    color: inherit;
-  }
-
-  [data-slot='card'] .text-muted-foreground {
-    @apply text-muted-foreground;
-  }
-}
-
-/* Custom gradient background for login page */
-.login-gradient-bg {
-  background: linear-gradient(135deg, #1a936f 0%, #88d4ab 50%, #114b5f 100%) !important;
-}
-
-/* Ensure login page body doesn't interfere with gradient */
-body.login-page-body {
-  background: transparent !important;
 }
 
 /* ── Global Scrollbar Styles ────────────────────────────── */
-/* Applies a clean, minimal scrollbar across the entire app */
-
 /* Webkit (Chrome, Edge, Safari, Opera) */
 ::-webkit-scrollbar {
   width: 8px;
@@ -187,37 +221,7 @@ body.login-page-body {
   scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
 }
 
-/* Animation utilities */
-@keyframes animateIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-in {
-  animation: animateIn 0.3s ease-out;
-}
-
-/* Smooth page transitions */
-[data-slot='page-transition'],
-.page-transition-container {
-  will-change: opacity;
-}
-
-/* Card hover effects */
-[data-slot='card']:hover {
-  transition: box-shadow 0.2s ease-in-out;
-}
-
-/* ============================================
-   Line Hover Link Animations (Vengence UI)
-   ============================================ */
+/* ── Line Hover Link Animations ─────────────────────────── */
 .link-hover {
   cursor: pointer;
   position: relative;
@@ -250,11 +254,11 @@ body.login-page-body {
   outline-offset: 0.25rem;
 }
 
-/* Slide variant - line slides in from right to left */
+/* Slide variant */
 .link-hover--slide::before {
   transform: scale3d(0, 1, 1);
   transform-origin: 100% 50%;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .link-hover--slide:hover::before,
@@ -272,18 +276,4 @@ body.login-page-body {
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Chart tooltip enhancements */
-.recharts-tooltip-wrapper {
-  z-index: 50;
-}
-
-/* Zoom hover effect for edit and archive buttons */
-.zoom-hover {
-  transition: transform 0.15s ease-in-out;
-}
-
-.zoom-hover:hover {
-  transform: scale(1.15);
 }
