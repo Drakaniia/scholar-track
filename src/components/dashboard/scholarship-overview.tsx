@@ -36,7 +36,7 @@ export function ScholarshipOverview({ scholarships }: ScholarshipOverviewProps) 
           {scholarships.map((scholarship) => (
             <div
               key={scholarship.id}
-              className="group relative rounded-xl border border-gray-200 bg-card p-4 transition-all hover:shadow-md hover:border-primary/20"
+              className="group relative rounded-xl border border-gray-200 bg-card p-4"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
