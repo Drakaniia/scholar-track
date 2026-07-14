@@ -12,8 +12,8 @@ export { RecentAwards } from './recent-awards';
 // Skeleton components for loading states
 export function StatsCardSkeleton() {
   return (
-    <Card className="relative overflow-hidden rounded-lg border-[#e1e8e4] bg-white py-0 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-      <Skeleton className="absolute inset-x-0 top-0 h-1 rounded-none" />
+    <Card className="relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm">
+      <Skeleton className="absolute inset-x-0 top-0 h-0.5 rounded-none" />
       <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 px-5 pt-5 pb-2">
         <Skeleton className="h-4 w-[110px]" />
         <Skeleton className="h-9 w-9 rounded-lg" />
@@ -39,8 +39,8 @@ export function StatsGridSkeleton() {
 
 export function ChartCardSkeleton() {
   return (
-    <Card className="rounded-lg border-[#e1e8e4] bg-white py-0 shadow-sm">
-      <CardHeader className="border-b border-[#e4ece8] px-5 py-5">
+    <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm">
+      <CardHeader className="border-b-[0.5px] border-border/60 px-5 py-5">
         <div className="flex items-center gap-2">
           <Skeleton className="h-2.5 w-2.5 rounded-full" />
           <Skeleton className="h-6 w-[180px]" />
@@ -56,23 +56,7 @@ export function ChartCardSkeleton() {
 
 export function PieChartSkeleton() {
   return (
-    <Card className="border-gray-200">
-      <CardHeader>
-        <Skeleton className="h-6 w-[160px]" />
-        <Skeleton className="h-4 w-[200px]" />
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-center">
-          <Skeleton className="h-[200px] w-[200px] rounded-full" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function TableSkeleton() {
-  return (
-    <Card className="border-gray-200">
+    <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl shadow-sm">
       <CardHeader>
         <Skeleton className="h-6 w-[200px]" />
         <Skeleton className="h-4 w-[300px]" />
@@ -96,7 +80,7 @@ export function TableSkeleton() {
 
 export function RecentAwardsSkeleton() {
   return (
-    <Card className="border-gray-200">
+    <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl shadow-sm">
       <CardHeader>
         <Skeleton className="h-6 w-[180px]" />
         <Skeleton className="h-4 w-[240px]" />
@@ -120,7 +104,7 @@ export function RecentAwardsSkeleton() {
 
 export function TabsSkeleton() {
   return (
-    <Card className="border-gray-200">
+    <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl shadow-sm">
       <CardHeader>
         <Skeleton className="h-6 w-[220px]" />
         <Skeleton className="h-4 w-[280px]" />

@@ -14,24 +14,28 @@ interface DashboardKpiStripProps {
 
 const CARD_THEME = {
   students: {
-    iconBg: 'bg-emerald-100 text-emerald-700',
-    accent: 'bg-emerald-500',
-    gradient: 'from-emerald-500/8',
+    iconBg: 'bg-gradient-to-br from-primary/25 to-primary/10 text-primary',
+    accent: 'bg-gradient-to-r from-primary/50 to-primary/10',
+    gradient: 'bg-gradient-to-br from-primary/[0.06] via-transparent to-primary/[0.02]',
+    progress: 'bg-primary/40',
   },
   programs: {
-    iconBg: 'bg-violet-100 text-violet-700',
-    accent: 'bg-violet-500',
-    gradient: 'from-violet-500/8',
+    iconBg: 'bg-gradient-to-br from-chart-2/25 to-chart-2/10 text-chart-2',
+    accent: 'bg-gradient-to-r from-chart-2/50 to-chart-2/10',
+    gradient: 'bg-gradient-to-br from-chart-2/[0.06] via-transparent to-chart-2/[0.02]',
+    progress: 'bg-chart-2/40',
   },
   awarded: {
-    iconBg: 'bg-amber-100 text-amber-700',
-    accent: 'bg-amber-500',
-    gradient: 'from-amber-500/8',
+    iconBg: 'bg-gradient-to-br from-chart-3/25 to-chart-3/10 text-chart-3',
+    accent: 'bg-gradient-to-r from-chart-3/50 to-chart-3/10',
+    gradient: 'bg-gradient-to-br from-chart-3/[0.06] via-transparent to-chart-3/[0.02]',
+    progress: 'bg-chart-3/40',
   },
   released: {
-    iconBg: 'bg-sky-100 text-sky-700',
-    accent: 'bg-sky-500',
-    gradient: 'from-sky-500/8',
+    iconBg: 'bg-gradient-to-br from-chart-4/25 to-chart-4/10 text-chart-4',
+    accent: 'bg-gradient-to-r from-chart-4/50 to-chart-4/10',
+    gradient: 'bg-gradient-to-br from-chart-4/[0.06] via-transparent to-chart-4/[0.02]',
+    progress: 'bg-chart-4/40',
   },
 } as const;
 
@@ -101,20 +105,15 @@ function KpiCard({
     typeof progress === 'number' ? Math.min(Math.max(progress, 0), 100) : null;
 
   return (
-    <Card className="group relative overflow-hidden border-slate-200 bg-white py-0 shadow-sm transition-all hover:border-slate-300 hover:shadow-md">
-      {/* Color-coded gradient overlay */}
-      <div
-        className={cn(
-          'via-white/95 absolute inset-0 bg-gradient-to-br to-white',
-          theme.gradient
-        )}
-      />
+    <Card className="group relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm transition-all hover:shadow-md">
+      {/* Gradient background tint */}
+      <div aria-hidden="true" className={cn('pointer-events-none absolute inset-0', theme.gradient)} />
 
       {/* Top accent bar */}
-      <div className={cn('absolute inset-x-0 top-0 h-0.5', theme.accent)} />
+      <div aria-hidden="true" className={cn('absolute inset-x-0 top-0 h-0.5', theme.accent)} />
 
       <CardHeader className="relative z-10 flex flex-row items-center justify-between px-4 pt-4 pb-1">
-        <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+        <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {title}
         </CardTitle>
         <div
@@ -128,24 +127,24 @@ function KpiCard({
       </CardHeader>
 
       <CardContent className="relative z-10 px-4 pb-4">
-        <div className="text-xl font-bold tracking-tight text-slate-950">
+        <div className="text-xl font-bold tracking-tight text-foreground">
           <AnimatedNumber value={value} />
         </div>
-        <p className="mt-0.5 truncate text-[11px] text-slate-500">{detail}</p>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{detail}</p>
         {normalizedProgress !== null && progressLabel && (
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[9px] font-medium text-slate-400">
+              <span className="text-[9px] font-medium text-muted-foreground/70">
                 {progressLabel}
               </span>
-              <span className="text-[9px] font-semibold text-slate-500">
+              <span className="text-[9px] font-semibold text-muted-foreground">
                 {normalizedProgress}%
               </span>
             </div>
-            <div className="h-1 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1 overflow-hidden rounded-full bg-muted">
               <AnimatedProgressBar
                 width={normalizedProgress}
-                className={cn('h-full rounded-full', theme.accent)}
+                className={cn('h-full rounded-full', theme.progress)}
               />
             </div>
           </div>

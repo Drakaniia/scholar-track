@@ -31,15 +31,15 @@ type MultiScholarshipStudentItemProps = {
 
 function MultiScholarshipStudentItem({ student }: MultiScholarshipStudentItemProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+    <div className="rounded-lg border-[0.5px] border-border/60 bg-muted/40 p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-slate-950">{student.studentName}</p>
-          <p className="text-xs text-slate-500">
+          <p className="truncate font-semibold text-foreground">{student.studentName}</p>
+          <p className="text-xs text-muted-foreground">
             {student.yearLevel} / {student.program || student.gradeLevel}
           </p>
         </div>
-        <Badge className="shrink-0 bg-amber-100 text-amber-900" variant="outline">
+        <Badge className="shrink-0 border-chart-4/20 bg-chart-4/10 text-chart-4" variant="outline">
           <AnimatedNumber value={student.scholarshipCount} /> scholarships
         </Badge>
       </div>
@@ -47,7 +47,7 @@ function MultiScholarshipStudentItem({ student }: MultiScholarshipStudentItemPro
         {student.scholarships.map((scholarship, index) => (
           <span
             key={`${student.id}-${scholarship.scholarshipName}-${scholarship.academicYear}-${index}`}
-            className="rounded-md border border-white bg-white px-2 py-1 text-xs text-slate-700 shadow-sm"
+            className="rounded-md border-[0.5px] border-border/60 bg-background/80 px-2 py-1 text-xs text-muted-foreground shadow-sm"
           >
             {index + 1}. {scholarship.scholarshipName}
             {scholarship.academicYear ? ` / ${scholarship.academicYear}` : ''}
@@ -60,7 +60,7 @@ function MultiScholarshipStudentItem({ student }: MultiScholarshipStudentItemPro
 
 function EmptyMultiScholarshipStudents() {
   return (
-    <div className="rounded-lg border border-dashed border-slate-200 py-12 text-center text-sm text-slate-500">
+    <div className="rounded-lg border border-dashed border-border/60 py-12 text-center text-sm text-muted-foreground">
       No students with multiple scholarships in the selected source and window.
     </div>
   );
@@ -76,14 +76,14 @@ export function MultipleScholarshipStudentsCard({
 
   return (
     <>
-      <Card className="rounded-lg border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-200">
+      <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl shadow-sm">
+        <CardHeader className="border-b-[0.5px] border-border/60">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-sky-50 text-sky-700">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <BadgeCheck className="h-4 w-4" />
               </span>
-              <CardTitle className="text-lg text-slate-950">
+              <CardTitle className="text-lg text-foreground">
                 Students With Multiple Scholarships
               </CardTitle>
             </div>
@@ -93,7 +93,7 @@ export function MultipleScholarshipStudentsCard({
                 variant="outline"
                 size="sm"
                 onClick={() => setDialogOpen(true)}
-                className="w-fit gap-2 border-slate-300 bg-white"
+                className="w-fit gap-2"
               >
                 <List className="h-4 w-4" />
                 View all
@@ -115,13 +115,13 @@ export function MultipleScholarshipStudentsCard({
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="border-sky-200 p-0 sm:max-w-3xl">
-          <DialogHeader className="border-b border-sky-100 bg-sky-50 px-6 py-5">
-            <DialogTitle className="flex items-center gap-2 text-slate-950">
-              <BadgeCheck className="h-5 w-5 text-sky-700" />
+        <DialogContent className="p-0 sm:max-w-3xl">
+          <DialogHeader className="border-b-[0.5px] border-border/60 bg-muted/40 px-6 py-5">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <BadgeCheck className="h-5 w-5 text-primary" />
               Students With Multiple Scholarships
             </DialogTitle>
-            <DialogDescription className="text-slate-600">
+            <DialogDescription>
               Full list for the selected source and comparative data window.
             </DialogDescription>
           </DialogHeader>
