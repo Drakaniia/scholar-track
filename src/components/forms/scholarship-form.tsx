@@ -1009,7 +1009,7 @@ export function ScholarshipForm({
         </Button>
         <Button
           type="submit"
-          variant="gradient"
+          variant="default"
           disabled={
             loading || selectedCoveredTerms.length === 0 || (isEditing && !hasScholarshipChanges)
           }

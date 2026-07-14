@@ -1065,7 +1065,7 @@ export default function StudentsPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button variant="gradient">
+                <Button variant="default">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Students
                 </Button>

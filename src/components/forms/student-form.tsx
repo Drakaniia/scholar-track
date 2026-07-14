@@ -1832,7 +1832,7 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
           </Button>
           <Button
             type="submit"
-            variant="gradient"
+            variant="default"
             disabled={loading || (isEditing && !hasStudentChanges)}
             className="min-w-32"
           >
