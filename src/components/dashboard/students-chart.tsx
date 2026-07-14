@@ -30,11 +30,11 @@ interface StudentsChartProps {
 }
 
 const COLORS = [
-  'hsl(var(--pastel-purple))',
-  'hsl(var(--pastel-blue))',
-  'hsl(var(--pastel-pink))',
-  'hsl(var(--pastel-orange))',
-  'hsl(var(--pastel-green))',
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-5))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-3))',
 ] as const;
 
 export function StudentsChart({
@@ -50,17 +50,17 @@ export function StudentsChart({
   return (
     <Card
       className={cn(
-        'rounded-lg border-slate-200 bg-white py-0 shadow-sm',
+        'border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm',
         className
       )}
     >
-      <CardHeader className="border-b border-slate-200 px-5 py-4">
+      <CardHeader className="border-b-[0.5px] border-border/60 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base text-slate-950">{title}</CardTitle>
+            <CardTitle className="text-base text-foreground">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
-          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-sky-700" />
+          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-chart-2" />
         </div>
       </CardHeader>
       <CardContent className="px-5 py-5">
@@ -97,12 +97,12 @@ export function StudentsChart({
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-lg border border-[#dce6e1] bg-white p-3 shadow-lg">
-                          <p className="mb-2 font-medium text-slate-950">{label}</p>
+                        <div className="rounded-lg border-[0.5px] border-border/60 bg-popover/95 p-3 shadow-lg">
+                          <p className="mb-2 font-medium text-foreground">{label}</p>
                           {payload.map((entry, index) => (
                             <p
                               key={index}
-                              className="flex items-center gap-2 text-sm text-slate-600"
+                              className="flex items-center gap-2 text-sm text-muted-foreground"
                             >
                               <span
                                 className="h-2 w-2 rounded-full"

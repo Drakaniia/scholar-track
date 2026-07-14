@@ -23,29 +23,24 @@ interface StatsCardProps {
 
 const VARIANTS = {
   default: {
-    icon: 'bg-[hsl(var(--pastel-purple))]/45 text-violet-800',
-    accent: 'bg-[hsl(var(--pastel-purple))]',
-    wash: 'from-[hsl(var(--pastel-purple))]/28 via-white',
+    icon: 'bg-primary/10 text-primary',
+    accent: 'bg-primary/20',
   },
   blue: {
-    icon: 'bg-[hsl(var(--pastel-blue))]/45 text-sky-800',
-    accent: 'bg-[hsl(var(--pastel-blue))]',
-    wash: 'from-[hsl(var(--pastel-blue))]/28 via-white',
+    icon: 'bg-chart-2/10 text-chart-2',
+    accent: 'bg-chart-2/20',
   },
   amber: {
-    icon: 'bg-[hsl(var(--pastel-orange))]/45 text-orange-800',
-    accent: 'bg-[hsl(var(--pastel-orange))]',
-    wash: 'from-[hsl(var(--pastel-orange))]/28 via-white',
+    icon: 'bg-chart-4/10 text-chart-4',
+    accent: 'bg-chart-4/20',
   },
   green: {
-    icon: 'bg-[hsl(var(--pastel-green))]/45 text-emerald-800',
-    accent: 'bg-[hsl(var(--pastel-green))]',
-    wash: 'from-[hsl(var(--pastel-green))]/28 via-white',
+    icon: 'bg-chart-1/10 text-chart-1',
+    accent: 'bg-chart-1/20',
   },
   rose: {
-    icon: 'bg-[hsl(var(--pastel-pink))]/45 text-pink-800',
-    accent: 'bg-[hsl(var(--pastel-pink))]',
-    wash: 'from-[hsl(var(--pastel-pink))]/28 via-white',
+    icon: 'bg-chart-5/10 text-chart-5',
+    accent: 'bg-chart-5/20',
   },
 };
 
@@ -67,18 +62,17 @@ export function StatsCard({
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden rounded-lg border-[#e1e8e4] bg-white py-0 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-all hover:-translate-y-0.5 hover:border-[#cbdad3] hover:shadow-[0_18px_42px_rgba(15,23,42,0.1)]',
+        'group relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm transition-all hover:shadow-md',
         className
       )}
     >
-      <div className={cn('absolute inset-0 bg-gradient-to-br to-white/10', styles.wash)} />
-      <div className={cn('absolute inset-x-0 top-0 h-1', styles.accent)} />
+      <div className={cn('absolute inset-x-0 top-0 h-0.5', styles.accent)} />
 
       <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 px-5 pt-5 pb-2">
-        <CardTitle className="text-sm font-semibold text-slate-600">{title}</CardTitle>
+        <CardTitle className="text-sm font-semibold text-muted-foreground">{title}</CardTitle>
         <div
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg shadow-sm shadow-slate-900/10',
+            'flex h-9 w-9 items-center justify-center rounded-lg',
             styles.icon,
             iconClassName
           )}
@@ -88,16 +82,16 @@ export function StatsCard({
       </CardHeader>
 
       <CardContent className="relative z-10 px-5 pb-5">
-        <div className="text-2xl font-bold text-slate-950">
+        <div className="text-2xl font-bold text-foreground">
           <AnimatedNumber value={value} />
         </div>
         {(description || trend) && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
+          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
             {trend && (
               <span
                 className={cn(
                   'flex items-center gap-0.5 font-medium',
-                  trend.isPositive ? 'text-emerald-600' : 'text-rose-600'
+                  trend.isPositive ? 'text-primary' : 'text-destructive'
                 )}
               >
                 {trend.isPositive ? (
@@ -109,15 +103,15 @@ export function StatsCard({
                 {trend.value}%
               </span>
             )}
-            {trend && description && <span className="text-slate-300">/</span>}
+            {trend && description && <span className="text-border">/</span>}
             {description}
           </div>
         )}
         {normalizedProgress !== null && (
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
             <AnimatedProgressBar
               width={normalizedProgress}
-              className={cn('shadow-sm', styles.accent)}
+              className={cn(styles.accent)}
             />
           </div>
         )}

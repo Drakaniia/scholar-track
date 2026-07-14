@@ -16,11 +16,11 @@ interface ProgramMixDonutProps {
 }
 
 const DONUT_COLORS = [
-  'hsl(var(--pastel-purple))',
-  'hsl(var(--pastel-blue))',
-  'hsl(var(--pastel-pink))',
-  'hsl(var(--pastel-orange))',
-  'hsl(var(--pastel-green))',
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-5))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-3))',
 ] as const;
 
 const CENTER_LABELS: Record<string, string> = {
@@ -123,14 +123,14 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
   );
 
   return (
-    <Card className="rounded-lg border-slate-200 bg-white py-0 shadow-sm">
-      <CardHeader className="border-b border-slate-200 px-5 py-4">
+    <Card className="border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm">
+      <CardHeader className="border-b-[0.5px] border-border/60 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base text-slate-950">Program Mix</CardTitle>
+            <CardTitle className="text-base text-foreground">Program Mix</CardTitle>
             <CardDescription>{sourceLabel}</CardDescription>
           </div>
-          <span className="flex size-9 items-center justify-center rounded-lg bg-slate-100 text-slate-800 text-xs font-semibold tabular-nums">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground text-xs font-semibold tabular-nums">
             {total}
           </span>
         </div>
@@ -209,7 +209,7 @@ export function ProgramMixDonut({ data, sourceLabel }: ProgramMixDonutProps) {
             )}
           </div>
         ) : (
-          <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+          <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40 text-sm text-muted-foreground">
             No scholarship type data
           </div>
         )}

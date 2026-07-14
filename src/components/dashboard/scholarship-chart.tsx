@@ -61,14 +61,14 @@ export function ScholarshipChart({
   }));
 
   return (
-    <Card className={cn('rounded-lg border-slate-200 bg-white py-0 shadow-sm', className)}>
-      <CardHeader className="border-b border-slate-200 px-5 py-4">
+    <Card className={cn('border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm', className)}>
+      <CardHeader className="border-b-[0.5px] border-border/60 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base text-slate-950">{title}</CardTitle>
+            <CardTitle className="text-base text-foreground">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
-          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-700" />
+          <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary/60" />
         </div>
       </CardHeader>
       <CardContent className="px-5 py-5">
@@ -143,7 +143,7 @@ export function ScholarshipChart({
             </ComposedChart>
           </ChartContainer>
         ) : (
-          <div className="flex h-[320px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+          <div className="flex h-[320px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/40 text-sm text-muted-foreground">
             No fund movement data
           </div>
         )}
