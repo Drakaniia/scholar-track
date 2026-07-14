@@ -565,7 +565,7 @@ export default function ScholarshipsPage() {
             className="bg-white/90"
           />
           {canManageScholarships && (
-            <Button onClick={openCreateDialog} variant="gradient">
+            <Button onClick={openCreateDialog} variant="default">
               <Plus className="mr-2 h-4 w-4" />
               Add Scholarship
             </Button>

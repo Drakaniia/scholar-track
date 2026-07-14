@@ -13,13 +13,13 @@ interface PageHeaderSkeletonProps {
 
 export function PageHeaderSkeleton({ actionWidths = [], className }: PageHeaderSkeletonProps) {
   return (
-    <Card className="relative mb-6 overflow-hidden border-gray-200 border-t-4 border-t-[#22c55e] bg-white">
+    <Card className="relative mb-6 overflow-hidden border-border/60 border-t-4 border-t-primary bg-card">
       <div
         aria-hidden="true"
         className="absolute inset-y-0 right-0 w-1/2 -scale-x-100 bg-cover bg-center bg-no-repeat opacity-60"
         style={{ backgroundImage: `url(${HEADER_BACKGROUND_IMAGE_URL})` }}
       />
-      <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-transparent via-white/20 to-white" />
+      <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-transparent via-background/20 to-background" />
       <div
         className={cn(
           'relative z-10 flex flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between',

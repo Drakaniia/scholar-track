@@ -117,7 +117,7 @@ export function StudentBatchForm({
             <Plus className="mr-2 h-4 w-4" />
             Add More Student
           </Button>
-          <Button type="button" variant="gradient" onClick={submitStudents} disabled={loading}>
+          <Button type="button" variant="default" onClick={submitStudents} disabled={loading}>
             {loading ? 'Saving...' : 'Add Students'}
           </Button>
         </div>

@@ -27,12 +27,12 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="relative min-h-screen">
           <DotPattern
-            className="text-muted-foreground/15"
-            width={24}
-            height={24}
+            className="text-muted-foreground/8"
+            width={20}
+            height={20}
             cx={1}
             cy={1}
-            cr={1.2}
+            cr={0.8}
           />
           <div className="relative z-10">
             <Providers>

@@ -16,7 +16,6 @@ import {
 type ExportFormat = 'pdf' | 'csv' | 'xlsx';
 type ButtonVariant =
   | 'default'
-  | 'gradient'
   | 'destructive'
   | 'outline'
   | 'secondary'
@@ -58,7 +57,7 @@ export function ExportButton({
   filename,
   formats = ['pdf', 'xlsx', 'csv'],
   label = 'Export',
-  variant = 'gradient',
+  variant = 'default',
   className,
   extraItems = [],
 }: ExportButtonProps) {

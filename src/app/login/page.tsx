@@ -111,7 +111,7 @@ const LoginPage = () => {
           <section className="w-full max-w-[540px]">
             <div className="mb-6 hidden h-px w-32 bg-gradient-to-r from-[#f0cf74] via-[#f0cf74]/70 to-transparent sm:block" />
 
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-[#e7d6a0]/50 bg-[#fffaf0]/96 p-6 text-[#11261c] shadow-[0_30px_80px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
+            <div className="relative overflow-hidden rounded-[1.75rem] border-[0.5px] border-white/15 bg-[#fffaf0]/96 p-6 text-[#11261c] shadow-[0_30px_80px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
               <div
                 aria-hidden="true"
                 className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-[#0d5b3b] via-[#e0b848] to-[#13a06f]"
@@ -149,7 +149,7 @@ const LoginPage = () => {
                         placeholder="Enter your username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="h-[52px] rounded-2xl border-[#cfddcf] bg-white/95 pl-12 pr-4 text-base font-medium text-[#12261c] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_28px_rgba(13,91,59,0.08)] placeholder:text-[#7b8b81] focus-visible:border-[#0d5b3b] focus-visible:ring-[#0d5b3b]/20"
+                        className="h-[52px] rounded-2xl border-[0.5px] border-[#cfddcf]/70 bg-white/95 pl-12 pr-4 text-base font-medium text-[#12261c] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_28px_rgba(13,91,59,0.08)] placeholder:text-[#7b8b81] focus-visible:border-[#0d5b3b] focus-visible:ring-[#0d5b3b]/20"
                         disabled={isLoading}
                         autoComplete="username"
                         required
@@ -169,7 +169,7 @@ const LoginPage = () => {
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-[52px] rounded-2xl border-[#cfddcf] bg-white/95 pl-12 pr-[52px] text-base font-medium text-[#12261c] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_28px_rgba(13,91,59,0.08)] placeholder:text-[#7b8b81] focus-visible:border-[#0d5b3b] focus-visible:ring-[#0d5b3b]/20"
+                        className="h-[52px] rounded-2xl border-[0.5px] border-[#cfddcf]/70 bg-white/95 pl-12 pr-[52px] text-base font-medium text-[#12261c] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_28px_rgba(13,91,59,0.08)] placeholder:text-[#7b8b81] focus-visible:border-[#0d5b3b] focus-visible:ring-[#0d5b3b]/20"
                         disabled={isLoading}
                         autoComplete="current-password"
                         required
@@ -188,7 +188,7 @@ const LoginPage = () => {
 
                   <Button
                     type="submit"
-                    className="group mt-7 h-[52px] w-full rounded-2xl bg-[#0d5b3b] text-base font-extrabold text-white shadow-[0_16px_32px_rgba(13,91,59,0.28)] hover:bg-[#0b4d32] hover:shadow-[0_18px_38px_rgba(13,91,59,0.34)] focus-visible:ring-[#e0b848]/50"
+                    className="group mt-7 h-[52px] w-full rounded-2xl bg-[#0d5b3b] text-base font-extrabold text-white shadow-[0_16px_32px_rgba(13,91,59,0.28)] hover:bg-[#0b4d32] hover:shadow-[0_18px_38px_rgba(13,91,59,0.34)] active:scale-[0.97] active:shadow-[0_8px_16px_rgba(13,91,59,0.2)] focus-visible:ring-[#e0b848]/50"
                     disabled={isLoading}
                   >
                     {isLoading ? (
