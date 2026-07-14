@@ -105,7 +105,7 @@ function KpiCard({
     typeof progress === 'number' ? Math.min(Math.max(progress, 0), 100) : null;
 
   return (
-    <Card className="group relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm transition-all hover:shadow-md">
+    <Card className="group relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm">
       {/* Gradient background tint */}
       <div aria-hidden="true" className={cn('pointer-events-none absolute inset-0', theme.gradient)} />
 
