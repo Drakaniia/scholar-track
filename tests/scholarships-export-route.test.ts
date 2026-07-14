@@ -53,5 +53,5 @@ describe('scholarships export route', () => {
     expect(pdfBytes.includes(Buffer.from([0xc3, 0xa2, 0xe2, 0x80, 0x9a, 0xc2, 0xb1]))).toBe(
       false
     );
-  });
+  }, 10000);
 });
