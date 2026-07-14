@@ -36,8 +36,8 @@ interface MainContentProps {
 
 export function MainContent({ children }: MainContentProps) {
   return (
-    <main className="pt-16">
-      <div className="container mx-auto p-4 md:p-8">{children}</div>
+    <main className="pt-14">
+      <div className="container mx-auto p-6 md:p-8">{children}</div>
     </main>
   );
 }
