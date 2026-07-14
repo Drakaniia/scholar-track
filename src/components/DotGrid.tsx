@@ -1,8 +1,10 @@
 'use client';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { gsap } from 'gsap';
 import { InertiaPlugin } from 'gsap/InertiaPlugin';
+
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 gsap.registerPlugin(InertiaPlugin);
 
@@ -79,6 +81,9 @@ const DotGrid: React.FC<DotGridProps> = ({
     lastX: 0,
     lastY: 0,
   });
+
+  const reducedMotion = useReducedMotion();
+  const [gridVersion, setGridVersion] = useState(0);
 
   const baseRgb = useMemo(() => hexToRgb(baseColor), [baseColor]);
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
@@ -169,23 +174,32 @@ const DotGrid: React.FC<DotGridProps> = ({
         ctx.restore();
       }
 
-      rafId = requestAnimationFrame(draw);
+      if (!reducedMotion) {
+        rafId = requestAnimationFrame(draw);
+      }
     };
 
     draw();
     return () => cancelAnimationFrame(rafId);
-  }, [proximity, baseColor, activeRgb, baseRgb, circlePath]);
+  }, [proximity, baseColor, activeRgb, baseRgb, circlePath, reducedMotion, gap, gridVersion]);
 
   useEffect(() => {
     buildGrid();
+    queueMicrotask(() => setGridVersion((v) => v + 1));
     let ro: ResizeObserver | null = null;
     if ('ResizeObserver' in window) {
-      ro = new ResizeObserver(buildGrid);
+      ro = new ResizeObserver(() => {
+        buildGrid();
+        setGridVersion((v) => v + 1);
+      });
       if (wrapperRef.current) {
         ro.observe(wrapperRef.current);
       }
     } else {
-      (window as Window).addEventListener('resize', buildGrid);
+      (window as Window).addEventListener('resize', () => {
+        buildGrid();
+        setGridVersion((v) => v + 1);
+      });
     }
     return () => {
       if (ro) ro.disconnect();
@@ -194,6 +208,8 @@ const DotGrid: React.FC<DotGridProps> = ({
   }, [buildGrid]);
 
   useEffect(() => {
+    if (reducedMotion) return;
+
     const onMove = (e: MouseEvent) => {
       const now = performance.now();
       const pr = pointerRef.current;
@@ -285,7 +301,7 @@ const DotGrid: React.FC<DotGridProps> = ({
       window.removeEventListener('mousemove', throttledMove);
       window.removeEventListener('click', onClick);
     };
-  }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength]);
+  }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength, reducedMotion]);
 
   return (
     <section
