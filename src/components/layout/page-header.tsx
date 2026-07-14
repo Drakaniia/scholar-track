@@ -17,7 +17,7 @@ export function PageHeader({ title, description, children, className }: PageHead
   return (
     <section
       className={cn(
-        'relative isolate mb-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm',
+        'relative isolate mb-6 overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm',
         className
       )}
     >
@@ -29,7 +29,7 @@ export function PageHeader({ title, description, children, className }: PageHead
           className="absolute inset-0 -scale-x-100 bg-cover bg-center bg-no-repeat opacity-55 saturate-[0.95]"
           style={{ backgroundImage: `url(${HEADER_BACKGROUND_IMAGE_URL})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-background/20 to-background" />
       </div>
 
       <div
@@ -43,17 +43,17 @@ export function PageHeader({ title, description, children, className }: PageHead
         )}
       >
         <div className="min-w-0 max-w-2xl">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-[1.7rem]">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[1.7rem]">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
               {description}
             </p>
           )}
         </div>
         {children && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-md bg-white/75 p-1 shadow-sm ring-1 ring-slate-200/70 backdrop-blur sm:justify-end">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-md bg-card/75 p-1 shadow-sm ring-1 ring-border/70 backdrop-blur sm:justify-end">
             {children}
           </div>
         )}
