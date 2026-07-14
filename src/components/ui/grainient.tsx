@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 
 import { Mesh, Program, Renderer, Triangle } from 'ogl';
 
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
+
 interface GrainientProps {
   timeSpeed?: number;
   colorBalance?: number;
@@ -154,6 +156,7 @@ const Grainient: React.FC<GrainientProps> = ({
   color3 = '#B19EEF',
   className = '',
 }) => {
+  const reducedMotion = useReducedMotion();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -264,6 +267,17 @@ const Grainient: React.FC<GrainientProps> = ({
     color2,
     color3,
   ]);
+
+  if (reducedMotion) {
+    return (
+      <div
+        className={`relative h-full w-full overflow-hidden ${className}`.trim()}
+        style={{
+          background: `linear-gradient(135deg, ${color1}, ${color2}, ${color3})`,
+        }}
+      />
+    );
+  }
 
   return (
     <div

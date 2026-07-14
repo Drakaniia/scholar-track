@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from "react"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 /**
  *  DotPattern Component Props
@@ -79,6 +80,7 @@ export function DotPattern({
   const [dots, setDots] = useState<
     Array<{ x: number; y: number; delay: number; duration: number }>
   >([])
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -143,9 +145,9 @@ export function DotPattern({
           cy={dot.y}
           r={cr}
           fill={glow ? `url(#${id}-gradient)` : "currentColor"}
-          initial={glow ? { opacity: 0.4, scale: 1 } : {}}
+          initial={glow && !reducedMotion ? { opacity: 0.4, scale: 1 } : {}}
           animate={
-            glow
+            glow && !reducedMotion
               ? {
                   opacity: [0.4, 1, 0.4],
                   scale: [1, 1.5, 1],
@@ -153,7 +155,7 @@ export function DotPattern({
               : {}
           }
           transition={
-            glow
+            glow && !reducedMotion
               ? {
                   duration: dot.duration,
                   repeat: Infinity,
