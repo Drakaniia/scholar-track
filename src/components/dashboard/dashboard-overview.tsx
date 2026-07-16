@@ -9,9 +9,9 @@ import { getSourceLabel } from '@/components/dashboard/dashboard-formatters';
 import { DashboardHero } from '@/components/dashboard/dashboard-hero';
 import { DashboardKpiStrip } from '@/components/dashboard/dashboard-kpi-strip';
 import type { DashboardData } from '@/components/dashboard/dashboard-types';
+import { ProgramMixDonut } from '@/components/dashboard/program-mix-donut';
 import { RecentAwards } from '@/components/dashboard/recent-awards';
 import { ScholarshipChart } from '@/components/dashboard/scholarship-chart';
-import { ProgramMixDonut } from '@/components/dashboard/program-mix-donut';
 import { StudentsChart } from '@/components/dashboard/students-chart';
 
 interface DashboardOverviewProps {

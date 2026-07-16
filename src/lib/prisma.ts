@@ -11,7 +11,8 @@ declare global {
 const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
 
 // Some providers (Supabase, Neon pooler) use self-signed certs
-const needsSslOverride = connectionString.includes('supabase.co') || connectionString.includes('neon.tech');
+const needsSslOverride =
+  connectionString.includes('supabase.co') || connectionString.includes('neon.tech');
 
 const pool = new Pool({
   connectionString,

@@ -34,7 +34,9 @@ async function diagnoseIssue() {
     return;
   }
 
-  console.log(`\n🎯 Target Academic Year: ${targetAcademicYear.year} (ID: ${targetAcademicYear.id})`);
+  console.log(
+    `\n🎯 Target Academic Year: ${targetAcademicYear.year} (ID: ${targetAcademicYear.id})`
+  );
 
   // Find students with scholarships for this academic year
   const studentsWithScholarships = await prisma.student.findMany({
@@ -62,11 +64,13 @@ async function diagnoseIssue() {
     },
   });
 
-  console.log(`\n👥 Students with scholarships for ${targetAcademicYear.year}: ${studentsWithScholarships.length}`);
+  console.log(
+    `\n👥 Students with scholarships for ${targetAcademicYear.year}: ${studentsWithScholarships.length}`
+  );
 
   studentsWithScholarships.slice(0, 5).forEach((student) => {
     console.log(`\n  📝 ${student.lastName}, ${student.firstName} (ID: ${student.id})`);
-    
+
     // Scholarships
     const scholarshipsForYear = student.scholarships.filter(
       (s) => s.academicYearId === targetAcademicYear.id
@@ -78,7 +82,8 @@ async function diagnoseIssue() {
 
     // Fees
     const feesForYear = student.fees.filter(
-      (f) => f.academicYearId === targetAcademicYear.id || f.academicYear === targetAcademicYear.year
+      (f) =>
+        f.academicYearId === targetAcademicYear.id || f.academicYear === targetAcademicYear.year
     );
     console.log(`     Fees for ${targetAcademicYear.year}:`);
     if (feesForYear.length === 0) {
@@ -95,9 +100,7 @@ async function diagnoseIssue() {
     if (student.fees.length > 0) {
       console.log(`     All fees (${student.fees.length}):`);
       student.fees.forEach((f) => {
-        console.log(
-          `       - Term: ${f.term}, AY: ${f.academicYear}, AY ID: ${f.academicYearId}`
-        );
+        console.log(`       - Term: ${f.term}, AY: ${f.academicYear}, AY ID: ${f.academicYearId}`);
       });
     } else {
       console.log(`     ⚠️  No fees recorded at all`);
@@ -132,7 +135,9 @@ async function diagnoseIssue() {
     },
   });
 
-  console.log(`\n\n💰 Students with fees for ${targetAcademicYear.year}: ${studentsWithFees.length}`);
+  console.log(
+    `\n\n💰 Students with fees for ${targetAcademicYear.year}: ${studentsWithFees.length}`
+  );
 
   // Check for mismatches
   const studentsInBoth = studentsWithScholarships.filter((s) =>
@@ -153,9 +158,13 @@ async function diagnoseIssue() {
     console.log('\n❗ Students with scholarships but no fees:');
     studentsOnlyInScholarships.slice(0, 10).forEach((s) => {
       console.log(`  - ${s.lastName}, ${s.firstName} (ID: ${s.id})`);
-      console.log(`    Scholarships: ${s.scholarships.map((sc) => sc.scholarship.scholarshipName).join(', ')}`);
+      console.log(
+        `    Scholarships: ${s.scholarships.map((sc) => sc.scholarship.scholarshipName).join(', ')}`
+      );
       if (s.fees.length > 0) {
-        console.log(`    But has fees for: ${[...new Set(s.fees.map((f) => f.academicYear))].join(', ')}`);
+        console.log(
+          `    But has fees for: ${[...new Set(s.fees.map((f) => f.academicYear))].join(', ')}`
+        );
       } else {
         console.log(`    No fees recorded at all`);
       }

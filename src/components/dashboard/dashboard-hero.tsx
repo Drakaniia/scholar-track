@@ -14,7 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { GRADE_LEVELS, GRADE_LEVEL_LABELS, SCHOLARSHIP_SOURCES, SCHOLARSHIP_SOURCE_LABELS } from '@/types';
+import {
+  GRADE_LEVELS,
+  GRADE_LEVEL_LABELS,
+  SCHOLARSHIP_SOURCES,
+  SCHOLARSHIP_SOURCE_LABELS,
+} from '@/types';
 
 const HEADER_BACKGROUND_IMAGE_URL = '/images/background2.jpg';
 
@@ -56,8 +61,8 @@ export function DashboardHero({
             Scholarship dashboard
           </h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            A cleaner read on student coverage, funding release, program mix, and recent
-            scholarship movement.
+            A cleaner read on student coverage, funding release, program mix, and recent scholarship
+            movement.
           </p>
         </div>
 

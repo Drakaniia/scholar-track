@@ -303,5 +303,7 @@ export function getNextArchivedPageAfterDelete(
   deletedIds: number[],
   currentPage: number
 ) {
-  return deletedIds.length >= currentVisibleCount && currentPage > 1 ? currentPage - 1 : currentPage;
+  return deletedIds.length >= currentVisibleCount && currentPage > 1
+    ? currentPage - 1
+    : currentPage;
 }

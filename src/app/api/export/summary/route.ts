@@ -25,7 +25,13 @@ function getMetricColumns(yearCount: number) {
   }));
 }
 
-const GRADE_LEVELS = ['KINDERGARTEN', 'GRADE_SCHOOL', 'JUNIOR_HIGH', 'SENIOR_HIGH', 'COLLEGE'] as const;
+const GRADE_LEVELS = [
+  'KINDERGARTEN',
+  'GRADE_SCHOOL',
+  'JUNIOR_HIGH',
+  'SENIOR_HIGH',
+  'COLLEGE',
+] as const;
 
 const GRADE_LEVEL_LABELS: Record<(typeof GRADE_LEVELS)[number], string> = {
   KINDERGARTEN: 'Kindergarten',
@@ -395,7 +401,7 @@ function formatFse(value: number, showZero = false) {
 function formatPercent(value: number, showZero = false) {
   if (value === 0 && !showZero) return '';
   if (!Number.isFinite(value)) return '';
-  
+
   // For grand total calculation: value is COUNT / GRAND_FSE, don't multiply
   // Just floor to whole number
   return `${Math.floor(value)}%`;
@@ -549,7 +555,8 @@ function aggregatePercentFseMetrics(
         const fees = feesByYear.get(year);
         if (!fees) return;
 
-        const totalFees = fees.tuitionFee + fees.otherFee + fees.miscellaneousFee + fees.laboratoryFee;
+        const totalFees =
+          fees.tuitionFee + fees.otherFee + fees.miscellaneousFee + fees.laboratoryFee;
         if (totalFees <= 0) return;
 
         metrics[year].studentIds.add(assignment.studentId);
@@ -586,12 +593,15 @@ function addMetricCells(
 
     row[columns.count] = formatCount(metric.count, options.showZero);
     row[columns.fse] = formatFse(metric.fse, options.showZero);
-    
+
     // Calculate percentage as: COUNT / GRAND_TOTAL_FSE
-    const percentValue = grandTotal && grandTotal.fse > 0 
-      ? pctMetric.count / grandTotal.fse 
-      : (pctMetric.count > 0 ? pctMetric.fse / pctMetric.count : 0);
-    
+    const percentValue =
+      grandTotal && grandTotal.fse > 0
+        ? pctMetric.count / grandTotal.fse
+        : pctMetric.count > 0
+          ? pctMetric.fse / pctMetric.count
+          : 0;
+
     row[columns.percent] = formatPercent(percentValue, options.showZero);
   });
 }
@@ -731,50 +741,101 @@ function buildSummaryRows(
 
   // Now build rows with grand totals available
   internalTemplateRows.forEach(({ template, scholarships: schols }, idx) => {
-    const row = createRow({
-      0: template.label,
-      [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    }, columnCount);
-    addMetricCells(row, years, internalMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, internalMetrics[idx].percentMetrics);
+    const row = createRow(
+      {
+        0: template.label,
+        [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
+      },
+      columnCount
+    );
+    addMetricCells(
+      row,
+      years,
+      internalMetrics[idx].metrics,
+      totalStudentsByYear,
+      { grandTotals },
+      internalMetrics[idx].percentMetrics
+    );
     rows.push({ kind: 'data', cells: row });
   });
 
   const internalTotalRow = createRow({ 2: 'TOTAL:' }, columnCount);
-  addMetricCells(internalTotalRow, years, internalTotals, totalStudentsByYear, { showZero: true, grandTotals }, internalPctTotals);
+  addMetricCells(
+    internalTotalRow,
+    years,
+    internalTotals,
+    totalStudentsByYear,
+    { showZero: true, grandTotals },
+    internalPctTotals
+  );
   rows.push({ kind: 'total', cells: internalTotalRow });
 
   rows.push({ kind: 'section', cells: createRow({ 0: 'EXTERNALLY FUNDED ' }, columnCount) });
   rows.push({ kind: 'heading', cells: createRow({ 0: 'BED' }, columnCount) });
 
   bedTemplateRows.forEach(({ template, scholarships: schols }, idx) => {
-    const row = createRow({
-      0: template.label,
-      [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    }, columnCount);
-    addMetricCells(row, years, bedMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, bedMetrics[idx].percentMetrics);
+    const row = createRow(
+      {
+        0: template.label,
+        [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
+      },
+      columnCount
+    );
+    addMetricCells(
+      row,
+      years,
+      bedMetrics[idx].metrics,
+      totalStudentsByYear,
+      { grandTotals },
+      bedMetrics[idx].percentMetrics
+    );
     rows.push({ kind: 'data', cells: row });
   });
 
   rows.push({ kind: 'heading', cells: createRow({ 0: 'HIED' }, columnCount) });
 
   hiedTemplateRows.forEach(({ template, scholarships: schols }, idx) => {
-    const row = createRow({
-      0: template.label,
-      [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
-    }, columnCount);
-    addMetricCells(row, years, hiedMetrics[idx].metrics, totalStudentsByYear, { grandTotals }, hiedMetrics[idx].percentMetrics);
+    const row = createRow(
+      {
+        0: template.label,
+        [template.grantColumn ?? 4]: getGrantDisplay(template, schols),
+      },
+      columnCount
+    );
+    addMetricCells(
+      row,
+      years,
+      hiedMetrics[idx].metrics,
+      totalStudentsByYear,
+      { grandTotals },
+      hiedMetrics[idx].percentMetrics
+    );
     rows.push({ kind: 'data', cells: row });
   });
 
   const externalTotalRow = createRow({ 2: 'TOTAL:' }, columnCount);
-  addMetricCells(externalTotalRow, years, externalTotals, totalStudentsByYear, {
-    showZero: true,
-    grandTotals,
-  }, externalPctTotals);
+  addMetricCells(
+    externalTotalRow,
+    years,
+    externalTotals,
+    totalStudentsByYear,
+    {
+      showZero: true,
+      grandTotals,
+    },
+    externalPctTotals
+  );
   rows.push({ kind: 'total', cells: externalTotalRow });
 
   const grandTotalRow = createRow({ 1: 'GRAND TOTAL:' }, columnCount);
-  addMetricCells(grandTotalRow, years, grandTotals, totalStudentsByYear, { showZero: true, grandTotals }, grandPctTotals);
+  addMetricCells(
+    grandTotalRow,
+    years,
+    grandTotals,
+    totalStudentsByYear,
+    { showZero: true, grandTotals },
+    grandPctTotals
+  );
   rows.push({ kind: 'grand', cells: grandTotalRow });
 
   const metricColumns = getMetricColumns(years.length);
@@ -790,7 +851,12 @@ function buildSummaryRows(
   return rows;
 }
 
-function resolveStyle(kind: SummaryRow['kind'], rowIndex: number, columnIndex: number, columnCount: number) {
+function resolveStyle(
+  kind: SummaryRow['kind'],
+  rowIndex: number,
+  columnIndex: number,
+  columnCount: number
+) {
   const yearCount = (columnCount - BASE_COLUMNS) / COLUMNS_PER_YEAR;
   const metricColumns = getMetricColumns(yearCount);
   const isMetricColumn = metricColumns.some(({ count, fse, percent }) =>
@@ -1023,7 +1089,7 @@ export async function GET(request: NextRequest) {
 
     // Apply academic year filter if specified
     const academicYearId = academicYearParam
-      ? academicYears.find((ay) => ay.year === academicYearParam)?.id ?? null
+      ? (academicYears.find((ay) => ay.year === academicYearParam)?.id ?? null)
       : null;
 
     const filteredFeeYears = academicYearParam
@@ -1068,18 +1134,20 @@ export async function GET(request: NextRequest) {
         rows: buildSummaryRows(gradeScholarships, years, totalStudentsByYear),
       };
     });
-    const buffer = await buildWorkbook(sheets.map((sheet) => ({
-      ...sheet,
-      years,
-    })));
+    const buffer = await buildWorkbook(
+      sheets.map((sheet) => ({
+        ...sheet,
+        years,
+      }))
+    );
 
     return new NextResponse(buffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': 'attachment; filename="scholarship-summary.xlsx"',
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

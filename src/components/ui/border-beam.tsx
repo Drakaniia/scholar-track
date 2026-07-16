@@ -2,9 +2,8 @@
 
 import { MotionStyle, Transition, motion } from 'motion/react';
 
-import { cn } from '@/lib/utils';
-
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { cn } from '@/lib/utils';
 
 interface BorderBeamProps {
   /**

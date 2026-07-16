@@ -5,19 +5,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const verifyTokenMock = vi.hoisted(() => vi.fn(async () => ({ id: 1, role: 'ADMIN' })));
 const cookieGetMock = vi.hoisted(() => vi.fn(() => ({ value: 'test-token' })));
 const promoteSelectedStudentsMock = vi.hoisted(() =>
-  vi.fn(
-    async (): Promise<unknown> => ({
-      success: true,
-      cohortCount: 2,
-      selectedCount: 2,
-      archivedCount: 0,
-      promotedCount: 1,
-      graduatedCount: 0,
-      skippedCount: 0,
-      errorCount: 0,
-      results: [] as Array<Record<string, unknown>>,
-    })
-  )
+  vi.fn(async (): Promise<unknown> => ({
+    success: true,
+    cohortCount: 2,
+    selectedCount: 2,
+    archivedCount: 0,
+    promotedCount: 1,
+    graduatedCount: 0,
+    skippedCount: 0,
+    errorCount: 0,
+    results: [] as Array<Record<string, unknown>>,
+  }))
 );
 
 vi.mock('next/headers', () => ({

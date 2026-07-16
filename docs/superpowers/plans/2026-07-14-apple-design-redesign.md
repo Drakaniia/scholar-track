@@ -54,15 +54,18 @@ MODIFY: src/app/login/page.tsx                       — Polish glass card, typo
 ### Task 1: Design Tokens — Rewrite globals.css
 
 **Files:**
+
 - Modify: `src/app/globals.css`
 
 **Interfaces:**
+
 - Consumes: Nothing
 - Produces: All CSS custom properties consumed by every other task
 
 - [ ] **Step 1: Read the current globals.css**
 
 Already read. Current file has:
+
 - `@theme inline` with radius, colors (mapped to hsl variables), `animate-shine`
 - `:root` with HSL color values (purple primary, pastel palette overwritten at bottom)
 - `@layer base` with border/body/card styles
@@ -184,6 +187,7 @@ Remove `--animate-shine` and its `@keyframes shine` block.
 - [ ] **Step 4: Remove pastel palette and chart overrides**
 
 Delete these lines from `:root`:
+
 ```css
 /* Pastel Palette */
 --pastel-purple: 262 83% 76%;
@@ -222,6 +226,7 @@ Remove `login-gradient-bg`, `login-page-body`, `page-transition-container`, `dat
 
 Keep scrollbar styles (already good).
 Keep link-hover styles but update transition:
+
 ```css
 .link-hover--slide::before {
   transform: scale3d(0, 1, 1);
@@ -241,31 +246,21 @@ Run: `npx tsc --noEmit` and check for CSS-related diagnostics.
 ### Task 2: Root Layout — Dot Pattern Opacity
 
 **Files:**
+
 - Modify: `src/app/layout.tsx`
 
 - [ ] **Step 1: Reduce dot pattern opacity and tighten spacing**
 
 Change:
+
 ```tsx
-<DotPattern
-  className="text-muted-foreground/15"
-  width={24}
-  height={24}
-  cx={1}
-  cy={1}
-  cr={1.2}
-/>
+<DotPattern className="text-muted-foreground/15" width={24} height={24} cx={1} cy={1} cr={1.2} />
 ```
+
 To:
+
 ```tsx
-<DotPattern
-  className="text-muted-foreground/8"
-  width={20}
-  height={20}
-  cx={1}
-  cy={1}
-  cr={0.8}
-/>
+<DotPattern className="text-muted-foreground/8" width={20} height={20} cx={1} cy={1} cr={0.8} />
 ```
 
 - [ ] **Step 2: Verify**
@@ -277,6 +272,7 @@ Run: `npx tsc --noEmit` — should pass clean.
 ### Task 3: Button Component — Apple-Style Rewrite
 
 **Files:**
+
 - Modify: `src/components/ui/button.tsx`
 
 - [ ] **Step 1: Rewrite buttonVariants with Apple proportions and press feedback**
@@ -290,12 +286,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
-        destructive:
-          'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm',
+        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm',
         outline:
           'border-[0.5px] border-border bg-background/80 hover:bg-accent hover:text-accent-foreground',
-        secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
@@ -317,6 +311,7 @@ const buttonVariants = cva(
 ```
 
 Key changes from current:
+
 - `rounded-lg` (10px) instead of `rounded-md` (6px)
 - `active:scale-[0.97]` for press feedback (Apple §1: respond on pointer-down)
 - `transition-all duration-100 ease-out` for instant feel
@@ -334,6 +329,7 @@ Run: `npx tsc --noEmit`
 ### Task 4: Card Component — Translucent Material
 
 **Files:**
+
 - Modify: `src/components/ui/card.tsx`
 
 - [ ] **Step 1: Rewrite Card with translucent material**
@@ -354,6 +350,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
 ```
 
 Key changes:
+
 - `bg-card/85` — translucent (85% opacity)
 - `backdrop-blur-xl saturate-[1.4]` — frosted glass
 - `border-[0.5px] border-border/60` — hairline border
@@ -362,13 +359,14 @@ Key changes:
 - Hover: `shadow-md -translate-y-0.5` with `duration-300 ease-out`
 
 Update CardHeader:
+
 ```tsx
 function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="card-header"
       className={cn(
-        'flex flex-col gap-1.5 px-0',  /* no horizontal padding — card has p-5 */
+        'flex flex-col gap-1.5 px-0' /* no horizontal padding — card has p-5 */,
         className
       )}
       {...props}
@@ -378,6 +376,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
 ```
 
 Update CardContent:
+
 ```tsx
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
   return <div data-slot="card-content" className={cn('px-0', className)} {...props} />;
@@ -385,6 +384,7 @@ function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
 ```
 
 Update CardFooter:
+
 ```tsx
 function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -408,6 +408,7 @@ Run: `npx tsc --noEmit`
 ### Task 5: Input / Select / Textarea — Apple-Style
 
 **Files:**
+
 - Modify: `src/components/ui/input.tsx`
 - Modify: `src/components/ui/select.tsx`
 - Modify: `src/components/ui/textarea.tsx`
@@ -441,6 +442,7 @@ export { Input };
 ```
 
 Key changes:
+
 - Height: `h-11` (44px, was 10)
 - Radius: `rounded-lg` (10px, was `rounded-md`)
 - Border: `border-[0.5px]` hairline
@@ -467,6 +469,7 @@ Run: `npx tsc --noEmit`
 ### Task 6: Table + Badge — Refinement
 
 **Files:**
+
 - Modify: `src/components/ui/table.tsx`
 - Modify: `src/components/ui/badge.tsx`
 
@@ -483,19 +486,18 @@ const TableHeader = React.forwardRef<
 ));
 TableHeader.displayName = 'TableHeader';
 
-const TableRow = React.forwardRef<
-  HTMLTableRowElement,
-  React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      'border-b-[0.5px] border-border/50 transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted',
-      className
-    )}
-    {...props}
-  />
-));
+const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
+  ({ className, ...props }, ref) => (
+    <tr
+      ref={ref}
+      className={cn(
+        'border-b-[0.5px] border-border/50 transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted',
+        className
+      )}
+      {...props}
+    />
+  )
+);
 TableRow.displayName = 'TableRow';
 
 const TableHead = React.forwardRef<
@@ -517,19 +519,13 @@ const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
-  <td
-    ref={ref}
-    className={cn(
-      'py-3 px-4 align-middle text-sm',
-      className
-    )}
-    {...props}
-  />
+  <td ref={ref} className={cn('py-3 px-4 align-middle text-sm', className)} {...props} />
 ));
 TableCell.displayName = 'TableCell';
 ```
 
 Key changes:
+
 - `h-10` header cells (was default)
 - `text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70` for header
 - `py-3` for cells (was `p-4`)
@@ -553,17 +549,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'border-transparent bg-primary/10 text-primary',
-        secondary:
-          'border-transparent bg-secondary text-secondary-foreground',
-        destructive:
-          'border-transparent bg-destructive/10 text-destructive',
+        default: 'border-transparent bg-primary/10 text-primary',
+        secondary: 'border-transparent bg-secondary text-secondary-foreground',
+        destructive: 'border-transparent bg-destructive/10 text-destructive',
         outline: 'text-foreground border-border/60',
-        success:
-          'border-transparent bg-emerald-50 text-emerald-800',
-        warning:
-          'border-transparent bg-amber-50 text-amber-800',
+        success: 'border-transparent bg-emerald-50 text-emerald-800',
+        warning: 'border-transparent bg-amber-50 text-amber-800',
       },
     },
     defaultVariants: {
@@ -573,19 +564,17 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  );
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
 export { Badge, badgeVariants };
 ```
 
 Key changes:
+
 - Radius: `rounded-md` (6px, was `rounded-full`/`px-2.5 py-0.5`)
 - Padding: `px-2 py-0.5` (tighter)
 - Font: `text-[11px] font-medium` (was `text-xs font-semibold`)
@@ -601,6 +590,7 @@ Run: `npx tsc --noEmit`
 ### Task 7: Dialog + Sheet — Material & Spring Animation
 
 **Files:**
+
 - Modify: `src/components/ui/dialog.tsx`
 - Modify: `src/components/ui/sheet.tsx`
 
@@ -611,6 +601,7 @@ Run: `npx tsc --noEmit`
 In `dialog.tsx`, locate the `DialogOverlay` and `DialogContent` styles.
 
 Update DialogOverlay:
+
 ```tsx
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
@@ -629,6 +620,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 ```
 
 Update DialogContent to add spring transition via motion (if already using motion, otherwise keep CSS animation):
+
 ```tsx
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
@@ -652,6 +644,7 @@ const DialogContent = React.forwardRef<
 ```
 
 Key changes:
+
 - `rounded-2xl` (16px) dialog corners
 - `bg-popover/85 backdrop-blur-2xl saturate-[1.4]` — translucent frosted glass
 - `border-[0.5px]` hairline
@@ -660,6 +653,7 @@ Key changes:
 - [ ] **Step 3: Update SheetContent with material and spring animation**
 
 In `sheet.tsx`, update the SheetContent className:
+
 ```tsx
 const SheetContent = React.forwardRef<
   React.ComponentRef<typeof SheetPrimitive.Content>,
@@ -687,6 +681,7 @@ const SheetContent = React.forwardRef<
 ```
 
 Key changes:
+
 - Same translucency as dialog
 - `rounded-none` on sheet (full height, no radius on edge side)
 - `backdrop-blur-2xl saturate-[1.4]`
@@ -700,6 +695,7 @@ Run: `npx tsc --noEmit`
 ### Task 8: Tabs + Dropdown-Menu — Underline & Material
 
 **Files:**
+
 - Modify: `src/components/ui/tabs.tsx`
 - Modify: `src/components/ui/dropdown-menu.tsx`
 
@@ -767,6 +763,7 @@ export { Tabs, TabsList, TabsTrigger, TabsContent };
 ```
 
 Key changes:
+
 - No pill background — just border-bottom on the list
 - Active: `data-[state=active]:shadow-[inset_0_-1.5px_0_hsl(var(--primary))]` — underline style
 - Inactive: just text color change
@@ -775,6 +772,7 @@ Key changes:
 - [ ] **Step 2: Update dropdown-menu.tsx with translucent material**
 
 Read current `dropdown-menu.tsx`. Update `DropdownMenuContent`:
+
 ```tsx
 const DropdownMenuContent = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Content>,
@@ -795,6 +793,7 @@ const DropdownMenuContent = React.forwardRef<
 ```
 
 Update `DropdownMenuItem`:
+
 ```tsx
 const DropdownMenuItem = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Item>,
@@ -815,6 +814,7 @@ const DropdownMenuItem = React.forwardRef<
 ```
 
 Key changes:
+
 - `rounded-xl` (12px) on content
 - `bg-popover/85 backdrop-blur-2xl saturate-[1.4]` — translucent material
 - `rounded-lg` (8px) on items (was `rounded-sm`)
@@ -829,11 +829,13 @@ Run: `npx tsc --noEmit`
 ### Task 9: Page Transition — Spring Variants
 
 **Files:**
+
 - Modify: `src/components/layout/page-transition.tsx`
 
 - [ ] **Step 1: Read current page-transition.tsx**
 
 Already read. Current uses:
+
 ```tsx
 const variants = {
   hidden: { opacity: 0, y: 8 },
@@ -880,22 +882,26 @@ Run: `npx tsc --noEmit`
 ### Task 10: Header & Sidebar — Material Refinement
 
 **Files:**
+
 - Modify: `src/components/layout/sidebar.tsx`
 - Modify: `src/components/layout/layout-wrapper.tsx`
 
 - [ ] **Step 1: Update header chrome to translucent material**
 
 In `sidebar.tsx`, find the header element (line ~172):
+
 ```tsx
 <header className="fixed left-0 right-0 top-0 z-40 h-16 border-b border-slate-200 bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.06)] backdrop-blur">
 ```
 
 Replace with:
+
 ```tsx
 <header className="fixed left-0 right-0 top-0 z-40 h-14 border-b-[0.5px] border-border/60 bg-background/70 shadow-sm backdrop-blur-2xl saturate-[1.8]">
 ```
 
 Key changes:
+
 - Height: `h-14` (56px, was h-16=64px) — more compact
 - `bg-background/70` — translucent (70% opacity)
 - `backdrop-blur-2xl saturate-[1.8]` — strong frosted glass
@@ -905,6 +911,7 @@ Key changes:
 - [ ] **Step 2: Update desktop navigation container**
 
 Find the nav container (`xl:flex` block, ~line 203):
+
 ```tsx
 <nav
   aria-label="Primary navigation"
@@ -913,6 +920,7 @@ Find the nav container (`xl:flex` block, ~line 203):
 ```
 
 Replace with:
+
 ```tsx
 <nav
   aria-label="Primary navigation"
@@ -925,45 +933,53 @@ Remove border, change to subtle muted background.
 - [ ] **Step 3: Update nav link styles**
 
 Find active nav link class:
+
 ```tsx
 isActive
   ? 'bg-white text-emerald-800 shadow-sm ring-1 ring-inset ring-emerald-100'
-  : 'text-slate-600 hover:bg-white hover:text-slate-950'
+  : 'text-slate-600 hover:bg-white hover:text-slate-950';
 ```
 
 Replace with:
+
 ```tsx
 isActive
   ? 'bg-primary/10 text-primary font-semibold'
-  : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+  : 'text-muted-foreground hover:bg-background/60 hover:text-foreground';
 ```
 
 - [ ] **Step 4: Update mobile sheet styling**
 
 In the SheetContent (line ~97), change:
+
 ```tsx
 <SheetContent side="left" className="w-[20rem] gap-0 border-slate-200 bg-white p-0">
 ```
 
 To:
+
 ```tsx
 <SheetContent side="left" className="w-[20rem] gap-0 p-0">
 ```
+
 (The material styling is inherited from the sheet component in Task 7.)
 
 Update the sheet header border:
+
 ```tsx
 <SheetHeader className="border-b-[0.5px] border-border/60 px-5 py-4 text-left">
 ```
 
 Update nav items in mobile sheet:
+
 ```tsx
 isActive
   ? 'bg-primary/10 text-primary font-semibold'
-  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground';
 ```
 
 Update user section background:
+
 ```tsx
 <div className="mb-3 flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5">
 ```
@@ -971,6 +987,7 @@ Update user section background:
 - [ ] **Step 5: Update layout-wrapper padding**
 
 In `layout-wrapper.tsx`, update MainContent:
+
 ```tsx
 export function MainContent({ children }: MainContentProps) {
   return (
@@ -992,6 +1009,7 @@ Run: `npx tsc --noEmit`
 ### Task 11: Dashboard Components — Accent Removal & Material
 
 **Files:**
+
 - Modify: `src/components/dashboard/dashboard-hero.tsx`
 - Modify: `src/components/dashboard/dashboard-kpi-strip.tsx`
 - Modify: `src/components/dashboard/stats-card.tsx`
@@ -1002,27 +1020,36 @@ Run: `npx tsc --noEmit`
 Read current file. Changes:
 
 Replace the accent bar div (lines ~49-52):
+
 ```tsx
-{/* Remove this entire block — no accent bar */}
+{
+  /* Remove this entire block — no accent bar */
+}
 ```
 
 Replace the section wrapper (line ~37):
+
 ```tsx
 <section className="relative isolate mb-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
 ```
+
 With:
+
 ```tsx
 <section className="relative isolate mb-6 overflow-hidden rounded-xl border-[0.5px] border-border/60 bg-card/85 shadow-sm backdrop-blur-xl saturate-[1.4]">
 ```
 
 Update the "source label" section (lines ~56-59):
+
 ```tsx
 <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-800">
   <span className="h-px w-8 bg-emerald-700" />
   {sourceLabel}
 </div>
 ```
+
 Remove the decorative span line — just:
+
 ```tsx
 <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary">
   {sourceLabel}
@@ -1030,12 +1057,15 @@ Remove the decorative span line — just:
 ```
 
 Update the h1 (line ~60):
+
 ```tsx
 <h1 className="text-3xl font-black leading-tight text-slate-950 md:text-4xl">
   Scholarship dashboard
 </h1>
 ```
+
 To:
+
 ```tsx
 <h1 className="text-[clamp(1.75rem,3vw,2.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-foreground">
   Scholarship dashboard
@@ -1043,19 +1073,24 @@ To:
 ```
 
 Update the description (line ~63):
+
 ```tsx
 <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
 ```
+
 To:
+
 ```tsx
 <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
 ```
 
 Update filter selects to remove emerald icon colors:
+
 - Remove `text-emerald-800` from Filter icons
 - Use `text-muted-foreground` instead
 
 Update Reports button (line ~100):
+
 ```tsx
 <Button
   asChild
@@ -1063,15 +1098,19 @@ Update Reports button (line ~100):
   className="h-10 rounded-lg border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
 >
 ```
+
 To use default outline variant (styling comes from button component now):
+
 ```tsx
 <Button asChild variant="outline">
 ```
 
 Update Export button (line ~111):
+
 ```tsx
-className="h-10 rounded-lg bg-emerald-800 text-white shadow-sm hover:bg-emerald-900"
+className = 'h-10 rounded-lg bg-emerald-800 text-white shadow-sm hover:bg-emerald-900';
 ```
+
 Remove className — use `variant="default"` directly.
 
 - [ ] **Step 2: Rewrite stats-card.tsx — remove accent top bar**
@@ -1079,6 +1118,7 @@ Remove className — use `variant="default"` directly.
 Read current `stats-card.tsx`. Changes:
 
 Replace the card wrapper with the new card approach — since card now has its own material styling, simplify:
+
 ```tsx
 <Card
   className={cn(
@@ -1092,6 +1132,7 @@ Remove the gradient wash div (`absolute inset-0 bg-gradient-to-br...`).
 Remove the accent bar div (`absolute inset-x-0 top-0 h-1...`).
 
 Update icon container — the pastel colors no longer exist. Use:
+
 ```tsx
 const VARIANTS = {
   default: { icon: 'bg-primary/10 text-primary' },
@@ -1103,19 +1144,25 @@ const VARIANTS = {
 ```
 
 Update CardTitle (line ~78):
+
 ```tsx
 <CardTitle className="text-sm font-semibold text-slate-600">{title}</CardTitle>
 ```
+
 To:
+
 ```tsx
 <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
 ```
 
 Update the main value text:
+
 ```tsx
 <div className="text-2xl font-bold text-slate-950">
 ```
+
 To:
+
 ```tsx
 <div className="text-2xl font-semibold tracking-tight text-foreground">
 ```
@@ -1125,6 +1172,7 @@ To:
 Read current `dashboard-kpi-strip.tsx`. Changes:
 
 Update CARD_THEME colors to use primary/standard instead of custom colors:
+
 ```tsx
 const CARD_THEME = {
   students: {
@@ -1147,6 +1195,7 @@ const CARD_THEME = {
 ```
 
 Update KpiCard to remove gradient overlay and accent bar. Remove:
+
 ```tsx
 <div
   className={cn('via-white/95 absolute inset-0 bg-gradient-to-br to-white', theme.gradient)}
@@ -1163,11 +1212,13 @@ Update grid gap: `gap-4` (was `gap-3`).
 Read current file. Changes:
 
 Update the card wrapper:
+
 ```tsx
 <Card className="overflow-hidden py-0">
 ```
 
 Update the card header (lines ~47-60):
+
 ```tsx
 <CardHeader className="flex flex-row items-center justify-between border-b-[0.5px] border-border/40 px-5 py-4">
   <div className="flex items-center gap-3">
@@ -1198,11 +1249,13 @@ Run: `npx tsc --noEmit`
 ### Task 12: Login Page — Polish
 
 **Files:**
+
 - Modify: `src/app/login/page.tsx`
 
 - [ ] **Step 1: Read current login page**
 
 Already read. The login page has:
+
 - Dark base (#041a12)
 - Background image
 - Complex gradient overlays
@@ -1213,11 +1266,13 @@ Already read. The login page has:
 - [ ] **Step 2: Refine the glass card material**
 
 Update the card (line ~114):
+
 ```tsx
 <div className="relative overflow-hidden rounded-[1.75rem] border border-[#e7d6a0]/50 bg-[#fffaf0]/96 p-6 text-[#11261c] shadow-[0_30px_80px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
 ```
 
 Refine with:
+
 ```tsx
 <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/90 backdrop-blur-2xl p-6 text-[#11261c] shadow-[0_30px_80px_rgba(0,0,0,0.35)] sm:p-8 lg:p-10">
 ```
@@ -1225,23 +1280,31 @@ Refine with:
 - [ ] **Step 3: Refine the title and description typography**
 
 Title (line ~130):
+
 ```tsx
 <h2 className="text-3xl font-black leading-[0.98] text-[#0b2c1d] sm:text-4xl">
   Automated Scholarship Tracking System
 </h2>
 ```
+
 Refine with Apple typography:
+
 ```tsx
 <h2 className="text-[clamp(1.75rem,3.5vw,2.5rem)] font-bold leading-[1.05] tracking-[-0.025em] text-[#0b2c1d]">
-  Automated Scholarship<br />Tracking System
+  Automated Scholarship
+  <br />
+  Tracking System
 </h2>
 ```
 
 Description (line ~133):
+
 ```tsx
 <p className="mt-4 max-w-md text-sm leading-6 text-[#4b5d52] sm:text-base">
 ```
+
 Refine:
+
 ```tsx
 <p className="mt-3 max-w-md text-sm leading-relaxed tracking-[0.01em] text-[#4b5d52]">
 ```
@@ -1249,6 +1312,7 @@ Refine:
 - [ ] **Step 4: Refine inputs — remove hardcoded inline styles, use new input styling philosophy**
 
 Update username input:
+
 ```tsx
 <Input
   id="username"
@@ -1264,6 +1328,7 @@ Update username input:
 ```
 
 Simplify to:
+
 ```tsx
 <Input
   id="username"
@@ -1283,6 +1348,7 @@ Same treatment for password input.
 - [ ] **Step 5: Refine the login button**
 
 Update button (line ~189):
+
 ```tsx
 <Button
   type="submit"
@@ -1292,6 +1358,7 @@ Update button (line ~189):
 ```
 
 Simplify to use logical Tailwind classes:
+
 ```tsx
 <Button
   type="submit"
@@ -1309,6 +1376,7 @@ Run: `npx tsc --noEmit`
 ### Task 13: Final Verification & Build
 
 **Files:**
+
 - All files modified above
 
 - [ ] **Step 1: TypeScript check**
@@ -1330,6 +1398,7 @@ Run diagnostics on each modified file. Verify no errors or warnings.
 ## Self-Review
 
 **Spec coverage check:**
+
 - Design tokens → Task 1
 - Root layout dot pattern → Task 2
 - Button → Task 3
@@ -1343,7 +1412,7 @@ Run diagnostics on each modified file. Verify no errors or warnings.
 - Dashboard components → Task 11
 - Login polish → Task 12
 - Verification → Task 13
-All spec sections covered.
+  All spec sections covered.
 
 **Placeholder scan:** No TODOs, TBDs, or incomplete code. Every step has concrete code blocks.
 

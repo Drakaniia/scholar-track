@@ -160,9 +160,7 @@ export function StudentsChart({
                   className="inline-flex cursor-pointer items-center gap-1.5 text-xs transition-all duration-300"
                   style={{
                     opacity: isDimmed ? 0.35 : 1,
-                    color: isThisActive
-                      ? 'hsl(var(--foreground))'
-                      : 'hsl(var(--muted-foreground))',
+                    color: isThisActive ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
                     transform: isThisActive ? 'scale(1.08)' : 'scale(1)',
                   }}
                   onMouseEnter={() => setActiveIndex(index)}

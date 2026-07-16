@@ -253,13 +253,23 @@ export default function ReportsPage() {
       if (ayYear === academicYearFilter) return true;
     }
     // Check fee records (by stored string or resolved via academicYearId)
-    if (student.fees?.some((fee) => fee.academicYear === academicYearFilter || (fee.academicYearId && yearById.get(fee.academicYearId) === academicYearFilter))) return true;
+    if (
+      student.fees?.some(
+        (fee) =>
+          fee.academicYear === academicYearFilter ||
+          (fee.academicYearId && yearById.get(fee.academicYearId) === academicYearFilter)
+      )
+    )
+      return true;
     // Check scholarship records by academic year ID
-    if (student.scholarships?.some((ss) => {
-      if (!ss.academicYearId) return false;
-      const ayYear = yearById.get(ss.academicYearId);
-      return ayYear === academicYearFilter;
-    })) return true;
+    if (
+      student.scholarships?.some((ss) => {
+        if (!ss.academicYearId) return false;
+        const ayYear = yearById.get(ss.academicYearId);
+        return ayYear === academicYearFilter;
+      })
+    )
+      return true;
     return false;
   };
 
@@ -269,13 +279,13 @@ export default function ReportsPage() {
         hasAcademicYearData(s) &&
         s.gradeLevel === gradeLevel &&
         (scholarshipType === 'No Scholarship'
-        ? fundingTypeFilter === 'all' && (!s.scholarships || s.scholarships.length === 0)
-        : s.scholarships?.some(
-            (ss) =>
-               scholarshipMatchesAcademicYear(ss) &&
-              ss.scholarship?.type === scholarshipType &&
-              scholarshipMatchesFundingFilter(ss.scholarship?.source)
-          ))
+          ? fundingTypeFilter === 'all' && (!s.scholarships || s.scholarships.length === 0)
+          : s.scholarships?.some(
+              (ss) =>
+                scholarshipMatchesAcademicYear(ss) &&
+                ss.scholarship?.type === scholarshipType &&
+                scholarshipMatchesFundingFilter(ss.scholarship?.source)
+            ))
     );
   };
 
@@ -288,10 +298,7 @@ export default function ReportsPage() {
     return Array.from(
       new Set(
         detailedStudents
-          .filter(
-            (student) =>
-              student.gradeLevel === gradeLevel && hasAcademicYearData(student)
-          )
+          .filter((student) => student.gradeLevel === gradeLevel && hasAcademicYearData(student))
           .flatMap((student) => student.scholarships || [])
           .filter(
             (ss) =>
@@ -334,9 +341,10 @@ export default function ReportsPage() {
     if (fundingTypeFilter === 'all') return true;
     if (!student.scholarships || student.scholarships.length === 0) return false;
 
-    return student.scholarships?.some((ss) =>
-      scholarshipMatchesAcademicYear(ss) &&
-      scholarshipMatchesFundingFilter(ss.scholarship?.source)
+    return student.scholarships?.some(
+      (ss) =>
+        scholarshipMatchesAcademicYear(ss) &&
+        scholarshipMatchesFundingFilter(ss.scholarship?.source)
     );
   };
 
@@ -375,12 +383,7 @@ export default function ReportsPage() {
     const scholarshipAcademicYearIds = detailedStudents.flatMap(
       (s) => s.scholarships?.map((ss) => ss.academicYearId) ?? []
     );
-    return deriveAcademicYearOptions(
-      academicYears,
-      allFees,
-      scholarshipAcademicYearIds,
-      yearById
-    );
+    return deriveAcademicYearOptions(academicYears, allFees, scholarshipAcademicYearIds, yearById);
   })();
 
   const exportSourceFilter =
@@ -400,16 +403,17 @@ export default function ReportsPage() {
 
   // Aggregate fees by academic year (sum all semesters), returning most recent year.
   // When selectedYear is provided ('all' or specific year), only aggregate fees for that year.
-  const aggregateFeesByAcademicYear = (
-    fees: DetailedStudent['fees'],
-    selectedYear?: string
-  ) => {
+  const aggregateFeesByAcademicYear = (fees: DetailedStudent['fees'], selectedYear?: string) => {
     if (!fees || fees.length === 0) return null;
 
     // Filter by selected academic year if specified (check stored string OR resolve via academicYearId)
     const workingFees =
       selectedYear && selectedYear !== 'all'
-        ? fees.filter((fee) => fee.academicYear === selectedYear || (fee.academicYearId && yearById.get(fee.academicYearId) === selectedYear))
+        ? fees.filter(
+            (fee) =>
+              fee.academicYear === selectedYear ||
+              (fee.academicYearId && yearById.get(fee.academicYearId) === selectedYear)
+          )
         : fees;
 
     if (workingFees.length === 0) {
@@ -443,7 +447,8 @@ export default function ReportsPage() {
     > = {};
 
     workingFees.forEach((fee) => {
-      const year = fee.academicYear || (fee.academicYearId && yearById.get(fee.academicYearId)) || 'Unknown';
+      const year =
+        fee.academicYear || (fee.academicYearId && yearById.get(fee.academicYearId)) || 'Unknown';
       if (!feesByYear[year]) {
         feesByYear[year] = {
           tuitionFee: 0,
@@ -483,13 +488,8 @@ export default function ReportsPage() {
   };
 
   // Calculate percent subsidy from total fees and scholarship's fixed subsidy
-  const calculatePercentSubsidyFromSubsidy = (
-    totalFees: number,
-    subsidyAmount: number
-  ) => {
-    return totalFees > 0
-      ? Number((subsidyAmount / totalFees).toFixed(4))
-      : 0;
+  const calculatePercentSubsidyFromSubsidy = (totalFees: number, subsidyAmount: number) => {
+    return totalFees > 0 ? Number((subsidyAmount / totalFees).toFixed(4)) : 0;
   };
 
   // Check if a specific scholarship record belongs to the selected academic year
@@ -567,7 +567,9 @@ export default function ReportsPage() {
                     <SelectValue placeholder="Filter by grade level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Grade Levels ({getFilteredTotalCount()})</SelectItem>
+                    <SelectItem value="all">
+                      All Grade Levels ({getFilteredTotalCount()})
+                    </SelectItem>
                     {GRADE_LEVELS.map((level) => {
                       const filteredCount = getFilteredGradeLevelCounts()[level] || 0;
                       return (
@@ -592,7 +594,6 @@ export default function ReportsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-
               </div>
             </div>
 
@@ -674,206 +675,214 @@ export default function ReportsPage() {
                       <p className="text-muted-foreground text-sm">No students with scholarships</p>
                     </div>
                   ) : (
-                  <div className="space-y-6 pl-4">
-                    {scholarshipTypes.map((scholarshipType) => {
-                      const students = getStudentsByGradeLevelAndScholarship(
-                        gradeLevel,
-                        scholarshipType
-                      );
-                      const scholarshipNames = getScholarshipNames(gradeLevel, scholarshipType);
+                    <div className="space-y-6 pl-4">
+                      {scholarshipTypes.map((scholarshipType) => {
+                        const students = getStudentsByGradeLevelAndScholarship(
+                          gradeLevel,
+                          scholarshipType
+                        );
+                        const scholarshipNames = getScholarshipNames(gradeLevel, scholarshipType);
 
-                      if (students.length === 0) return null;
+                        if (students.length === 0) return null;
 
-                      return (
-                        <div key={scholarshipType} className="space-y-2">
-                          <div className="bg-muted px-4 py-2 rounded-md">
-                            <div className="flex items-center justify-between">
-                              <div className="space-y-1">
-                                <h3 className="text-lg font-semibold text-muted-foreground">
-                                  {scholarshipType === 'No Scholarship'
-                                    ? 'No Scholarship'
-                                    : `${formatScholarshipType(scholarshipType)} Scholarship`}
-                                </h3>
-                                {scholarshipNames.length > 0 && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {scholarshipNames.join(', ')}
-                                  </p>
-                                )}
+                        return (
+                          <div key={scholarshipType} className="space-y-2">
+                            <div className="bg-muted px-4 py-2 rounded-md">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <h3 className="text-lg font-semibold text-muted-foreground">
+                                    {scholarshipType === 'No Scholarship'
+                                      ? 'No Scholarship'
+                                      : `${formatScholarshipType(scholarshipType)} Scholarship`}
+                                  </h3>
+                                  {scholarshipNames.length > 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {scholarshipNames.join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+                                <Badge variant="outline" className="text-sm">
+                                  {students.length} student{students.length !== 1 ? 's' : ''}
+                                </Badge>
                               </div>
-                              <Badge variant="outline" className="text-sm">
-                                {students.length} student{students.length !== 1 ? 's' : ''}
-                              </Badge>
                             </div>
-                          </div>
-                          <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                            <Table className="table-fixed min-w-[1000px] text-xs">
-                              <colgroup>
-                                <col className="w-[110px]" />
-                                <col className="w-[110px]" />
-                                <col className="w-[50px]" />
-                                <col className="w-[80px]" />
-                                <col className="w-[75px]" />
-                                <col className="w-[75px]" />
-                                <col className="w-[65px]" />
-                                <col className="w-[65px]" />
-                                <col className="w-[80px]" />
-                                <col className="w-[90px]" />
-                                <col className="w-[75px]" />
-                                <col className="w-[60px]" />
-                                <col className="w-[75px]" />
-                              </colgroup>
-                              <TableHeader>
-                                <TableRow className="bg-muted/50">
-                                  <TableHead className="font-bold">Last Name</TableHead>
-                                  <TableHead className="font-bold">First Name</TableHead>
-                                  <TableHead className="font-bold">M.I.</TableHead>
-                                  <TableHead className="font-bold">Year Level</TableHead>
-                                  <TableHead className="font-bold text-right">Tuition</TableHead>
-                                  <TableHead className="font-bold text-right">Other Fees</TableHead>
-                                  <TableHead className="font-bold text-right">Misc.</TableHead>
-                                  <TableHead className="font-bold text-right">Lab</TableHead>
-                                  <TableHead className="font-bold text-right">Total Fees</TableHead>
-                                  <TableHead className="font-bold text-right">
-                                    Amount Subsidy
-                                  </TableHead>
-                                  <TableHead className="font-bold text-right">% Subsidy</TableHead>
-                                  <TableHead className="font-bold text-right">
-                                    No. of Students
-                                  </TableHead>
-                                  <TableHead className="font-bold text-right">FSE</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {students.map((student) => {
-                                  // Aggregate all fees by academic year
-                                  const aggregatedFees = aggregateFeesByAcademicYear(
+                            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                              <Table className="table-fixed min-w-[1000px] text-xs">
+                                <colgroup>
+                                  <col className="w-[110px]" />
+                                  <col className="w-[110px]" />
+                                  <col className="w-[50px]" />
+                                  <col className="w-[80px]" />
+                                  <col className="w-[75px]" />
+                                  <col className="w-[75px]" />
+                                  <col className="w-[65px]" />
+                                  <col className="w-[65px]" />
+                                  <col className="w-[80px]" />
+                                  <col className="w-[90px]" />
+                                  <col className="w-[75px]" />
+                                  <col className="w-[60px]" />
+                                  <col className="w-[75px]" />
+                                </colgroup>
+                                <TableHeader>
+                                  <TableRow className="bg-muted/50">
+                                    <TableHead className="font-bold">Last Name</TableHead>
+                                    <TableHead className="font-bold">First Name</TableHead>
+                                    <TableHead className="font-bold">M.I.</TableHead>
+                                    <TableHead className="font-bold">Year Level</TableHead>
+                                    <TableHead className="font-bold text-right">Tuition</TableHead>
+                                    <TableHead className="font-bold text-right">
+                                      Other Fees
+                                    </TableHead>
+                                    <TableHead className="font-bold text-right">Misc.</TableHead>
+                                    <TableHead className="font-bold text-right">Lab</TableHead>
+                                    <TableHead className="font-bold text-right">
+                                      Total Fees
+                                    </TableHead>
+                                    <TableHead className="font-bold text-right">
+                                      Amount Subsidy
+                                    </TableHead>
+                                    <TableHead className="font-bold text-right">
+                                      % Subsidy
+                                    </TableHead>
+                                    <TableHead className="font-bold text-right">
+                                      No. of Students
+                                    </TableHead>
+                                    <TableHead className="font-bold text-right">FSE</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {students.map((student) => {
+                                    // Aggregate all fees by academic year
+                                    const aggregatedFees = aggregateFeesByAcademicYear(
                                       student.fees,
                                       academicYearFilter
                                     );
-                                  const totalFees = aggregatedFees
-                                    ? Number(aggregatedFees.tuitionFee) +
-                                      Number(aggregatedFees.otherFee) +
-                                      Number(aggregatedFees.miscellaneousFee) +
-                                      Number(aggregatedFees.laboratoryFee)
-                                    : 0;
-                                  // Use the scholarship's fixed amountSubsidy (not fee-level)
-                                  // so it remains constant regardless of academic year filter
-                                  const scholarshipSubsidy = getTotalScholarshipSubsidy(student);
-                                  const percentSubsidy = calculatePercentSubsidyFromSubsidy(
-                                    totalFees,
-                                    scholarshipSubsidy
-                                  );
+                                    const totalFees = aggregatedFees
+                                      ? Number(aggregatedFees.tuitionFee) +
+                                        Number(aggregatedFees.otherFee) +
+                                        Number(aggregatedFees.miscellaneousFee) +
+                                        Number(aggregatedFees.laboratoryFee)
+                                      : 0;
+                                    // Use the scholarship's fixed amountSubsidy (not fee-level)
+                                    // so it remains constant regardless of academic year filter
+                                    const scholarshipSubsidy = getTotalScholarshipSubsidy(student);
+                                    const percentSubsidy = calculatePercentSubsidyFromSubsidy(
+                                      totalFees,
+                                      scholarshipSubsidy
+                                    );
 
-                                  return (
-                                    <TableRow key={student.id}>
-                                      <TableCell
-                                        className="font-medium truncate"
-                                        title={student.lastName}
-                                      >
-                                        {student.lastName}
-                                      </TableCell>
-                                      <TableCell className="truncate" title={student.firstName}>
-                                        {student.firstName}
-                                      </TableCell>
-                                      <TableCell className="text-center">
-                                        {student.middleInitial || '-'}
-                                      </TableCell>
-                                      <TableCell className="truncate">
-                                        {student.yearLevel}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {aggregatedFees
-                                          ? formatCurrency(Number(aggregatedFees.tuitionFee))
-                                          : '-'}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {aggregatedFees
-                                          ? formatCurrency(Number(aggregatedFees.otherFee))
-                                          : '-'}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {aggregatedFees
-                                          ? formatCurrency(Number(aggregatedFees.miscellaneousFee))
-                                          : '-'}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {aggregatedFees
-                                          ? formatCurrency(Number(aggregatedFees.laboratoryFee))
-                                          : '-'}
-                                      </TableCell>
-                                      <TableCell className="text-right font-semibold">
-                                        {formatCurrency(totalFees)}
-                                      </TableCell>
-                                      <TableCell className="text-right text-green-600 font-semibold">
-                                        {totalFees > 0 || scholarshipSubsidy > 0
-                                          ? formatCurrency(scholarshipSubsidy)
-                                          : '-'}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        <Badge variant="secondary" className="text-xs">
+                                    return (
+                                      <TableRow key={student.id}>
+                                        <TableCell
+                                          className="font-medium truncate"
+                                          title={student.lastName}
+                                        >
+                                          {student.lastName}
+                                        </TableCell>
+                                        <TableCell className="truncate" title={student.firstName}>
+                                          {student.firstName}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                          {student.middleInitial || '-'}
+                                        </TableCell>
+                                        <TableCell className="truncate">
+                                          {student.yearLevel}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {aggregatedFees
+                                            ? formatCurrency(Number(aggregatedFees.tuitionFee))
+                                            : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {aggregatedFees
+                                            ? formatCurrency(Number(aggregatedFees.otherFee))
+                                            : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {aggregatedFees
+                                            ? formatCurrency(
+                                                Number(aggregatedFees.miscellaneousFee)
+                                              )
+                                            : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {aggregatedFees
+                                            ? formatCurrency(Number(aggregatedFees.laboratoryFee))
+                                            : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold">
+                                          {formatCurrency(totalFees)}
+                                        </TableCell>
+                                        <TableCell className="text-right text-green-600 font-semibold">
+                                          {totalFees > 0 || scholarshipSubsidy > 0
+                                            ? formatCurrency(scholarshipSubsidy)
+                                            : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          <Badge variant="secondary" className="text-xs">
+                                            {totalFees > 0 ? `${percentSubsidy.toFixed(2)}` : '-'}
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                          {aggregatedFees ? (
+                                            <div className="flex flex-col items-end gap-1">
+                                              <span>1</span>
+                                              {aggregatedFees.semesterCount > 1 && (
+                                                <Badge
+                                                  variant="outline"
+                                                  className="text-[10px] px-1 py-0 h-4"
+                                                >
+                                                  {aggregatedFees.semesterCount} sem
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          ) : (
+                                            '1'
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="text-right font-semibold">
                                           {totalFees > 0 ? `${percentSubsidy.toFixed(2)}` : '-'}
-                                        </Badge>
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {aggregatedFees ? (
-                                          <div className="flex flex-col items-end gap-1">
-                                            <span>1</span>
-                                            {aggregatedFees.semesterCount > 1 && (
-                                              <Badge
-                                                variant="outline"
-                                                className="text-[10px] px-1 py-0 h-4"
-                                              >
-                                                {aggregatedFees.semesterCount} sem
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        ) : (
-                                          '1'
-                                        )}
-                                      </TableCell>
-                                      <TableCell className="text-right font-semibold">
-                                        {totalFees > 0 ? `${percentSubsidy.toFixed(2)}` : '-'}
-                                      </TableCell>
-                                    </TableRow>
-                                  );
-                                })}
-                                {/* Totals Row */}
-                                <TableRow className="bg-muted/50 font-semibold">
-                                  <TableCell colSpan={11} className="text-right">
-                                    Total
-                                  </TableCell>
-                                  <TableCell className="text-right">{students.length}</TableCell>
-                                  <TableCell className="text-right">
-                                    {students
-                                      .reduce((sum, s) => {
-                                        const aggregatedFees = aggregateFeesByAcademicYear(
-                                          s.fees,
-                                          academicYearFilter
-                                        );
-                                        const totalFees = aggregatedFees
-                                          ? Number(aggregatedFees.tuitionFee) +
-                                            Number(aggregatedFees.otherFee) +
-                                            Number(aggregatedFees.miscellaneousFee) +
-                                            Number(aggregatedFees.laboratoryFee)
-                                          : 0;
-                                        const scholarshipSubsidy = getTotalScholarshipSubsidy(s);
-                                        const fse = calculatePercentSubsidyFromSubsidy(
-                                          totalFees,
-                                          scholarshipSubsidy
-                                        );
-                                        return sum + fse;
-                                      }, 0)
-                                      .toFixed(2)}
-                                  </TableCell>
-                                </TableRow>
-                              </TableBody>
-                            </Table>
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                  {/* Totals Row */}
+                                  <TableRow className="bg-muted/50 font-semibold">
+                                    <TableCell colSpan={11} className="text-right">
+                                      Total
+                                    </TableCell>
+                                    <TableCell className="text-right">{students.length}</TableCell>
+                                    <TableCell className="text-right">
+                                      {students
+                                        .reduce((sum, s) => {
+                                          const aggregatedFees = aggregateFeesByAcademicYear(
+                                            s.fees,
+                                            academicYearFilter
+                                          );
+                                          const totalFees = aggregatedFees
+                                            ? Number(aggregatedFees.tuitionFee) +
+                                              Number(aggregatedFees.otherFee) +
+                                              Number(aggregatedFees.miscellaneousFee) +
+                                              Number(aggregatedFees.laboratoryFee)
+                                            : 0;
+                                          const scholarshipSubsidy = getTotalScholarshipSubsidy(s);
+                                          const fse = calculatePercentSubsidyFromSubsidy(
+                                            totalFees,
+                                            scholarshipSubsidy
+                                          );
+                                          return sum + fse;
+                                        }, 0)
+                                        .toFixed(2)}
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

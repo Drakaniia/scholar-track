@@ -245,7 +245,7 @@
 }
 
 .link-hover::before {
-  content: "";
+  content: '';
 }
 
 .link-hover:focus-visible {

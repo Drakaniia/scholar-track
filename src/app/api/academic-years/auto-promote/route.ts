@@ -8,10 +8,7 @@ import {
 } from '@/lib/academic-year-service';
 import { verifyToken } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import {
-  isPromotionDecisionAllowed,
-  isStudentTransitionDecision,
-} from '@/lib/promotion-decisions';
+import { isPromotionDecisionAllowed, isStudentTransitionDecision } from '@/lib/promotion-decisions';
 import { getPromotionTargetBlocker } from '@/lib/promotion-validation';
 import { SEPARATED_STUDENT_STATUSES, type StudentTransitionDecision } from '@/types';
 
@@ -94,7 +91,10 @@ export async function PATCH(request: NextRequest) {
 
     const decisions: Array<{ studentId: number; decision: StudentTransitionDecision }> = [];
     for (const decision of rawDecisions) {
-      if (!Number.isInteger(decision?.studentId) || !isStudentTransitionDecision(decision?.decision)) {
+      if (
+        !Number.isInteger(decision?.studentId) ||
+        !isStudentTransitionDecision(decision?.decision)
+      ) {
         return NextResponse.json(
           { success: false, error: 'Invalid transition decision payload.' },
           { status: 400 }

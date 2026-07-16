@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import type { ProfileFormData, ChangePasswordFormData } from '../settings-types';
+import type { ChangePasswordFormData, ProfileFormData } from '../settings-types';
 import { ProfileInformationSkeleton } from './settings-table-skeleton';
 
 export function ProfileEditor() {
@@ -19,9 +19,9 @@ export function ProfileEditor() {
     lastName: '',
     email: '',
   });
-  const [profileErrors, setProfileErrors] = useState<Partial<Record<keyof ProfileFormData, string>>>(
-    {}
-  );
+  const [profileErrors, setProfileErrors] = useState<
+    Partial<Record<keyof ProfileFormData, string>>
+  >({});
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
 

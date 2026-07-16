@@ -33,8 +33,14 @@ function getRequiredSeedPassword(envName: string, label: string) {
 }
 
 async function main() {
-  const adminPassword = await bcrypt.hash(getRequiredSeedPassword('SEED_ADMIN_PASSWORD', 'admin'), 12);
-  const userPassword = await bcrypt.hash(getRequiredSeedPassword('SEED_STAFF_PASSWORD', 'staff'), 12);
+  const adminPassword = await bcrypt.hash(
+    getRequiredSeedPassword('SEED_ADMIN_PASSWORD', 'admin'),
+    12
+  );
+  const userPassword = await bcrypt.hash(
+    getRequiredSeedPassword('SEED_STAFF_PASSWORD', 'staff'),
+    12
+  );
 
   console.log('🌱 Starting seed...');
 

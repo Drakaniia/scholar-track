@@ -2,14 +2,14 @@
 
 Plans for improving animation and motion quality across the ScholarTrack codebase.
 
-| # | Title | Severity | Category | Status |
-|---|---|---|---|---|
-| 001 | Narrow `transition-all` to property-specific transitions | HIGH | Performance | **DONE** |
-| — | Shared easing/duration tokens (H2) | HIGH | Cohesion & tokens | Pending user selection |
-| — | Keyframes interruptibility on line-hover-link (H3) | HIGH | Interruptibility | Pending user selection |
-| — | Sheet open duration 500ms (M1) | MEDIUM | Easing & duration | Pending user selection |
-| — | Card hover lift duration 300ms (M2) | MEDIUM | Easing & duration | Pending user selection |
-| — | Reduced-motion gating on Radix wrappers (M3) | MEDIUM | Accessibility | Pending user selection |
+| #   | Title                                                    | Severity | Category          | Status                 |
+| --- | -------------------------------------------------------- | -------- | ----------------- | ---------------------- |
+| 001 | Narrow `transition-all` to property-specific transitions | HIGH     | Performance       | **DONE**               |
+| —   | Shared easing/duration tokens (H2)                       | HIGH     | Cohesion & tokens | Pending user selection |
+| —   | Keyframes interruptibility on line-hover-link (H3)       | HIGH     | Interruptibility  | Pending user selection |
+| —   | Sheet open duration 500ms (M1)                           | MEDIUM   | Easing & duration | Pending user selection |
+| —   | Card hover lift duration 300ms (M2)                      | MEDIUM   | Easing & duration | Pending user selection |
+| —   | Reduced-motion gating on Radix wrappers (M3)             | MEDIUM   | Accessibility     | Pending user selection |
 
 ## Recommended execution order
 

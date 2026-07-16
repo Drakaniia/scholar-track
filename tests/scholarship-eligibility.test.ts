@@ -24,9 +24,7 @@ describe('scholarship eligibility helpers', () => {
     expect(isGradeLevelEligibleForScholarship('JUNIOR_HIGH', 'GRADE_SCHOOL,JUNIOR_HIGH')).toBe(
       true
     );
-    expect(isGradeLevelEligibleForScholarship('SENIOR_HIGH', 'JUNIOR_HIGH,SENIOR_HIGH')).toBe(
-      true
-    );
+    expect(isGradeLevelEligibleForScholarship('SENIOR_HIGH', 'JUNIOR_HIGH,SENIOR_HIGH')).toBe(true);
     expect(isGradeLevelEligibleForScholarship('COLLEGE', 'SENIOR_HIGH,COLLEGE')).toBe(true);
   });
 
@@ -61,7 +59,7 @@ describe('scholarship eligibility helpers', () => {
     expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Grade 1', 'Grade 1')).toBe(true);
     // Scholarship for Grade 1 should not match Grade 2 student
     expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Grade 1', 'Grade 2')).toBe(false);
-    
+
     // Scholarship for broad category BED should match any Grade 1-6
     expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'BED', 'Grade 1')).toBe(true);
     expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'BED', 'Grade 6')).toBe(true);
@@ -110,7 +108,11 @@ describe('scholarship eligibility helpers', () => {
   });
 
   it('direct year level match works for Kindergarten', () => {
-    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'Kindergarten', 'Kindergarten')).toBe(true);
-    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Kindergarten', 'Kindergarten')).toBe(true);
+    expect(isGradeLevelEligibleForScholarship('KINDERGARTEN', 'Kindergarten', 'Kindergarten')).toBe(
+      true
+    );
+    expect(isGradeLevelEligibleForScholarship('GRADE_SCHOOL', 'Kindergarten', 'Kindergarten')).toBe(
+      true
+    );
   });
 });

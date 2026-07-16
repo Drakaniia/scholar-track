@@ -10,7 +10,10 @@ import {
   getSessionPreloadMarkerKey,
 } from '@/lib/app-preload';
 
-class MemoryStorage implements Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'> {
+class MemoryStorage implements Pick<
+  Storage,
+  'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'
+> {
   private readonly values = new Map<string, string>();
 
   get length() {
@@ -53,12 +56,8 @@ describe('application preload manifest', () => {
   });
 
   it('builds stable per-user cache keys that are invalidated by a cache buster', () => {
-    expect(getQueryCacheStorageKey(42)).toMatch(
-      /^scholartrack:query-cache:v\d+:user:42$/
-    );
-    expect(getSessionPreloadMarkerKey(42)).toMatch(
-      /^scholartrack:preload-complete:v\d+:user:42$/
-    );
+    expect(getQueryCacheStorageKey(42)).toMatch(/^scholartrack:query-cache:v\d+:user:42$/);
+    expect(getSessionPreloadMarkerKey(42)).toMatch(/^scholartrack:preload-complete:v\d+:user:42$/);
   });
 
   it('preloads core query-backed pages before optional admin endpoints', () => {

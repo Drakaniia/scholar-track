@@ -61,12 +61,12 @@ import {
 } from '@/components/ui/table';
 import { useDebounce } from '@/hooks/use-debounce';
 import { clientCache, fetchWithCache } from '@/lib/cache';
+import { EDUCATION_LEVEL_INFO } from '@/lib/constants';
 import {
   getPromotionContinueDecision,
   getPromotionDecisionOptions,
   isStudentTransitionDecision,
 } from '@/lib/promotion-decisions';
-import { EDUCATION_LEVEL_INFO } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { STUDENT_TRANSITION_DECISION_LABELS } from '@/types';
 import type { StudentTransitionDecision } from '@/types';
@@ -200,9 +200,7 @@ const PROMOTION_FILTERS: PromotionFilter[] = [
   'grade-12',
   'graduating',
 ];
-const ALL_YEAR_LEVELS = Object.values(EDUCATION_LEVEL_INFO).flatMap(
-  (info) => info.yearLevels
-);
+const ALL_YEAR_LEVELS = Object.values(EDUCATION_LEVEL_INFO).flatMap((info) => info.yearLevels);
 const PROMOTION_QUEUE_PAGE_SIZE = 10;
 const OUTCOME_LABELS: Record<string, string> = {
   COMPLETED_JHS: 'Completed JHS',

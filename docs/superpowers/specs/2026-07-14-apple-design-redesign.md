@@ -41,9 +41,11 @@
 ### Shadows
 
 ```css
---shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)
---shadow-md: 0 2px 8px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06)
---shadow-lg: 0 4px 16px rgba(15, 23, 42, 0.04), 0 8px 32px rgba(15, 23, 42, 0.06)
+--shadow-sm:
+  0 1px 2px rgba(15, 23, 42, 0.04),
+  0 1px 3px rgba(15, 23, 42, 0.06) --shadow-md: 0 2px 8px rgba(15, 23, 42, 0.04),
+  0 4px 16px rgba(15, 23, 42, 0.06) --shadow-lg: 0 4px 16px rgba(15, 23, 42, 0.04),
+  0 8px 32px rgba(15, 23, 42, 0.06);
 ```
 
 ---
@@ -148,15 +150,15 @@
 
 ### Micro-interactions
 
-| Element | Action | Response |
-|---|---|---|
-| Button press | pointerdown | `scale(0.97)` instant CSS |
-| Button hover | mouseenter | bg shift, 200ms ease |
-| Card hover | mouseenter | shadow elevation + -1px Y, spring 0.3s |
-| Dialog open | mount | `scale(0.95→1)` + opacity, spring 0.35s |
-| Dialog close | unmount | opacity fade 100ms |
-| Sheet open | mount | slide + opacity, spring 0.4s |
-| Tabs active | change | underline slide (spring) |
+| Element      | Action      | Response                                |
+| ------------ | ----------- | --------------------------------------- |
+| Button press | pointerdown | `scale(0.97)` instant CSS               |
+| Button hover | mouseenter  | bg shift, 200ms ease                    |
+| Card hover   | mouseenter  | shadow elevation + -1px Y, spring 0.3s  |
+| Dialog open  | mount       | `scale(0.95→1)` + opacity, spring 0.35s |
+| Dialog close | unmount     | opacity fade 100ms                      |
+| Sheet open   | mount       | slide + opacity, spring 0.4s            |
+| Tabs active  | change      | underline slide (spring)                |
 
 ### Reduced motion
 
@@ -177,13 +179,16 @@
 ## 6. Files to Modify
 
 ### CSS & Theme
+
 - `src/app/globals.css` — Rewrite all CSS variables, @theme, shadows, typography
 
 ### Layout Components
+
 - `src/components/layout/sidebar.tsx` — Refine header material, nav pills, spacing
 - `src/components/layout/layout-wrapper.tsx` — Update MainContent padding
 
 ### UI Components (Full Rewrite)
+
 - `src/components/ui/button.tsx` — New variants, press feedback, Apple proportions
 - `src/components/ui/card.tsx` — Translucent material, refined padding
 - `src/components/ui/input.tsx` — Hairline border, blur bg, new height
@@ -197,18 +202,22 @@
 - `src/components/ui/dropdown-menu.tsx` — Material pass
 
 ### Dashboard Components
+
 - `src/components/dashboard/dashboard-hero.tsx` — Remove accent bar, refine spacing
 - `src/components/dashboard/stats-card.tsx` — Remove accent-top, material card
 - `src/components/dashboard/dashboard-kpi-strip.tsx` — Refine for new card style
 - `src/components/dashboard/recent-awards.tsx` — Refine table, remove accent
 
 ### Page Transition
+
 - `src/components/layout/page-transition.tsx` — Spring-based variants
 
 ### Login Page
+
 - `src/app/login/page.tsx` — Polish glass card, typography, spacing
 
 ### Root Layout
+
 - `src/app/layout.tsx` — Reduce dot-pattern opacity
 
 ---

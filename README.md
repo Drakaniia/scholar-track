@@ -17,18 +17,18 @@ ScholarTrack is a web-based platform for administrators who manage student recor
 
 ## Key Features
 
-| Module | Description |
-| --- | --- |
-| **Dashboard** | Central overview of student counts, scholarship distribution, financial summaries, and recent activity |
-| **Students** | Manage student profiles, scholarships, fee records, graduation status, and archival state |
-| **Scholarships** | Configure scholarship programs, coverage rules, subsidy amounts, and eligibility |
-| **Academic Years** | Organize records by academic year and semester for clean financial workflows |
-| **Fee Management** | Record tuition, miscellaneous, laboratory, and other fees with automatic subsidy calculations and annual aggregation |
-| **Disbursements** | Track scholarship payments linked to students, programs, and academic periods |
-| **Reports** | Detailed student scholarship reports with annual aggregated fee data |
-| **Comparative Data** | Five-year scholarship comparison with funding trends, beneficiary counts, and scholarship load analysis |
-| **Exports** | Export reports in PDF, XLSX, and CSV formats |
-| **RBAC** | ADMIN, STAFF, and VIEWER roles with permission-aware screens and API protection |
+| Module               | Description                                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard**        | Central overview of student counts, scholarship distribution, financial summaries, and recent activity               |
+| **Students**         | Manage student profiles, scholarships, fee records, graduation status, and archival state                            |
+| **Scholarships**     | Configure scholarship programs, coverage rules, subsidy amounts, and eligibility                                     |
+| **Academic Years**   | Organize records by academic year and semester for clean financial workflows                                         |
+| **Fee Management**   | Record tuition, miscellaneous, laboratory, and other fees with automatic subsidy calculations and annual aggregation |
+| **Disbursements**    | Track scholarship payments linked to students, programs, and academic periods                                        |
+| **Reports**          | Detailed student scholarship reports with annual aggregated fee data                                                 |
+| **Comparative Data** | Five-year scholarship comparison with funding trends, beneficiary counts, and scholarship load analysis              |
+| **Exports**          | Export reports in PDF, XLSX, and CSV formats                                                                         |
+| **RBAC**             | ADMIN, STAFF, and VIEWER roles with permission-aware screens and API protection                                      |
 
 ---
 
@@ -63,13 +63,14 @@ The **Comparative Data** page (`/scholarship-flow`) provides a five-year scholar
 
 ScholarTrack supports **three export formats**:
 
-| Format | Description |
-| --- | --- |
-| **PDF** | Print-ready reports with tables and formatting (jsPDF + autoTable) |
+| Format   | Description                                                                                |
+| -------- | ------------------------------------------------------------------------------------------ |
+| **PDF**  | Print-ready reports with tables and formatting (jsPDF + autoTable)                         |
 | **XLSX** | Structured Excel workbooks — detailed student reports and summary by grade level (ExcelJS) |
-| **CSV** | Comma-separated values for spreadsheet or data analysis tools |
+| **CSV**  | Comma-separated values for spreadsheet or data analysis tools                              |
 
 Export endpoints are available for:
+
 - **Detailed student scholarship report** (`/api/export/students`)
 - **Summary by grade level** (`/api/export/summary`)
 
@@ -77,14 +78,14 @@ Export endpoints are available for:
 
 ## Documentation
 
-| Document | Description |
-| --- | --- |
-| [Setup Guide](docs/SETUP.md) | Installation, environment variables, scripts |
-| [Technical Reference](docs/TECHNICAL-REFERENCE.md) | Architecture, tech stack, DB schema, RBAC, performance, deployment |
-| [Architecture Overview](ARCHITECTURE.md) | System architecture diagrams |
-| [Annual Fee Aggregation Guide](docs/ANNUAL-FEE-AGGREGATION-GUIDE.md) | Multi-semester fee aggregation |
-| [Feature Location Guide](docs/WHERE-TO-FIND-NEW-FEATURES.md) | Where to find UI features |
-| [Entity Relationship Diagram](docs/ERD.svg) | Database visualization |
+| Document                                                             | Description                                                        |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [Setup Guide](docs/SETUP.md)                                         | Installation, environment variables, scripts                       |
+| [Technical Reference](docs/TECHNICAL-REFERENCE.md)                   | Architecture, tech stack, DB schema, RBAC, performance, deployment |
+| [Architecture Overview](ARCHITECTURE.md)                             | System architecture diagrams                                       |
+| [Annual Fee Aggregation Guide](docs/ANNUAL-FEE-AGGREGATION-GUIDE.md) | Multi-semester fee aggregation                                     |
+| [Feature Location Guide](docs/WHERE-TO-FIND-NEW-FEATURES.md)         | Where to find UI features                                          |
+| [Entity Relationship Diagram](docs/ERD.svg)                          | Database visualization                                             |
 
 ---
 

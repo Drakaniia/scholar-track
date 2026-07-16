@@ -4,9 +4,5 @@ interface GridBackgroundProps {
 }
 
 export function GridBackground({ children, className = '' }: GridBackgroundProps) {
-  return (
-    <div className={`min-h-screen bg-[#f8f8f8] ${className}`}>
-      {children}
-    </div>
-  );
+  return <div className={`min-h-screen bg-[#f8f8f8] ${className}`}>{children}</div>;
 }

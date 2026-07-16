@@ -12,7 +12,6 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const reportsPageSource = readFileSync(
@@ -67,7 +66,10 @@ describe('Reports page scholarship academic year filtering', () => {
     // that belong to the selected academic year
     const typesSectionStart = reportsPageSource.indexOf('const allScholarshipTypes');
     let typesSectionEnd = reportsPageSource.indexOf('const scholarshipTypes');
-    if (typesSectionEnd === -1) typesSectionEnd = reportsPageSource.indexOf('const scholarshipTypes = filterScholarshipTypes');
+    if (typesSectionEnd === -1)
+      typesSectionEnd = reportsPageSource.indexOf(
+        'const scholarshipTypes = filterScholarshipTypes'
+      );
     const typesSectionBody = reportsPageSource.slice(typesSectionStart, typesSectionEnd);
 
     // The .flatMap((s) => s.scholarships || []) should be followed by a filter

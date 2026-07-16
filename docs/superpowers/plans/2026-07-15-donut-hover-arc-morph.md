@@ -22,9 +22,11 @@
 ### Task 1: Add angle computation helpers and GSAP hover morph
 
 **Files:**
+
 - Modify: `src/components/dashboard/program-mix-donut.tsx`
 
 **Interfaces:**
+
 - Consumes: `ScholarshipTypeDatum[]` (from `./dashboard-types`), `AnimatedChart` (from `@/components/shared`), `useGSAP` (from `@gsap/react`), `gsap` (from `gsap`)
 - Produces: Updated `ProgramMixDonut` component with GSAP-driven arc morph on hover
 
@@ -35,6 +37,7 @@ Add `useGSAP` and `gsap` imports at the top of the file. Add an `EXPANSION_DEGRE
 ```tsx
 // Add these imports alongside existing ones
 import { useCallback, useMemo, useRef, useState } from 'react';
+
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
@@ -78,10 +81,7 @@ function computeAccumulatedAngles(sectors: SectorAngles[]): SectorAngles[] {
   });
 }
 
-function computeHoverAngles(
-  restingAngles: SectorAngles[],
-  hoveredIndex: number
-): SectorAngles[] {
+function computeHoverAngles(restingAngles: SectorAngles[], hoveredIndex: number): SectorAngles[] {
   const expanded: SectorAngles[] = restingAngles.map((s, i) => ({
     ...s,
     startAngle: s.startAngle,
@@ -121,166 +121,171 @@ function computeHoverAngles(
 Inside the `ProgramMixDonut` component, after the existing `const isAnyActive = activeIndex >= 0;` line, add:
 
 ```tsx
-  const animStateRef = useRef<SectorAnimationState>({ sectors: [] });
-  const [, forceRender] = useState(0);
+const animStateRef = useRef<SectorAnimationState>({ sectors: [] });
+const [, forceRender] = useState(0);
 
-  // Compute resting angles (memoized on data)
-  const restingAngles = useMemo(() => {
-    const raw = computeRestingAngles(data);
-    return computeAccumulatedAngles(raw);
-  }, [data]);
+// Compute resting angles (memoized on data)
+const restingAngles = useMemo(() => {
+  const raw = computeRestingAngles(data);
+  return computeAccumulatedAngles(raw);
+}, [data]);
 
-  // Sync resting angles into the mutable ref when data changes
-  useGSAP(
-    () => {
-      const state = animStateRef.current;
-      const target = computeAccumulatedAngles(
-        computeRestingAngles(data)
-      );
+// Sync resting angles into the mutable ref when data changes
+useGSAP(
+  () => {
+    const state = animStateRef.current;
+    const target = computeAccumulatedAngles(computeRestingAngles(data));
 
-      // If state is empty (first mount), snap to resting
-      if (state.sectors.length !== target.length) {
-        state.sectors = target.map((s) => ({ ...s }));
-        forceRender((n) => n + 1);
-      }
-    },
-    { dependencies: [data], scope: animStateRef }
-  );
+    // If state is empty (first mount), snap to resting
+    if (state.sectors.length !== target.length) {
+      state.sectors = target.map((s) => ({ ...s }));
+      forceRender((n) => n + 1);
+    }
+  },
+  { dependencies: [data], scope: animStateRef }
+);
 
-  // Animate hover / leave
-  const animateToHover = useCallback(
-    (index: number) => {
-      if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        // Show final state immediately
-        const target = computeHoverAngles(restingAngles, index);
-        animStateRef.current.sectors = target.map((s) => ({ ...s }));
-        forceRender((n) => n + 1);
-        return;
-      }
-
+// Animate hover / leave
+const animateToHover = useCallback(
+  (index: number) => {
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      // Show final state immediately
       const target = computeHoverAngles(restingAngles, index);
-      const state = animStateRef.current;
-
-      gsap.to(state.sectors, {
-        startAngle: (i) => target[i].startAngle,
-        endAngle: (i) => target[i].endAngle,
-        opacity: (i) => target[i].opacity,
-        duration: 0.4,
-        ease: 'power2.out',
-        onUpdate: () => forceRender((n) => n + 1),
-      });
-    },
-    [restingAngles]
-  );
-
-  const animateToRest = useCallback(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const target = restingAngles;
       animStateRef.current.sectors = target.map((s) => ({ ...s }));
       forceRender((n) => n + 1);
       return;
     }
 
+    const target = computeHoverAngles(restingAngles, index);
     const state = animStateRef.current;
 
     gsap.to(state.sectors, {
-      startAngle: (i) => restingAngles[i].startAngle,
-      endAngle: (i) => restingAngles[i].endAngle,
-      opacity: 1,
-      duration: 0.35,
+      startAngle: (i) => target[i].startAngle,
+      endAngle: (i) => target[i].endAngle,
+      opacity: (i) => target[i].opacity,
+      duration: 0.4,
       ease: 'power2.out',
       onUpdate: () => forceRender((n) => n + 1),
     });
-  }, [restingAngles]);
+  },
+  [restingAngles]
+);
+
+const animateToRest = useCallback(() => {
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    const target = restingAngles;
+    animStateRef.current.sectors = target.map((s) => ({ ...s }));
+    forceRender((n) => n + 1);
+    return;
+  }
+
+  const state = animStateRef.current;
+
+  gsap.to(state.sectors, {
+    startAngle: (i) => restingAngles[i].startAngle,
+    endAngle: (i) => restingAngles[i].endAngle,
+    opacity: 1,
+    duration: 0.35,
+    ease: 'power2.out',
+    onUpdate: () => forceRender((n) => n + 1),
+  });
+}, [restingAngles]);
 ```
 
 - [ ] **Step 4: Update renderCustomShape to use animated angles and remove CSS transitions**
 
 Replace the entire `renderCustomShape` callback. Key changes:
+
 - Read angles from `animStateRef.current.sectors[index]` instead of Recharts props
 - Remove the CSS `transform: scale(1.06)` and `transition` on the `<g>` wrapper
 - Keep the radius expansion (`innerRadius - 3`, `outerRadius + 8`) on the hovered sector
 - Keep the center label fade-in (convert to use the animated opacity from state)
 
 ```tsx
-  const renderCustomShape = useCallback(
-    (props: PieSectorShapeProps) => {
-      const {
-        cx,
-        cy,
-        innerRadius = 0,
-        outerRadius = 0,
-        fill = '#94a3b8',
-        payload,
-        value = 0,
-        index,
-      } = props;
+const renderCustomShape = useCallback(
+  (props: PieSectorShapeProps) => {
+    const {
+      cx,
+      cy,
+      innerRadius = 0,
+      outerRadius = 0,
+      fill = '#94a3b8',
+      payload,
+      value = 0,
+      index,
+    } = props;
 
-      const animated = animStateRef.current.sectors[index];
-      const startAngle = animated?.startAngle ?? props.startAngle;
-      const endAngle = animated?.endAngle ?? props.endAngle;
-      const sectorOpacity = animated?.opacity ?? 1;
-      const isThisActive = index === activeIndex;
-      const name = payload?.name ?? '';
-      const centerLabel = name ? CENTER_LABELS[name] : undefined;
+    const animated = animStateRef.current.sectors[index];
+    const startAngle = animated?.startAngle ?? props.startAngle;
+    const endAngle = animated?.endAngle ?? props.endAngle;
+    const sectorOpacity = animated?.opacity ?? 1;
+    const isThisActive = index === activeIndex;
+    const name = payload?.name ?? '';
+    const centerLabel = name ? CENTER_LABELS[name] : undefined;
 
-      return (
-        <g
-          style={{ opacity: sectorOpacity }}
-          onMouseEnter={() => {
-            setActiveIndex(index);
-            animateToHover(index);
-          }}
-          onMouseLeave={() => {
-            setActiveIndex(-1);
-            animateToRest();
+    return (
+      <g
+        style={{ opacity: sectorOpacity }}
+        onMouseEnter={() => {
+          setActiveIndex(index);
+          animateToHover(index);
+        }}
+        onMouseLeave={() => {
+          setActiveIndex(-1);
+          animateToRest();
+        }}
+      >
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={isThisActive ? innerRadius - 3 : innerRadius}
+          outerRadius={isThisActive ? outerRadius + 8 : outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+        />
+        <text
+          x={cx}
+          y={cy - 8}
+          textAnchor="middle"
+          fill="hsl(var(--foreground))"
+          fontSize={15}
+          fontWeight={700}
+          fontFamily="var(--font-sans, system-ui)"
+          style={{
+            opacity: isThisActive ? 1 : 0,
+            transition: 'opacity 0.2s ease',
+            pointerEvents: 'none',
           }}
         >
-          <Sector
-            cx={cx}
-            cy={cy}
-            innerRadius={isThisActive ? innerRadius - 3 : innerRadius}
-            outerRadius={isThisActive ? outerRadius + 8 : outerRadius}
-            startAngle={startAngle}
-            endAngle={endAngle}
-            fill={fill}
-          />
-          <text
-            x={cx}
-            y={cy - 8}
-            textAnchor="middle"
-            fill="hsl(var(--foreground))"
-            fontSize={15}
-            fontWeight={700}
-            fontFamily="var(--font-sans, system-ui)"
-            style={{
-              opacity: isThisActive ? 1 : 0,
-              transition: 'opacity 0.2s ease',
-              pointerEvents: 'none',
-            }}
-          >
-            {centerLabel ?? name}
-          </text>
-          <text
-            x={cx}
-            y={cy + 14}
-            textAnchor="middle"
-            fill="hsl(var(--muted-foreground))"
-            fontSize={11}
-            fontFamily="var(--font-sans, system-ui)"
-            style={{
-              opacity: isThisActive ? 1 : 0,
-              transition: 'opacity 0.2s ease',
-              pointerEvents: 'none',
-            }}
-          >
-            {value} student{value !== 1 ? 's' : ''}
-          </text>
-        </g>
-      );
-    },
-    [activeIndex, animateToHover, animateToRest]
-  );
+          {centerLabel ?? name}
+        </text>
+        <text
+          x={cx}
+          y={cy + 14}
+          textAnchor="middle"
+          fill="hsl(var(--muted-foreground))"
+          fontSize={11}
+          fontFamily="var(--font-sans, system-ui)"
+          style={{
+            opacity: isThisActive ? 1 : 0,
+            transition: 'opacity 0.2s ease',
+            pointerEvents: 'none',
+          }}
+        >
+          {value} student{value !== 1 ? 's' : ''}
+        </text>
+      </g>
+    );
+  },
+  [activeIndex, animateToHover, animateToRest]
+);
 ```
 
 - [ ] **Step 5: Update legend hover handlers to trigger GSAP morph**
@@ -288,11 +293,14 @@ Replace the entire `renderCustomShape` callback. Key changes:
 In the legend section (the `.flex-wrap` div with `data.map`), replace the `onMouseEnter` and `onMouseLeave` handlers:
 
 Change:
+
 ```tsx
 onMouseEnter={() => setActiveIndex(index)}
 onMouseLeave={() => setActiveIndex(-1)}
 ```
+
 To:
+
 ```tsx
 onMouseEnter={() => {
   setActiveIndex(index);
@@ -319,6 +327,7 @@ Expected: No errors.
 
 Run: `pnpm run dev`
 Open `http://localhost:8080` → navigate to the dashboard with the Program Mix donut card.
+
 - Hover each sector — it should smoothly expand its arc angle while others compress and dim.
 - Move to a different sector — arcs should smoothly redistribute.
 - Leave the donut — arcs should smoothly return to resting proportions.

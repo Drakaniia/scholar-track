@@ -1,11 +1,11 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 
 import { queryKeys } from '@/hooks/use-queries';
+import { fetchWithCache } from '@/lib/cache';
 import {
   getDefaultScholarshipFlowStartYear,
   getScholarshipFlowEndYear,
 } from '@/lib/scholarship-flow-years';
-import { fetchWithCache } from '@/lib/cache';
 import type { UserRole } from '@/types';
 
 export const PRELOAD_CACHE_VERSION = 1;
@@ -164,8 +164,9 @@ export function markSessionPreloadComplete(
 }
 
 export function clearSessionPreloadMarkers(
-  storage: Pick<Storage, 'key' | 'length' | 'removeItem'> | null =
-    typeof window === 'undefined' ? null : sessionStorage
+  storage: Pick<Storage, 'key' | 'length' | 'removeItem'> | null = typeof window === 'undefined'
+    ? null
+    : sessionStorage
 ) {
   if (!storage) {
     return;

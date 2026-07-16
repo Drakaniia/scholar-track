@@ -38,7 +38,13 @@ export async function validateStudentScholarshipEligibility(
     throw new Error(`Scholarship with ID ${scholarshipId} not found`);
   }
 
-  if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels, student.yearLevel)) {
+  if (
+    !isGradeLevelEligibleForScholarship(
+      student.gradeLevel,
+      scholarship.eligibleGradeLevels,
+      student.yearLevel
+    )
+  ) {
     throw new Error(
       `Student grade level '${student.gradeLevel}' (${student.yearLevel}) is not eligible for scholarship ` +
         `'${scholarship.scholarshipName}' which is only available for: ${scholarship.eligibleGradeLevels}`
@@ -94,7 +100,13 @@ export async function validateMultipleStudentScholarshipEligibility(
 
   // Check each scholarship for eligibility
   for (const scholarship of scholarships) {
-    if (!isGradeLevelEligibleForScholarship(student.gradeLevel, scholarship.eligibleGradeLevels, student.yearLevel)) {
+    if (
+      !isGradeLevelEligibleForScholarship(
+        student.gradeLevel,
+        scholarship.eligibleGradeLevels,
+        student.yearLevel
+      )
+    ) {
       throw new Error(
         `Student grade level '${student.gradeLevel}' (${student.yearLevel}) is not eligible for scholarship ` +
           `'${scholarship.scholarshipName}' which is only available for: ${scholarship.eligibleGradeLevels}`

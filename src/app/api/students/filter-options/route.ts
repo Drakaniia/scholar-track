@@ -29,12 +29,7 @@ type StudentFilterInput = {
 };
 
 type OmittedStudentFacet =
-  | 'gradeLevel'
-  | 'program'
-  | 'status'
-  | 'scholarshipId'
-  | 'scholarshipSource'
-  | 'academicYearId';
+  'gradeLevel' | 'program' | 'status' | 'scholarshipId' | 'scholarshipSource' | 'academicYearId';
 
 function parseAcademicYearFilter(value: string) {
   if (!value || value === 'all') return null;

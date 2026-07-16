@@ -62,7 +62,13 @@ export const queryKeys = {
     filterOptions: (filters: ScholarshipFilters = {}) =>
       [...queryKeys.scholarships.all, 'filter-options', filters] as const,
     flow: (source?: string, startYear?: number, gradeLevel?: string) =>
-      [...queryKeys.scholarships.all, 'flow', source || 'all', startYear || 'current', gradeLevel || 'all'] as const,
+      [
+        ...queryKeys.scholarships.all,
+        'flow',
+        source || 'all',
+        startYear || 'current',
+        gradeLevel || 'all',
+      ] as const,
   },
 
   // Users
@@ -858,8 +864,14 @@ export function useCreateScholarship() {
     },
     onSuccess: () => {
       // Force immediate refetch so the list updates right away
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.lists(), refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.filterOptions(), refetchType: 'all' });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.lists(),
+        refetchType: 'all',
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.filterOptions(),
+        refetchType: 'all',
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.all, refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all, refetchType: 'all' });
       toast.success('Scholarship created successfully');
@@ -890,9 +902,18 @@ export function useUpdateScholarship() {
     },
     onSuccess: (_, { id }) => {
       // Force immediate refetch so the list updates right away
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.lists(), refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.filterOptions(), refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.detail(id), refetchType: 'all' });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.lists(),
+        refetchType: 'all',
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.filterOptions(),
+        refetchType: 'all',
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.detail(id),
+        refetchType: 'all',
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.all, refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all, refetchType: 'all' });
       toast.success('Scholarship updated successfully');
@@ -922,8 +943,14 @@ export function useDeleteScholarship() {
     onSuccess: (_, id) => {
       removeScholarshipsFromListQueries(queryClient, [id]);
       // Force immediate refetch so the list updates right away
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.lists(), refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.filterOptions(), refetchType: 'all' });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.lists(),
+        refetchType: 'all',
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.filterOptions(),
+        refetchType: 'all',
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.scholarships.all, refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all, refetchType: 'all' });
       toast.success('Scholarship archived successfully');

@@ -1,24 +1,17 @@
 'use client';
 
-import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from 'recharts';
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency, cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface ScholarshipChartData {
   readonly name: string;
@@ -61,7 +54,12 @@ export function ScholarshipChart({
   }));
 
   return (
-    <Card className={cn('border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm', className)}>
+    <Card
+      className={cn(
+        'border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm',
+        className
+      )}
+    >
       <CardHeader className="border-b-[0.5px] border-border/60 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>

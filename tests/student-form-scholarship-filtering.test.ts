@@ -6,7 +6,6 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const studentFormSource = readFileSync(
@@ -19,7 +18,7 @@ describe('student form scholarship filtering', () => {
   it('passes eligibleGradeLevels filter when fetching scholarships for student form', () => {
     // The fetchScholarships function should build a URL with eligibleGradeLevels param
     expect(studentFormSource).toContain('eligibleGradeLevels');
-    expect(studentFormSource).toContain("encodeURIComponent(gradeLevelFilter)");
+    expect(studentFormSource).toContain('encodeURIComponent(gradeLevelFilter)');
     // Should construct URL with the filter param
     expect(studentFormSource).toContain('&eligibleGradeLevels=');
   });
@@ -37,8 +36,8 @@ describe('student form scholarship filtering', () => {
   // Test 3: Initial fetch uses the default values grade level when editing
   it('fetches scholarships with initial grade level when editing an existing student', () => {
     // The mount useEffect should pass defaultValues?.gradeLevel to fetchScholarships
-    expect(studentFormSource).toContain("fetchScholarships(initialGradeLevel || undefined)");
-    expect(studentFormSource).toContain("defaultValues?.gradeLevel");
+    expect(studentFormSource).toContain('fetchScholarships(initialGradeLevel || undefined)');
+    expect(studentFormSource).toContain('defaultValues?.gradeLevel');
   });
 
   // Test 4: Already uses isScholarshipEligibleForStudent for client-side filtering
@@ -71,6 +70,6 @@ describe('student form scholarship filtering', () => {
 
   // Test 7: An ineligible scholarship shows the correct error message when manually added
   it('shows clear error when trying to add an ineligible scholarship', () => {
-    expect(studentFormSource).toContain("Student is not eligible for this scholarship");
+    expect(studentFormSource).toContain('Student is not eligible for this scholarship');
   });
 });

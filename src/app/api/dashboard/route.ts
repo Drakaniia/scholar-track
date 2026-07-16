@@ -106,9 +106,7 @@ export async function GET(request: NextRequest) {
                   },
                 }
               : {}),
-            ...(gradeLevel
-              ? { student: { gradeLevel } }
-              : {}),
+            ...(gradeLevel ? { student: { gradeLevel } } : {}),
           },
           _sum: { amount: true },
         }),
@@ -124,9 +122,7 @@ export async function GET(request: NextRequest) {
                     },
                   }
                 : {}),
-              ...(gradeLevel
-                ? { student: { gradeLevel } }
-                : {}),
+              ...(gradeLevel ? { student: { gradeLevel } } : {}),
             },
             take: 100,
             orderBy: { awardDate: 'desc' },
@@ -144,9 +140,7 @@ export async function GET(request: NextRequest) {
                     },
                   }
                 : {}),
-              ...(gradeLevel
-                ? { student: { gradeLevel } }
-                : {}),
+              ...(gradeLevel ? { student: { gradeLevel } } : {}),
             },
             take: 100,
             orderBy: { disbursementDate: 'desc' },

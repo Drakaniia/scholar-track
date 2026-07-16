@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   CheckCircle2,
@@ -15,11 +16,8 @@ import {
   RotateCcw,
   Save,
 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { useQueryClient } from '@tanstack/react-query';
-
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,7 +45,11 @@ import {
   getPromotionDecisionOptions,
   isStudentTransitionDecision,
 } from '@/lib/promotion-decisions';
-import { STUDENT_TRANSITION_DECISION_LABELS, SCHOLARSHIP_TERMS, SCHOLARSHIP_TERM_LABELS } from '@/types';
+import {
+  SCHOLARSHIP_TERMS,
+  SCHOLARSHIP_TERM_LABELS,
+  STUDENT_TRANSITION_DECISION_LABELS,
+} from '@/types';
 import type { StudentTransitionDecision } from '@/types';
 
 import type {
@@ -259,7 +261,13 @@ export function AcademicYearManager() {
       }
     }, 3000);
     return () => window.clearInterval(intervalId);
-  }, [academicYearPage, fetchAcademicYears, fetchPromotionRunStatus, isPromotionRunActive, promotionRun]);
+  }, [
+    academicYearPage,
+    fetchAcademicYears,
+    fetchPromotionRunStatus,
+    isPromotionRunActive,
+    promotionRun,
+  ]);
 
   const handleAcademicYearFormChange = (
     field: keyof typeof academicYearFormData,
@@ -337,7 +345,8 @@ export function AcademicYearManager() {
   };
 
   const handleDeleteAcademicYear = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this academic year? This cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this academic year? This cannot be undone.'))
+      return;
 
     setIsSubmittingAcademicYear(true);
     try {
@@ -427,7 +436,10 @@ export function AcademicYearManager() {
     await fetchPromotionPreview();
   };
 
-  const handleTransitionDecisionChange = (studentId: number, decision: StudentTransitionDecision) => {
+  const handleTransitionDecisionChange = (
+    studentId: number,
+    decision: StudentTransitionDecision
+  ) => {
     setTransitionDecisions((current) => ({ ...current, [studentId]: decision }));
   };
 
@@ -517,14 +529,14 @@ export function AcademicYearManager() {
   const hasPromotionDecisionBlockers = promotionDecisionBlockers.length > 0;
   const canStartDialogPromotion = Boolean(
     promotionPreview?.activeAcademicYear &&
-      !promotionPreview.activeAcademicYear.promotionProcessedAt &&
-      !isDialogPromotionProcessing &&
-      !hasPromotionDecisionBlockers
+    !promotionPreview.activeAcademicYear.promotionProcessedAt &&
+    !isDialogPromotionProcessing &&
+    !hasPromotionDecisionBlockers
   );
   const canReviewDialogPromotion = Boolean(
     promotionPreview?.activeAcademicYear &&
-      !promotionPreview.activeAcademicYear.promotionProcessedAt &&
-      !isDialogPromotionProcessing
+    !promotionPreview.activeAcademicYear.promotionProcessedAt &&
+    !isDialogPromotionProcessing
   );
   const canUndoPromotion = Boolean(activeAcademicYear?.promotionProcessedAt);
 
@@ -558,12 +570,7 @@ export function AcademicYearManager() {
                   Undo Last Promotion
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddAcademicYear}
-                className="gap-2"
-              >
+              <Button variant="outline" size="sm" onClick={handleAddAcademicYear} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add New
               </Button>
@@ -638,7 +645,8 @@ export function AcademicYearManager() {
                     <SelectContent>
                       {SCHOLARSHIP_TERMS.map((term) => (
                         <SelectItem key={term} value={term}>
-                          {SCHOLARSHIP_TERM_LABELS[term as keyof typeof SCHOLARSHIP_TERM_LABELS] || term}
+                          {SCHOLARSHIP_TERM_LABELS[term as keyof typeof SCHOLARSHIP_TERM_LABELS] ||
+                            term}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -768,9 +776,7 @@ export function AcademicYearManager() {
                           <TableCell>{formatDate(ay.promotionDate)}</TableCell>
                           <TableCell>
                             {promoStatus.className ? (
-                              <Badge className={promoStatus.className}>
-                                {promoStatus.label}
-                              </Badge>
+                              <Badge className={promoStatus.className}>{promoStatus.label}</Badge>
                             ) : (
                               <span className="text-sm text-muted-foreground">
                                 {promoStatus.label}
@@ -917,11 +923,7 @@ export function AcademicYearManager() {
                     </>
                   )}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsPromotionDialogOpen(false)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setIsPromotionDialogOpen(false)}>
                   Close
                 </Button>
               </div>

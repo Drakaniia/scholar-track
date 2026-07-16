@@ -63,11 +63,11 @@ No change — the existing `AnimatedChart` staggered reveal handles entry.
 
 ## Animation Parameters
 
-| Property        | Enter value | Leave value | Duration | Easing     |
-|-----------------|-------------|-------------|----------|------------|
-| Arc angles      | expanded    | resting    | 0.4s     | power2.out |
-| Sector opacity  | 0.25 / 1.0  | 1.0        | 0.3s     | power2.out |
-| Center label    | 0 → 1       | 1 → 0      | 0.2s     | power2.out |
+| Property       | Enter value | Leave value | Duration | Easing     |
+| -------------- | ----------- | ----------- | -------- | ---------- |
+| Arc angles     | expanded    | resting     | 0.4s     | power2.out |
+| Sector opacity | 0.25 / 1.0  | 1.0         | 0.3s     | power2.out |
+| Center label   | 0 → 1       | 1 → 0       | 0.2s     | power2.out |
 
 **Expansion:** 4° total (2° per edge of hovered sector).
 
@@ -75,6 +75,6 @@ No change — the existing `AnimatedChart` staggered reveal handles entry.
 
 ## File Changes
 
-| File | Change |
-|------|--------|
+| File                                             | Change                                                                            |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- |
 | `src/components/dashboard/program-mix-donut.tsx` | Add `useGSAP`, angle computation, GSAP hover tweens, remove CSS hover transitions |

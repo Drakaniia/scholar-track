@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isStudentTransitionDecision } from '@/lib/promotion-decisions';
 import prisma from '@/lib/prisma';
-import {
-  SEPARATED_STUDENT_STATUSES,
-  STUDENT_TRANSITION_DECISION_LABELS,
-} from '@/types';
+import { isStudentTransitionDecision } from '@/lib/promotion-decisions';
+import { SEPARATED_STUDENT_STATUSES, STUDENT_TRANSITION_DECISION_LABELS } from '@/types';
 
 const BOUNDARY_YEAR_LEVELS = ['Grade 6', 'Grade 10', 'Grade 12'];
 const SEPARATED_OUTCOMES = [
@@ -226,34 +223,33 @@ export async function GET(request: NextRequest) {
         .map((record) => record.studentId)
     );
 
-    const currentPromotionRows: RegistryRow[] = currentPromotionStudents
-      .map((student) => {
-        const latestRecord = student.academicRecords[0];
-        const laneFromStudent = getBoundaryLane(student.yearLevel);
+    const currentPromotionRows: RegistryRow[] = currentPromotionStudents.map((student) => {
+      const latestRecord = student.academicRecords[0];
+      const laneFromStudent = getBoundaryLane(student.yearLevel);
 
-        return {
-          id: `current-${student.id}`,
-          studentId: student.id,
-          studentName: `${student.lastName}, ${student.firstName}`,
-          program: student.program,
-          academicYear: latestRecord?.academicYear || 'Current record',
-          gradeLevel: student.gradeLevel,
-          yearLevel: student.yearLevel,
-          fromLevel: `${student.gradeLevel} - ${student.yearLevel}`,
-          toLevel: student.transitionDecision
-            ? formatDecision(student.transitionDecision)
-            : 'Pending decision',
-          outcome: student.transitionDecision ? 'READY_FOR_PROMOTION' : 'PENDING_DECISION',
-          decision: student.transitionDecision,
-          decisionLabel: formatDecision(student.transitionDecision),
-          status: student.status,
-          separatedAt: student.separatedAt,
-          recordedAt: student.transitionDecisionAt || latestRecord?.createdAt || student.updatedAt,
-          lane: laneFromStudent,
-          canDecide: true,
-          requiresDecision: !student.transitionDecision,
-        };
-      });
+      return {
+        id: `current-${student.id}`,
+        studentId: student.id,
+        studentName: `${student.lastName}, ${student.firstName}`,
+        program: student.program,
+        academicYear: latestRecord?.academicYear || 'Current record',
+        gradeLevel: student.gradeLevel,
+        yearLevel: student.yearLevel,
+        fromLevel: `${student.gradeLevel} - ${student.yearLevel}`,
+        toLevel: student.transitionDecision
+          ? formatDecision(student.transitionDecision)
+          : 'Pending decision',
+        outcome: student.transitionDecision ? 'READY_FOR_PROMOTION' : 'PENDING_DECISION',
+        decision: student.transitionDecision,
+        decisionLabel: formatDecision(student.transitionDecision),
+        status: student.status,
+        separatedAt: student.separatedAt,
+        recordedAt: student.transitionDecisionAt || latestRecord?.createdAt || student.updatedAt,
+        lane: laneFromStudent,
+        canDecide: true,
+        requiresDecision: !student.transitionDecision,
+      };
+    });
 
     const fallbackSeparatedRows: RegistryRow[] = separatedStudents
       .filter((student) => !studentsWithSeparatedRecords.has(student.id))

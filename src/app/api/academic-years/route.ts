@@ -174,13 +174,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (!canManageStudentsAndScholarships(payload.role)) {
-      console.error('Academic year creation failed: Insufficient permissions for user', payload.username);
+      console.error(
+        'Academic year creation failed: Insufficient permissions for user',
+        payload.username
+      );
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
     const body: AcademicYearData = await request.json();
     console.log('Academic year creation request:', JSON.stringify(body, null, 2));
-    
+
     const { year, startDate, endDate, semester, isActive = false, promotionDate } = body;
 
     // Enhanced validation with detailed logging
@@ -202,18 +205,12 @@ export async function POST(request: NextRequest) {
 
     if (!endDate?.trim()) {
       console.error('Academic year creation failed: Missing endDate field');
-      return NextResponse.json(
-        { success: false, error: 'End date is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'End date is required' }, { status: 400 });
     }
 
     if (!semester?.trim()) {
       console.error('Academic year creation failed: Missing semester field');
-      return NextResponse.json(
-        { success: false, error: 'Semester is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Semester is required' }, { status: 400 });
     }
 
     let parsedSemester: string;
@@ -223,9 +220,10 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('Academic year creation failed: Invalid semester', semester, error);
       return NextResponse.json(
-        { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Invalid semester. Must be 1ST, 2ND, or 3RD' 
+        {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Invalid semester. Must be 1ST, 2ND, or 3RD',
         },
         { status: 400 }
       );
@@ -253,18 +251,19 @@ export async function POST(request: NextRequest) {
       parsedEndDate = parseDateInput(endDate, 'end date');
       parsedPromotionDate = parseOptionalDateInput(promotionDate, 'promotion date');
       validateAcademicYearDateRange(parsedStartDate, parsedEndDate);
-      
+
       console.log('Parsed dates:', {
         startDate: parsedStartDate.toISOString(),
         endDate: parsedEndDate.toISOString(),
-        promotionDate: parsedPromotionDate?.toISOString() || null
+        promotionDate: parsedPromotionDate?.toISOString() || null,
       });
     } catch (error) {
       console.error('Academic year creation failed: Date validation error', error);
       return NextResponse.json(
-        { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Invalid date format. Use YYYY-MM-DD format.' 
+        {
+          success: false,
+          error:
+            error instanceof Error ? error.message : 'Invalid date format. Use YYYY-MM-DD format.',
         },
         { status: 400 }
       );

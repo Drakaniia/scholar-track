@@ -1,10 +1,11 @@
-"use client"
+'use client';
 
-import React, { useEffect, useId, useRef, useState } from "react"
-import { motion } from "motion/react"
+import React, { useEffect, useId, useRef, useState } from 'react';
 
-import { cn } from "@/lib/utils"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
+import { motion } from 'motion/react';
+
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { cn } from '@/lib/utils';
 
 /**
  *  DotPattern Component Props
@@ -20,16 +21,16 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion"
  * @param {boolean} [glow=false] - Whether dots should have a glowing animation effect
  */
 interface DotPatternProps extends React.SVGProps<SVGSVGElement> {
-  width?: number
-  height?: number
-  x?: number
-  y?: number
-  cx?: number
-  cy?: number
-  cr?: number
-  className?: string
-  glow?: boolean
-  [key: string]: unknown
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  cx?: number;
+  cy?: number;
+  cr?: number;
+  className?: string;
+  glow?: boolean;
+  [key: string]: unknown;
 }
 
 /**
@@ -74,60 +75,60 @@ export function DotPattern({
   glow = false,
   ...props
 }: DotPatternProps) {
-  const id = useId()
-  const containerRef = useRef<SVGSVGElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+  const id = useId();
+  const containerRef = useRef<SVGSVGElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [dots, setDots] = useState<
     Array<{ x: number; y: number; delay: number; duration: number }>
-  >([])
-  const reducedMotion = useReducedMotion()
+  >([]);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect()
-        setDimensions({ width, height })
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        setDimensions({ width, height });
       }
-    }
+    };
 
-    updateDimensions()
-    window.addEventListener("resize", updateDimensions)
-    return () => window.removeEventListener("resize", updateDimensions)
-  }, [])
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   useEffect(() => {
     if (dimensions.width === 0 || dimensions.height === 0) {
       queueMicrotask(() => {
-        setDots([])
-      })
-      return
+        setDots([]);
+      });
+      return;
     }
-    const cols = Math.ceil(dimensions.width / width)
-    const rows = Math.ceil(dimensions.height / height)
-    const count = cols * rows
+    const cols = Math.ceil(dimensions.width / width);
+    const rows = Math.ceil(dimensions.height / height);
+    const count = cols * rows;
 
     queueMicrotask(() => {
       setDots(
         Array.from({ length: count }, (_, i) => {
-          const col = i % cols
-          const row = Math.floor(i / cols)
+          const col = i % cols;
+          const row = Math.floor(i / cols);
           return {
             x: col * width + cx + x,
             y: row * height + cy + y,
             delay: Math.random() * 5,
             duration: Math.random() * 3 + 2,
-          }
+          };
         })
-      )
-    })
-  }, [dimensions, width, height, cx, cy, x, y])
+      );
+    });
+  }, [dimensions, width, height, cx, cy, x, y]);
 
   return (
     <svg
       ref={containerRef}
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-0 h-full w-full text-neutral-400/80",
+        'pointer-events-none absolute inset-0 h-full w-full text-neutral-400/80',
         className
       )}
       {...props}
@@ -146,7 +147,7 @@ export function DotPattern({
           cx={dot.x}
           cy={dot.y}
           r={cr}
-          fill={glow ? `url(#${id}-gradient)` : "currentColor"}
+          fill={glow ? `url(#${id}-gradient)` : 'currentColor'}
           initial={glow && !reducedMotion ? { opacity: 0.4, scale: 1 } : {}}
           animate={
             glow && !reducedMotion
@@ -161,14 +162,14 @@ export function DotPattern({
               ? {
                   duration: dot.duration,
                   repeat: Infinity,
-                  repeatType: "reverse",
+                  repeatType: 'reverse',
                   delay: dot.delay,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 }
               : {}
           }
         />
       ))}
     </svg>
-  )
+  );
 }

@@ -13,10 +13,7 @@ function range(start: number, end: number): number[] {
 
 const SIBLING_COUNT = 1;
 
-export function getPaginationRange(
-  currentPage: number,
-  totalPages: number
-): PageItem[] {
+export function getPaginationRange(currentPage: number, totalPages: number): PageItem[] {
   // Clamp currentPage to valid range
   const page = Math.max(1, Math.min(currentPage, totalPages));
 
@@ -53,12 +50,7 @@ export interface PaginationProps {
   totalCount?: number;
 }
 
-export function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-  totalCount,
-}: PaginationProps) {
+export function Pagination({ currentPage, totalPages, onPageChange, totalCount }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const items = getPaginationRange(currentPage, totalPages);
@@ -70,9 +62,7 @@ export function Pagination({
     >
       <div className="text-sm text-muted-foreground">
         Page {currentPage} of {totalPages}
-        {totalCount !== undefined && (
-          <> ({totalCount.toLocaleString()} total)</>
-        )}
+        {totalCount !== undefined && <> ({totalCount.toLocaleString()} total)</>}
       </div>
       <div className="flex items-center gap-1">
         <Button
@@ -108,9 +98,7 @@ export function Pagination({
                 onClick={() => onPageChange(item)}
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={`Page ${item}`}
-                className={cn(
-                  isActive && 'pointer-events-none'
-                )}
+                className={cn(isActive && 'pointer-events-none')}
               >
                 {item}
               </Button>

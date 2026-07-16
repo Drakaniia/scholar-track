@@ -77,10 +77,13 @@ Each component transitions **only** the properties that actually change:
 1. **`src/components/ui/button.tsx:9`** — In the `buttonVariants` CVA string, replace `transition-all` with `transition-[color,background-color,box-shadow,transform,outline]`.
 
    Before:
+
    ```
    text-sm font-medium transition-all duration-100 ease-out
    ```
+
    After:
+
    ```
    text-sm font-medium transition-[color,background-color,box-shadow,transform,outline] duration-100 ease-out
    ```
@@ -88,10 +91,13 @@ Each component transitions **only** the properties that actually change:
 2. **`src/components/ui/card.tsx:10`** — In the `Card` div className, replace `transition-all` with `transition-[transform,box-shadow]`.
 
    Before:
+
    ```
    backdrop-blur-xl saturate-[1.4] transition-all duration-300 ease-out hover:shadow-md hover:-translate-y-0.5
    ```
+
    After:
+
    ```
    backdrop-blur-xl saturate-[1.4] transition-[transform,box-shadow] duration-300 ease-out hover:shadow-md hover:-translate-y-0.5
    ```
@@ -99,10 +105,13 @@ Each component transitions **only** the properties that actually change:
 3. **`src/components/ui/tabs.tsx:37`** — In the `TabsTrigger` className, replace `transition-all` with `transition-[color,box-shadow]`.
 
    Before:
+
    ```
    text-sm font-medium ring-offset-background transition-all duration-200 ease-out
    ```
+
    After:
+
    ```
    text-sm font-medium ring-offset-background transition-[color,box-shadow] duration-200 ease-out
    ```

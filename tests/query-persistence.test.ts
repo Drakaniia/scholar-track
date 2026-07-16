@@ -10,7 +10,10 @@ import {
   restoreQueryCache,
 } from '@/lib/query-persistence';
 
-class MemoryStorage implements Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'> {
+class MemoryStorage implements Pick<
+  Storage,
+  'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'
+> {
   private readonly values = new Map<string, string>();
 
   get length() {

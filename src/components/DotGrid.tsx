@@ -301,7 +301,16 @@ const DotGrid: React.FC<DotGridProps> = ({
       window.removeEventListener('mousemove', throttledMove);
       window.removeEventListener('click', onClick);
     };
-  }, [maxSpeed, speedTrigger, proximity, resistance, returnDuration, shockRadius, shockStrength, reducedMotion]);
+  }, [
+    maxSpeed,
+    speedTrigger,
+    proximity,
+    resistance,
+    returnDuration,
+    shockRadius,
+    shockStrength,
+    reducedMotion,
+  ]);
 
   return (
     <section

@@ -107,9 +107,7 @@ const schemas = {
   _user: null as z.ZodType | null,
   get user() {
     if (!this._user) {
-      this._user = z.object({
-        /* ... */
-      });
+      this._user = z.object({/* ... */});
     }
     return this._user;
   },

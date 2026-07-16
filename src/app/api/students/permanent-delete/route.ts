@@ -24,7 +24,11 @@ async function parseBody(request: NextRequest) {
     if (body.selectAll === true) {
       const parsed = permanentDeleteSelectAllSchema.safeParse(body);
       if (!parsed.success) {
-        return { success: false as const, error: 'Invalid selectAll payload', status: 400 as const };
+        return {
+          success: false as const,
+          error: 'Invalid selectAll payload',
+          status: 400 as const,
+        };
       }
       return { success: true as const, mode: 'selectAll' as const, filters: parsed.data.filters };
     }
@@ -38,7 +42,11 @@ async function parseBody(request: NextRequest) {
       };
     }
 
-    return { success: true as const, mode: 'ids' as const, ids: Array.from(new Set(parsed.data.ids)) };
+    return {
+      success: true as const,
+      mode: 'ids' as const,
+      ids: Array.from(new Set(parsed.data.ids)),
+    };
   } catch {
     return { success: false as const, error: 'Invalid request body', status: 400 as const };
   }
