@@ -26,14 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="fixed inset-0 -z-10 pointer-events-none">
-          <DotPattern
-            className="text-transparent"
-            width={20}
-            height={20}
-            cx={1}
-            cy={1}
-            cr={0.8}
-          />
+          <DotPattern className="text-transparent" width={20} height={20} cx={1} cy={1} cr={0.8} />
         </div>
         <div className="relative min-h-screen">
           <div className="relative z-10">

@@ -45,7 +45,11 @@ async function parseBulkArchiveBody(request: NextRequest): Promise<ParsedBody> {
     if (body.selectAll === true) {
       const filters = body.filters as BulkArchiveFilters | undefined;
       if (!filters || typeof filters !== 'object') {
-        return { success: false, error: 'filters object required when selectAll is true', status: 400 };
+        return {
+          success: false,
+          error: 'filters object required when selectAll is true',
+          status: 400,
+        };
       }
       return { success: true, mode: 'selectAll', action, filters };
     }
@@ -82,7 +86,16 @@ function parseOptionalAcademicYearId(value: unknown): number | null {
 }
 
 function buildArchiveWhereClause(filters: BulkArchiveFilters, isUnarchive: boolean) {
-  const { gradeLevel = '', program = '', status = '', search = '', scholarshipId = '', scholarshipSource = '', academicYearId, population = 'active' } = filters;
+  const {
+    gradeLevel = '',
+    program = '',
+    status = '',
+    search = '',
+    scholarshipId = '',
+    scholarshipSource = '',
+    academicYearId,
+    population = 'active',
+  } = filters;
   const academicYearFilter = parseOptionalAcademicYearId(academicYearId);
 
   const additionalFilters: Record<string, unknown> = {
@@ -110,7 +123,9 @@ function buildArchiveWhereClause(filters: BulkArchiveFilters, isUnarchive: boole
   }
 
   if (scholarshipSource) {
-    Object.assign(where, { scholarships: { some: { scholarship: { source: scholarshipSource } } } });
+    Object.assign(where, {
+      scholarships: { some: { scholarship: { source: scholarshipSource } } },
+    });
   }
 
   if (academicYearFilter) {
@@ -137,7 +152,12 @@ async function processByIds(ids: number[], action: ArchiveAction) {
     const student = existingMap.get(studentId);
 
     if (!student) {
-      results.push({ studentId, studentName: 'Unknown', success: false, error: 'Student not found' });
+      results.push({
+        studentId,
+        studentName: 'Unknown',
+        success: false,
+        error: 'Student not found',
+      });
       notFoundCount++;
       continue;
     }
@@ -197,7 +217,12 @@ async function processByFilters(filters: BulkArchiveFilters, action: ArchiveActi
   });
 
   if (studentsToProcess.length === 0) {
-    return { results: [] as BulkArchiveResult[], processedCount: 0, alreadyInStateCount: 0, notFoundCount: 0 };
+    return {
+      results: [] as BulkArchiveResult[],
+      processedCount: 0,
+      alreadyInStateCount: 0,
+      notFoundCount: 0,
+    };
   }
 
   const results: BulkArchiveResult[] = [];
@@ -275,6 +300,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in bulk operation:', error);
-    return NextResponse.json({ success: false, error: 'Failed to process bulk operation' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Failed to process bulk operation' },
+      { status: 500 }
+    );
   }
 }

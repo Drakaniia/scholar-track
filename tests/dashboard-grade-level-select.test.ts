@@ -7,7 +7,6 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const heroSource = readFileSync(
@@ -15,15 +14,9 @@ const heroSource = readFileSync(
   'utf8'
 );
 
-const pageSource = readFileSync(
-  join(process.cwd(), 'src/app/(dashboard)/page.tsx'),
-  'utf8'
-);
+const pageSource = readFileSync(join(process.cwd(), 'src/app/(dashboard)/page.tsx'), 'utf8');
 
-const queriesSource = readFileSync(
-  join(process.cwd(), 'src/hooks/use-queries.ts'),
-  'utf8'
-);
+const queriesSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
 const flowSource = readFileSync(
   join(process.cwd(), 'src/app/(dashboard)/scholarship-flow/page.tsx'),

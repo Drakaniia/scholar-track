@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -212,7 +211,7 @@ describe('backup data script', () => {
       };
 
       await expect(createTableBackup(prisma, 'nonexistent_table', null)).rejects.toThrow(
-        "Unknown table: nonexistent_table"
+        'Unknown table: nonexistent_table'
       );
     });
 
@@ -286,7 +285,16 @@ describe('backup data script', () => {
 
     it('returns default values when no args given', () => {
       const result = parseCliArgs([]);
-      expect(result).toEqual({ list: false, create: null, exportAll: false, restore: null, dryRun: false, tables: null, limit: 20, help: false });
+      expect(result).toEqual({
+        list: false,
+        create: null,
+        exportAll: false,
+        restore: null,
+        dryRun: false,
+        tables: null,
+        limit: 20,
+        help: false,
+      });
     });
   });
 
@@ -308,7 +316,9 @@ describe('backup data script', () => {
 
       const manifest = await exportAllTables(client, join('backups', 'test-export'));
 
-      expect(mockMkdirSync).toHaveBeenCalledWith(join('backups', 'test-export'), { recursive: true });
+      expect(mockMkdirSync).toHaveBeenCalledWith(join('backups', 'test-export'), {
+        recursive: true,
+      });
       expect(manifest.totalTables).toBe(6);
       expect(manifest.totalRecords).toBe(2);
       expect(manifest.tables).toEqual(
@@ -331,11 +341,10 @@ describe('backup data script', () => {
         academicYear: { findMany: vi.fn().mockResolvedValue([]) },
       };
 
-      const manifest = await exportAllTables(
-        client,
-        join('backups', 'test-filtered'),
-        ['students', 'scholarships']
-      );
+      const manifest = await exportAllTables(client, join('backups', 'test-filtered'), [
+        'students',
+        'scholarships',
+      ]);
 
       expect(manifest.totalTables).toBe(2);
       expect(manifest.totalRecords).toBe(2);
@@ -366,8 +375,8 @@ describe('backup data script', () => {
       expect(new Date(manifest.exportedAt).toISOString()).toBe(manifest.exportedAt);
 
       // Verify manifest was written
-      const manifestCall = mockWriteFileSync.mock.calls.find(
-        (call: unknown[]) => (call[0] as string).endsWith('manifest.json')
+      const manifestCall = mockWriteFileSync.mock.calls.find((call: unknown[]) =>
+        (call[0] as string).endsWith('manifest.json')
       );
       expect(manifestCall).toBeDefined();
       expect(manifestCall![1]).toBeDefined();
@@ -392,22 +401,50 @@ describe('backup data script', () => {
           { tableName: 'academic_years', recordCount: 1, fileName: 'academic_years.json' },
           { tableName: 'students', recordCount: 1, fileName: 'students.json' },
           { tableName: 'scholarships', recordCount: 1, fileName: 'scholarships.json' },
-          { tableName: 'student_scholarships', recordCount: 0, fileName: 'student_scholarships.json' },
+          {
+            tableName: 'student_scholarships',
+            recordCount: 0,
+            fileName: 'student_scholarships.json',
+          },
           { tableName: 'student_fees', recordCount: 0, fileName: 'student_fees.json' },
           { tableName: 'disbursements', recordCount: 0, fileName: 'disbursements.json' },
         ],
       });
 
       const academicYearsJson = JSON.stringify([
-        { id: 1, year: '2024-2025', startDate: '2024-06-01T00:00:00.000Z', endDate: '2025-03-31T00:00:00.000Z', semester: '1ST', isActive: true },
+        {
+          id: 1,
+          year: '2024-2025',
+          startDate: '2024-06-01T00:00:00.000Z',
+          endDate: '2025-03-31T00:00:00.000Z',
+          semester: '1ST',
+          isActive: true,
+        },
       ]);
 
       const studentsJson = JSON.stringify([
-        { id: 1, firstName: 'Alice', lastName: 'Smith', program: 'BSCS', yearLevel: '3rd', gradeLevel: 'College', status: 'Active' },
+        {
+          id: 1,
+          firstName: 'Alice',
+          lastName: 'Smith',
+          program: 'BSCS',
+          yearLevel: '3rd',
+          gradeLevel: 'College',
+          status: 'Active',
+        },
       ]);
 
       const scholarshipsJson = JSON.stringify([
-        { id: 1, scholarshipName: 'Test Grant', sponsor: 'Test', type: 'CHED', amount: '5000.00', status: 'Active', source: 'INTERNAL', eligibleGradeLevels: 'College' },
+        {
+          id: 1,
+          scholarshipName: 'Test Grant',
+          sponsor: 'Test',
+          type: 'CHED',
+          amount: '5000.00',
+          status: 'Active',
+          source: 'INTERNAL',
+          eligibleGradeLevels: 'College',
+        },
       ]);
 
       const emptyJson = JSON.stringify([]);
@@ -482,7 +519,11 @@ describe('backup data script', () => {
           { tableName: 'academic_years', recordCount: 0, fileName: 'academic_years.json' },
           { tableName: 'students', recordCount: 0, fileName: 'students.json' },
           { tableName: 'scholarships', recordCount: 0, fileName: 'scholarships.json' },
-          { tableName: 'student_scholarships', recordCount: 0, fileName: 'student_scholarships.json' },
+          {
+            tableName: 'student_scholarships',
+            recordCount: 0,
+            fileName: 'student_scholarships.json',
+          },
           { tableName: 'student_fees', recordCount: 0, fileName: 'student_fees.json' },
           { tableName: 'disbursements', recordCount: 0, fileName: 'disbursements.json' },
         ],
@@ -513,13 +554,19 @@ describe('backup data script', () => {
         exportedAt: '2025-06-21T12:00:00.000Z',
         totalTables: 1,
         totalRecords: 1,
-        tables: [
-          { tableName: 'students', recordCount: 1, fileName: 'students.json' },
-        ],
+        tables: [{ tableName: 'students', recordCount: 1, fileName: 'students.json' }],
       });
 
       const studentsJson = JSON.stringify([
-        { id: 1, firstName: 'Alice', lastName: 'Smith', program: 'BSCS', yearLevel: '3rd', gradeLevel: 'College', status: 'Active' },
+        {
+          id: 1,
+          firstName: 'Alice',
+          lastName: 'Smith',
+          program: 'BSCS',
+          yearLevel: '3rd',
+          gradeLevel: 'College',
+          status: 'Active',
+        },
       ]);
 
       mockReadFileSync.mockImplementation((path: string) => {
@@ -578,12 +625,10 @@ describe('backup data script', () => {
         disbursement: { upsert: vi.fn() },
       };
 
-      const result = await restoreFromBackup(
-        client,
-        'backups/test',
-        false,
-        ['students', 'scholarships']
-      );
+      const result = await restoreFromBackup(client, 'backups/test', false, [
+        'students',
+        'scholarships',
+      ]);
 
       expect(result.totalRestored).toBe(2);
       expect(result.totalTables).toBe(2);
@@ -605,9 +650,7 @@ describe('backup data script', () => {
         disbursement: { upsert: vi.fn() },
       };
 
-      await expect(
-        restoreFromBackup(client, 'backups/nonexistent')
-      ).rejects.toThrow();
+      await expect(restoreFromBackup(client, 'backups/nonexistent')).rejects.toThrow();
     });
   });
 

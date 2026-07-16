@@ -82,7 +82,9 @@ export function findBestAcademicYearId(
   if (active) return active.id;
 
   // 3. Fall back to most recent (sort by year descending)
-  const sorted = [...academicYears].sort((a, b) => String(b.year || '').localeCompare(String(a.year || '')));
+  const sorted = [...academicYears].sort((a, b) =>
+    String(b.year || '').localeCompare(String(a.year || ''))
+  );
   return sorted[0]?.id ?? null;
 }
 

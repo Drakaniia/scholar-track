@@ -63,23 +63,23 @@ pnpm start
 
 ## Available Scripts
 
-| Command                  | Description                                   |
-| ------------------------ | --------------------------------------------- |
-| `pnpm run dev`           | Start development server (port 8080)          |
-| `pnpm run build`         | Generate Prisma client + production build     |
-| `pnpm start`             | Start production server                       |
-| `pnpm run lint`          | Run ESLint                                    |
-| `pnpm run typecheck`     | TypeScript type checking                      |
-| `pnpm run test`          | Run Vitest tests                              |
-| `pnpm run test:watch`    | Run tests in watch mode                       |
-| `pnpm run db:push`       | Push Prisma schema to database                |
-| `pnpm run db:seed`       | Seed database with initial data               |
-| `pnpm run db:studio`     | Open Prisma Studio                            |
-| `pnpm run db:add-indexes`| Apply performance indexes                     |
-| `pnpm run erd:generate`  | Generate ERD visualization                    |
-| `pnpm run erd:view`      | Open ERD in browser                           |
-| `pnpm run db:backup`     | Manage data backups (list, create, export)    |
-| `pnpm run clean`         | Clean node_modules and .next, reinstall       |
+| Command                   | Description                                |
+| ------------------------- | ------------------------------------------ |
+| `pnpm run dev`            | Start development server (port 8080)       |
+| `pnpm run build`          | Generate Prisma client + production build  |
+| `pnpm start`              | Start production server                    |
+| `pnpm run lint`           | Run ESLint                                 |
+| `pnpm run typecheck`      | TypeScript type checking                   |
+| `pnpm run test`           | Run Vitest tests                           |
+| `pnpm run test:watch`     | Run tests in watch mode                    |
+| `pnpm run db:push`        | Push Prisma schema to database             |
+| `pnpm run db:seed`        | Seed database with initial data            |
+| `pnpm run db:studio`      | Open Prisma Studio                         |
+| `pnpm run db:add-indexes` | Apply performance indexes                  |
+| `pnpm run erd:generate`   | Generate ERD visualization                 |
+| `pnpm run erd:view`       | Open ERD in browser                        |
+| `pnpm run db:backup`      | Manage data backups (list, create, export) |
+| `pnpm run clean`          | Clean node_modules and .next, reinstall    |
 
 ## Initial Users
 

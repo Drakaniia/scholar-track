@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
@@ -50,8 +51,6 @@ describe('scholarships export route', () => {
 
     expect(pdfText).toContain('PHP 85,000');
     expect(pdfBytes.includes(Buffer.from([0xe2, 0x82, 0xb1]))).toBe(false);
-    expect(pdfBytes.includes(Buffer.from([0xc3, 0xa2, 0xe2, 0x80, 0x9a, 0xc2, 0xb1]))).toBe(
-      false
-    );
+    expect(pdfBytes.includes(Buffer.from([0xc3, 0xa2, 0xe2, 0x80, 0x9a, 0xc2, 0xb1]))).toBe(false);
   }, 10000);
 });

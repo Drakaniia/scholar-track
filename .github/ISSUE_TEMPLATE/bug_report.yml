@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug to help us improve the system
-title: "[Bug]: "
-labels: ["bug", "triage"]
+title: '[Bug]: '
+labels: ['bug', 'triage']
 assignees: []
 body:
   - type: markdown
@@ -14,7 +14,7 @@ body:
     attributes:
       label: Bug Title
       description: Give your bug a clear, descriptive title.
-      placeholder: "e.g. Student filter by academic year returns incorrect results when multiple semesters are selected"
+      placeholder: 'e.g. Student filter by academic year returns incorrect results when multiple semesters are selected'
     validations:
       required: true
 
@@ -54,7 +54,7 @@ body:
     attributes:
       label: Expected Behavior
       description: What did you expect to happen instead?
-      placeholder: "The annual fee aggregation should correctly sum all semester fees (1st Semester + 2nd Semester + Summer) and display the accurate EFC value."
+      placeholder: 'The annual fee aggregation should correctly sum all semester fees (1st Semester + 2nd Semester + Summer) and display the accurate EFC value.'
     validations:
       required: true
 
@@ -102,7 +102,7 @@ body:
     attributes:
       label: Browser & OS
       description: What browser and operating system were you using?
-      placeholder: "e.g. Chrome 125 on Windows 11, Safari 17 on macOS 14"
+      placeholder: 'e.g. Chrome 125 on Windows 11, Safari 17 on macOS 14'
     validations:
       required: false
 

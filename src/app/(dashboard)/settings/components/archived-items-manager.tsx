@@ -31,8 +31,8 @@ import {
   ARCHIVED_ITEMS_PAGE_SIZE,
   type ArchivedDeleteKind,
   type ArchivedDeleteTarget,
-  type ArchivedStudentsResponse,
   type ArchivedScholarshipsResponse,
+  type ArchivedStudentsResponse,
   type PermanentDeleteResponse,
   type Scholarship,
   type Student,
@@ -48,7 +48,9 @@ export function ArchivedItemsManager() {
   const [selectedArchivedStudentIds, setSelectedArchivedStudentIds] = useState<number[]>([]);
   const [studentSelectAllAcrossPages, setStudentSelectAllAcrossPages] = useState(false);
   const [isBulkUnarchivingArchived, setIsBulkUnarchivingArchived] = useState(false);
-  const [selectedArchivedScholarshipIds, setSelectedArchivedScholarshipIds] = useState<number[]>([]);
+  const [selectedArchivedScholarshipIds, setSelectedArchivedScholarshipIds] = useState<number[]>(
+    []
+  );
   const [archiveDeleteTarget, setArchiveDeleteTarget] = useState<ArchivedDeleteTarget | null>(null);
   const [isDeletingArchivedItem, setIsDeletingArchivedItem] = useState(false);
   const [studentPage, setStudentPage] = useState(1);
@@ -450,9 +452,7 @@ export function ArchivedItemsManager() {
               {archivedStudents.length > 0 && (
                 <div>
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">
-                      Archived Students ({studentTotal})
-                    </h3>
+                    <h3 className="text-lg font-semibold">Archived Students ({studentTotal})</h3>
                     <div className="flex items-center gap-2">
                       {selectedArchivedStudentIds.length > 0 && (
                         <>
@@ -535,9 +535,7 @@ export function ArchivedItemsManager() {
                               checked={allArchivedStudentsSelected}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedArchivedStudentIds(
-                                    archivedStudents.map((s) => s.id)
-                                  );
+                                  setSelectedArchivedStudentIds(archivedStudents.map((s) => s.id));
                                 } else {
                                   setSelectedArchivedStudentIds([]);
                                   setStudentSelectAllAcrossPages(false);
@@ -560,10 +558,7 @@ export function ArchivedItemsManager() {
                                 checked={selectedArchivedStudentIds.includes(student.id)}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
-                                    setSelectedArchivedStudentIds((prev) => [
-                                      ...prev,
-                                      student.id,
-                                    ]);
+                                    setSelectedArchivedStudentIds((prev) => [...prev, student.id]);
                                   } else {
                                     setSelectedArchivedStudentIds((prev) =>
                                       prev.filter((id) => id !== student.id)
@@ -832,9 +827,7 @@ export function ArchivedItemsManager() {
             <DialogTitle>Permanently Delete</DialogTitle>
             <DialogDescription>
               Are you sure you want to permanently delete {archiveDeleteTarget?.label}?
-              {archiveDeleteTarget?.selectAll
-                ? ' This will delete ALL archived students.'
-                : ''}{' '}
+              {archiveDeleteTarget?.selectAll ? ' This will delete ALL archived students.' : ''}{' '}
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>

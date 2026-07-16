@@ -69,7 +69,12 @@ import {
   getScholarshipFlowEndYear,
 } from '@/lib/scholarship-flow-years';
 import { formatCurrency } from '@/lib/utils';
-import { GRADE_LEVELS, GRADE_LEVEL_LABELS, SCHOLARSHIP_SOURCES, SCHOLARSHIP_SOURCE_LABELS } from '@/types';
+import {
+  GRADE_LEVELS,
+  GRADE_LEVEL_LABELS,
+  SCHOLARSHIP_SOURCES,
+  SCHOLARSHIP_SOURCE_LABELS,
+} from '@/types';
 
 function formatPhp(amount: number) {
   return `PHP ${formatCurrency(amount)}`;

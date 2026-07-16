@@ -47,7 +47,9 @@ export function getCellText(cell: ExcelJS.Cell) {
   return String(value);
 }
 
-export function worksheetToObjects<T extends Record<string, unknown>>(worksheet: ExcelJS.Worksheet) {
+export function worksheetToObjects<T extends Record<string, unknown>>(
+  worksheet: ExcelJS.Worksheet
+) {
   const headerRow = worksheet.getRow(1);
   const headers: Array<{ index: number; key: string }> = [];
 

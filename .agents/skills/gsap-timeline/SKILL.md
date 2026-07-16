@@ -16,9 +16,9 @@ Apply when building multi-step animations, coordinating several tweens in sequen
 
 ```javascript
 const tl = gsap.timeline();
-tl.to(".a", { x: 100, duration: 1 })
-  .to(".b", { y: 50, duration: 0.5 })
-  .to(".c", { opacity: 0, duration: 0.3 });
+tl.to('.a', { x: 100, duration: 1 })
+  .to('.b', { y: 50, duration: 0.5 })
+  .to('.c', { opacity: 0, duration: 0.3 });
 ```
 
 By default, tweens are **appended** one after another. Use the **position parameter** to place tweens at specific times or relative to other tweens.
@@ -35,10 +35,10 @@ Third argument (or position property in vars) controls placement:
 Examples:
 
 ```javascript
-tl.to(".a", { x: 100 }, 0);           // at 0
-tl.to(".b", { y: 50 }, "+=0.5");      // 0.5s after last end
-tl.to(".c", { opacity: 0 }, "<");     // same start as previous
-tl.to(".d", { scale: 2 }, "<0.2");    // 0.2s after previous start
+tl.to('.a', { x: 100 }, 0); // at 0
+tl.to('.b', { y: 50 }, '+=0.5'); // 0.5s after last end
+tl.to('.c', { opacity: 0 }, '<'); // same start as previous
+tl.to('.d', { scale: 2 }, '<0.2'); // 0.2s after previous start
 ```
 
 ## Timeline Defaults
@@ -46,8 +46,8 @@ tl.to(".d", { scale: 2 }, "<0.2");    // 0.2s after previous start
 Pass defaults into the timeline so all child tweens inherit:
 
 ```javascript
-const tl = gsap.timeline({ defaults: { duration: 0.5, ease: "power2.out" } });
-tl.to(".a", { x: 100 }).to(".b", { y: 50 }); // both use 0.5s and power2.out
+const tl = gsap.timeline({ defaults: { duration: 0.5, ease: 'power2.out' } });
+tl.to('.a', { x: 100 }).to('.b', { y: 50 }); // both use 0.5s and power2.out
 ```
 
 ## Timeline Options (constructor)
@@ -62,12 +62,12 @@ tl.to(".a", { x: 100 }).to(".b", { y: 50 }); // both use 0.5s and power2.out
 Add and use labels for readable, maintainable sequencing:
 
 ```javascript
-tl.addLabel("intro", 0);
-tl.to(".a", { x: 100 }, "intro");
-tl.addLabel("outro", "+=0.5");
-tl.to(".b", { opacity: 0 }, "outro");
-tl.play("outro");  // start from "outro"
-tl.tweenFromTo("intro", "outro"); // pauses the timeline and returns a new Tween that animates the timeline's playhead from intro to outro with no ease.
+tl.addLabel('intro', 0);
+tl.to('.a', { x: 100 }, 'intro');
+tl.addLabel('outro', '+=0.5');
+tl.to('.b', { opacity: 0 }, 'outro');
+tl.play('outro'); // start from "outro"
+tl.tweenFromTo('intro', 'outro'); // pauses the timeline and returns a new Tween that animates the timeline's playhead from intro to outro with no ease.
 ```
 
 ## Nesting Timelines
@@ -77,9 +77,9 @@ Timelines can contain other timelines.
 ```javascript
 const master = gsap.timeline();
 const child = gsap.timeline();
-child.to(".a", { x: 100 }).to(".b", { y: 50 });
+child.to('.a', { x: 100 }).to('.b', { y: 50 });
 master.add(child, 0);
-master.to(".c", { opacity: 0 }, "+=0.2");
+master.to('.c', { opacity: 0 }, '+=0.2');
 ```
 
 ## Controlling Playback

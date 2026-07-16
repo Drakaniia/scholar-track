@@ -99,9 +99,7 @@ const UserSchema = z.object({
 type User = z.infer<typeof UserSchema>;
 
 // Alternative: lowercase schema, uppercase type
-const userSchema = z.object({
-  /*...*/
-});
+const userSchema = z.object({/*...*/});
 type User = z.infer<typeof userSchema>;
 ```
 

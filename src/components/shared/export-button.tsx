@@ -14,13 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 type ExportFormat = 'pdf' | 'csv' | 'xlsx';
-type ButtonVariant =
-  | 'default'
-  | 'destructive'
-  | 'outline'
-  | 'secondary'
-  | 'ghost'
-  | 'link';
+type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 
 interface ExportButtonProps {
   endpoint: string;
@@ -61,48 +55,47 @@ export function ExportButton({
   className,
   extraItems = [],
 }: ExportButtonProps) {
-  const handleExport = useCallback(async (
-    format: ExportFormat,
-    exportEndpoint = endpoint,
-    exportFilename = filename
-  ) => {
-    try {
-      if (!exportEndpoint) {
-        toast.error('Export endpoint not configured');
-        return;
+  const handleExport = useCallback(
+    async (format: ExportFormat, exportEndpoint = endpoint, exportFilename = filename) => {
+      try {
+        if (!exportEndpoint) {
+          toast.error('Export endpoint not configured');
+          return;
+        }
+
+        toast.loading(`Generating ${format.toUpperCase()} export...`);
+
+        const exportUrl = new URL(exportEndpoint, window.location.origin);
+        exportUrl.searchParams.set('format', format);
+        // Prevent browser caching of export responses
+        exportUrl.searchParams.set('_t', Date.now().toString());
+
+        const res = await fetch(exportUrl.toString(), { credentials: 'include' });
+
+        if (!res.ok) {
+          throw new Error('Export failed');
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${exportFilename}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        toast.dismiss();
+        toast.success(`${format.toUpperCase()} exported successfully`);
+      } catch (error) {
+        console.error('Export error:', error);
+        toast.dismiss();
+        toast.error('Failed to export');
       }
-
-      toast.loading(`Generating ${format.toUpperCase()} export...`);
-
-      const exportUrl = new URL(exportEndpoint, window.location.origin);
-      exportUrl.searchParams.set('format', format);
-      // Prevent browser caching of export responses
-      exportUrl.searchParams.set('_t', Date.now().toString());
-
-      const res = await fetch(exportUrl.toString(), { credentials: 'include' });
-
-      if (!res.ok) {
-        throw new Error('Export failed');
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${exportFilename}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      toast.dismiss();
-      toast.success(`${format.toUpperCase()} exported successfully`);
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.dismiss();
-      toast.error('Failed to export');
-    }
-  }, [endpoint, filename]);
+    },
+    [endpoint, filename]
+  );
 
   if (formats.length === 1 && extraItems.length === 0) {
     const format = formats[0];

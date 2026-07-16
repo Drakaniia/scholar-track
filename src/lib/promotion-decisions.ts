@@ -1,7 +1,4 @@
-import {
-  STUDENT_TRANSITION_DECISIONS,
-  type StudentTransitionDecision,
-} from '@/types';
+import { STUDENT_TRANSITION_DECISIONS, type StudentTransitionDecision } from '@/types';
 
 type PromotionDecisionStudent = {
   readonly gradeLevel?: string | null;
@@ -38,9 +35,7 @@ export const COLLEGE_GRADUATING_PROMOTION_DECISIONS = [
   'RETAINED',
 ] as const satisfies readonly StudentTransitionDecision[];
 
-const STUDENT_TRANSITION_DECISION_SET: ReadonlySet<string> = new Set(
-  STUDENT_TRANSITION_DECISIONS
-);
+const STUDENT_TRANSITION_DECISION_SET: ReadonlySet<string> = new Set(STUDENT_TRANSITION_DECISIONS);
 
 function parseGradeNumber(yearLevel: string): number | null {
   const match = yearLevel.trim().match(/^Grade\s+(\d+)$/i);

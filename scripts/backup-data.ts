@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -77,19 +76,14 @@ const TABLE_MODEL_MAP: Record<string, string> = {
   academic_years: 'academicYear',
 };
 
-function getModelForTable(
-  client: TableModels,
-  tableName: string
-): TableModel {
+function getModelForTable(client: TableModels, tableName: string): TableModel {
   const modelKey = TABLE_MODEL_MAP[tableName];
   if (!modelKey) {
     throw new Error(`Unknown table: ${tableName}`);
   }
   const model = client[modelKey];
   if (!model || typeof model.findMany !== 'function') {
-    throw new Error(
-      `Prisma model not found for table: ${tableName} (model key: ${modelKey})`
-    );
+    throw new Error(`Prisma model not found for table: ${tableName} (model key: ${modelKey})`);
   }
   return model;
 }
@@ -164,13 +158,13 @@ export async function exportAllTables(
   const backupDir = outputDir || join('backups', `backup-${timestamp}`);
 
   const tablesToExport = tableFilter
-    ? tableFilter.filter((t) => VALID_BACKUP_TABLES.includes(t as typeof VALID_BACKUP_TABLES[number]))
+    ? tableFilter.filter((t) =>
+        VALID_BACKUP_TABLES.includes(t as (typeof VALID_BACKUP_TABLES)[number])
+      )
     : [...VALID_BACKUP_TABLES];
 
   if (tablesToExport.length === 0) {
-    throw new Error(
-      `No valid tables specified. Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`
-    );
+    throw new Error(`No valid tables specified. Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`);
   }
 
   mkdirSync(backupDir, { recursive: true });
@@ -184,10 +178,12 @@ export async function exportAllTables(
 
     // Serialize Decimal fields to strings for JSON compatibility
     const serialized = records.map((record) =>
-      JSON.parse(JSON.stringify(record, (_key, value) => {
-        if (typeof value === 'bigint') return value.toString();
-        return value;
-      }))
+      JSON.parse(
+        JSON.stringify(record, (_key, value) => {
+          if (typeof value === 'bigint') return value.toString();
+          return value;
+        })
+      )
     );
 
     const fileName = `${tableName}.json`;
@@ -209,11 +205,7 @@ export async function exportAllTables(
     totalRecords,
     tables,
   };
-  writeFileSync(
-    join(backupDir, 'manifest.json'),
-    JSON.stringify(manifest, null, 2),
-    'utf-8'
-  );
+  writeFileSync(join(backupDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
 
   return manifest;
 }
@@ -359,8 +351,12 @@ export function displayBackups(backups: BackupSummary[]): string {
   const lines: string[] = [];
   lines.push('Recent backup snapshots:');
   lines.push('');
-  lines.push('  ID  | Table             | Record | Operation | Context        | Performed By | Created At');
-  lines.push('  ----+-------------------+--------+-----------+----------------+--------------+------------------------');
+  lines.push(
+    '  ID  | Table             | Record | Operation | Context        | Performed By | Created At'
+  );
+  lines.push(
+    '  ----+-------------------+--------+-----------+----------------+--------------+------------------------'
+  );
 
   for (const backup of backups) {
     const id = String(backup.id).padEnd(4);
@@ -371,7 +367,9 @@ export function displayBackups(backups: BackupSummary[]): string {
     const by = backup.performedBy !== null ? String(backup.performedBy) : '-'.padEnd(12);
     const at = backup.createdAt.toISOString().replace('T', ' ').replace(/\..+/, '');
 
-    lines.push(`  ${id} | ${table} | ${record} | ${op} | ${ctx} | ${String(by).padEnd(12)} | ${at}`);
+    lines.push(
+      `  ${id} | ${table} | ${record} | ${op} | ${ctx} | ${String(by).padEnd(12)} | ${at}`
+    );
   }
 
   lines.push('');
@@ -381,7 +379,17 @@ export function displayBackups(backups: BackupSummary[]): string {
 }
 
 export function parseCliArgs(args: string[]): CliOptions {
-  const allowedFlags = new Set(['--list', '--create', '--limit', '--export-all', '--restore', '--dry-run', '--tables', '--help', '-h']);
+  const allowedFlags = new Set([
+    '--list',
+    '--create',
+    '--limit',
+    '--export-all',
+    '--restore',
+    '--dry-run',
+    '--tables',
+    '--help',
+    '-h',
+  ]);
 
   const options: CliOptions = {
     list: false,
@@ -489,16 +497,21 @@ async function main(args = process.argv.slice(2)) {
   }
 
   const tableFilter = options.tables
-    ? options.tables.split(',').map((t) => t.trim()).filter(Boolean)
+    ? options.tables
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
     : undefined;
 
   // Warn about unknown table names in filter
   if (tableFilter) {
     const unknown = tableFilter.filter(
-      (t) => !VALID_BACKUP_TABLES.includes(t as typeof VALID_BACKUP_TABLES[number])
+      (t) => !VALID_BACKUP_TABLES.includes(t as (typeof VALID_BACKUP_TABLES)[number])
     );
     if (unknown.length > 0) {
-      console.warn(`Warning: Unknown table(s): ${unknown.join(', ')}. Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`);
+      console.warn(
+        `Warning: Unknown table(s): ${unknown.join(', ')}. Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`
+      );
     }
   }
 
@@ -516,7 +529,9 @@ async function main(args = process.argv.slice(2)) {
       tableFilter
     );
     const verb = options.dryRun ? 'would be restored' : 'restored';
-    console.log(`Done. ${result.totalRestored} records ${verb} across ${result.totalTables} tables.`);
+    console.log(
+      `Done. ${result.totalRestored} records ${verb} across ${result.totalTables} tables.`
+    );
     for (const table of result.tables) {
       console.log(`  ${table.tableName}: ${table.recordCount} records`);
     }
@@ -531,7 +546,9 @@ async function main(args = process.argv.slice(2)) {
       undefined,
       tableFilter
     );
-    console.log(`Export complete. ${manifest.totalRecords} records across ${manifest.totalTables} tables.`);
+    console.log(
+      `Export complete. ${manifest.totalRecords} records across ${manifest.totalTables} tables.`
+    );
     for (const table of manifest.tables) {
       console.log(`  ${table.tableName}: ${table.recordCount} records -> ${table.fileName}`);
     }
@@ -540,8 +557,10 @@ async function main(args = process.argv.slice(2)) {
 
   if (options.create) {
     const tableName = options.create;
-    if (!VALID_BACKUP_TABLES.includes(tableName as typeof VALID_BACKUP_TABLES[number])) {
-      console.error(`Error: Invalid table name "${tableName}". Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`);
+    if (!VALID_BACKUP_TABLES.includes(tableName as (typeof VALID_BACKUP_TABLES)[number])) {
+      console.error(
+        `Error: Invalid table name "${tableName}". Valid tables: ${VALID_BACKUP_TABLES.join(', ')}`
+      );
       process.exitCode = 1;
       return;
     }

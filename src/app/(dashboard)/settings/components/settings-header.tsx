@@ -31,7 +31,11 @@ export function SettingsConsoleHeaderSkeleton() {
   );
 }
 
-export function SettingsConsoleHeader({ currentUser }: { currentUser: SettingsConsoleUser | null }) {
+export function SettingsConsoleHeader({
+  currentUser,
+}: {
+  currentUser: SettingsConsoleUser | null;
+}) {
   const fullName = [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ');
   const displayName = fullName || currentUser?.username || 'Administrator';
 

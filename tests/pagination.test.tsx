@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { getPaginationRange, Pagination } from '@/components/shared/pagination';
+import { Pagination, getPaginationRange } from '@/components/shared/pagination';
 
 type PageItem = number | '...';
 

@@ -4,14 +4,14 @@ Welcome to the ScholarTrack documentation. This directory contains all comprehen
 
 ## 📖 Quick Reference
 
-| Document                                         | Description                                  |
-| ------------------------------------------------ | -------------------------------------------- |
-| [Setup Guide](./SETUP.md)                        | Installation, environment, scripts           |
-| [Technical Reference](./TECHNICAL-REFERENCE.md)  | Architecture, tech stack, DB schema, RBAC    |
-| [API Reference](./API-REFERENCE.md)              | Complete endpoint listing with request/response schemas |
-| [Architecture Diagram](../ARCHITECTURE.md)       | System architecture with ASCII diagrams      |
-| [Annual Fee Aggregation Guide](./ANNUAL-FEE-AGGREGATION-GUIDE.md) | Multi-semester fee aggregation |
-| [Feature Location Guide](./WHERE-TO-FIND-NEW-FEATURES.md) | Where to find UI changes           |
+| Document                                                          | Description                                             |
+| ----------------------------------------------------------------- | ------------------------------------------------------- |
+| [Setup Guide](./SETUP.md)                                         | Installation, environment, scripts                      |
+| [Technical Reference](./TECHNICAL-REFERENCE.md)                   | Architecture, tech stack, DB schema, RBAC               |
+| [API Reference](./API-REFERENCE.md)                               | Complete endpoint listing with request/response schemas |
+| [Architecture Diagram](../ARCHITECTURE.md)                        | System architecture with ASCII diagrams                 |
+| [Annual Fee Aggregation Guide](./ANNUAL-FEE-AGGREGATION-GUIDE.md) | Multi-semester fee aggregation                          |
+| [Feature Location Guide](./WHERE-TO-FIND-NEW-FEATURES.md)         | Where to find UI changes                                |
 
 ## 🗺️ Entity Relationship Diagram
 

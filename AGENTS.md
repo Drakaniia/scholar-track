@@ -191,24 +191,24 @@ pnpm start
 
 ### Available Scripts
 
-| Command                  | Description                                   |
-| ------------------------ | --------------------------------------------- |
-| `pnpm run dev`           | Start development server (port 8080, webpack) |
-| `pnpm run build`         | Generate Prisma client + production build     |
-| `pnpm start`             | Start production server                       |
-| `pnpm run lint`          | Run ESLint                                    |
-| `pnpm run typecheck`     | TypeScript type checking                      |
-| `pnpm run test`          | Run Vitest tests                              |
-| `pnpm run test:watch`    | Run tests in watch mode                       |
-| `pnpm run test:api`      | Test scholarship API endpoints                |
-| `pnpm run db:push`       | Push Prisma schema to database                |
-| `pnpm run db:seed`       | Seed database with initial data               |
-| `pnpm run db:studio`     | Open Prisma Studio                            |
-| `pnpm run db:add-indexes`| Apply performance indexes                     |
-| `pnpm run erd:generate`  | Generate ERD visualization                    |
-| `pnpm run erd:view`      | Open ERD in browser                           |
-| `pnpm run db:backup`     | Manage data backups (list, create, export)    |
-| `pnpm run clean`         | Clean node_modules and .next, reinstall       |
+| Command                   | Description                                   |
+| ------------------------- | --------------------------------------------- |
+| `pnpm run dev`            | Start development server (port 8080, webpack) |
+| `pnpm run build`          | Generate Prisma client + production build     |
+| `pnpm start`              | Start production server                       |
+| `pnpm run lint`           | Run ESLint                                    |
+| `pnpm run typecheck`      | TypeScript type checking                      |
+| `pnpm run test`           | Run Vitest tests                              |
+| `pnpm run test:watch`     | Run tests in watch mode                       |
+| `pnpm run test:api`       | Test scholarship API endpoints                |
+| `pnpm run db:push`        | Push Prisma schema to database                |
+| `pnpm run db:seed`        | Seed database with initial data               |
+| `pnpm run db:studio`      | Open Prisma Studio                            |
+| `pnpm run db:add-indexes` | Apply performance indexes                     |
+| `pnpm run erd:generate`   | Generate ERD visualization                    |
+| `pnpm run erd:view`       | Open ERD in browser                           |
+| `pnpm run db:backup`      | Manage data backups (list, create, export)    |
+| `pnpm run clean`          | Clean node_modules and .next, reinstall       |
 
 ## Initial Users
 
@@ -469,8 +469,8 @@ For detailed TanStack Query guide, see `docs/TANSTACK-QUERY-GUIDE.md`
 | Prisma client not generated | Run `npx prisma generate`                                         |
 | Database connection error   | Verify `DATABASE_URL` in `.env`, check connection pool parameters |
 | Auth not working            | Clear cookies, ensure JWT_SECRET matches                          |
-| Build fails                 | Run `pnpm run typecheck` to identify TS errors                     |
-| Slow queries                | Run `pnpm run db:add-indexes` to apply performance indexes         |
+| Build fails                 | Run `pnpm run typecheck` to identify TS errors                    |
+| Slow queries                | Run `pnpm run db:add-indexes` to apply performance indexes        |
 | Prisma retry warnings       | Check DATABASE_URL parameters, reduce `connection_limit`          |
 
 ### Performance Issues

@@ -109,10 +109,7 @@ export function StatsCard({
         )}
         {normalizedProgress !== null && (
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted">
-            <AnimatedProgressBar
-              width={normalizedProgress}
-              className={cn(styles.accent)}
-            />
+            <AnimatedProgressBar width={normalizedProgress} className={cn(styles.accent)} />
           </div>
         )}
       </CardContent>

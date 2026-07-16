@@ -312,9 +312,7 @@ describe('summary export route', () => {
     prismaMock.scholarship.findMany.mockResolvedValueOnce([]);
 
     const { GET } = await import('@/app/api/export/summary/route');
-    const response = await GET(
-      new NextRequest('http://localhost/api/export/summary?format=xlsx')
-    );
+    const response = await GET(new NextRequest('http://localhost/api/export/summary?format=xlsx'));
 
     expect(response.status).toBe(200);
 

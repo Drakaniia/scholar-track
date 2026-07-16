@@ -92,7 +92,7 @@ export function normalizeYearLevel(yearLevel: string | null | undefined): string
 
 /**
  * Checks if a student is eligible based on their grade level category and specific year level.
- * 
+ *
  * Logic:
  * 1. Normalize both the student's yearLevel and the scholarship's eligibility list.
  * 2. A match is found if:
@@ -188,18 +188,8 @@ const GRADE_LEVEL_CATEGORY_ALIASES = {
     'KINDER',
     'PREP',
   ],
-  JUNIOR_HIGH: [
-    'JUNIOR_HIGH',
-    'JUNIOR HIGH',
-    'JUNIOR HIGH SCHOOL',
-    'JHS',
-  ],
-  SENIOR_HIGH: [
-    'SENIOR_HIGH',
-    'SENIOR HIGH',
-    'SENIOR HIGH SCHOOL',
-    'SHS',
-  ],
+  JUNIOR_HIGH: ['JUNIOR_HIGH', 'JUNIOR HIGH', 'JUNIOR HIGH SCHOOL', 'JHS'],
+  SENIOR_HIGH: ['SENIOR_HIGH', 'SENIOR HIGH', 'SENIOR HIGH SCHOOL', 'SHS'],
   COLLEGE: [
     'COLLEGE',
     'HIED',
@@ -232,11 +222,7 @@ function parseCommaSeparatedEligibilityList(value: string | null | undefined): s
 }
 
 function normalizeEligibilityValue(value: string): string {
-  return value
-    .trim()
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .toUpperCase();
+  return value.trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').toUpperCase();
 }
 
 function normalizeProgramValue(value: string): string {

@@ -9,7 +9,6 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const pageSource = readFileSync(
@@ -22,10 +21,7 @@ const apiDetailRouteSource = readFileSync(
   'utf8'
 );
 
-const hooksSource = readFileSync(
-  join(process.cwd(), 'src/hooks/use-queries.ts'),
-  'utf8'
-);
+const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
 const apiRouteSource = readFileSync(
   join(process.cwd(), 'src/app/api/scholarships/route.ts'),

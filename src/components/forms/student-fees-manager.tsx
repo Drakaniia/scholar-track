@@ -70,7 +70,11 @@ interface StudentFeesManagerProps {
   academicYearIdFilter?: number | null;
 }
 
-export function StudentFeesManager({ studentId, readOnly = false, academicYearIdFilter }: StudentFeesManagerProps) {
+export function StudentFeesManager({
+  studentId,
+  readOnly = false,
+  academicYearIdFilter,
+}: StudentFeesManagerProps) {
   const queryClient = useQueryClient();
   const [fees, setFees] = useState<StudentFees[]>([]);
   const [loading, setLoading] = useState(true);

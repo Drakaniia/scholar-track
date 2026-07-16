@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const ReactQueryDevtools =
   process.env.NODE_ENV === 'development'
     ? dynamic(
-        () =>
-          import('@tanstack/react-query-devtools').then((mod) => mod.ReactQueryDevtools),
+        () => import('@tanstack/react-query-devtools').then((mod) => mod.ReactQueryDevtools),
         { ssr: false }
       )
     : null;

@@ -1164,27 +1164,28 @@ export async function promoteSelectedStudents(
         action: 'ARCHIVE',
         success: true,
       });
-    }      auditRows.push(
-        buildAuditCreateInput(
-          userId || null,
-          'MANUAL_SELECTED_PROMOTE_STUDENTS',
-          'SYSTEM',
-          undefined,
-          {
-            academicYear: activeAcademicYear.year,
-            academicYearId: activeAcademicYear.id,
-            cohortCount: cohortIds.length,
-            selectedCount: selectedIds.length,
-            promotedCount,
-            graduatedCount,
-            archivedCount,
-            skippedCount,
-            errorCount,
-            source: 'MANUAL_SELECTED',
-            errors: errors.length > 0 ? errors : undefined,
-          }
-        )
-      );
+    }
+    auditRows.push(
+      buildAuditCreateInput(
+        userId || null,
+        'MANUAL_SELECTED_PROMOTE_STUDENTS',
+        'SYSTEM',
+        undefined,
+        {
+          academicYear: activeAcademicYear.year,
+          academicYearId: activeAcademicYear.id,
+          cohortCount: cohortIds.length,
+          selectedCount: selectedIds.length,
+          promotedCount,
+          graduatedCount,
+          archivedCount,
+          skippedCount,
+          errorCount,
+          source: 'MANUAL_SELECTED',
+          errors: errors.length > 0 ? errors : undefined,
+        }
+      )
+    );
 
     if (backupRows.length > 0) {
       await tx.backup.createMany({ data: backupRows });

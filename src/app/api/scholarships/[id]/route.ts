@@ -116,9 +116,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         createdAt: true,
         updatedAt: true,
         students: {
-          where: parsedAcademicYearId
-            ? { academicYearId: parsedAcademicYearId }
-            : undefined,
+          where: parsedAcademicYearId ? { academicYearId: parsedAcademicYearId } : undefined,
           include: {
             student: {
               select: {

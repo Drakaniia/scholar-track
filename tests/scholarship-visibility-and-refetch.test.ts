@@ -4,10 +4,10 @@
  *
  * TDD: These tests are written first, then code is implemented to pass them.
  */
+import { NextRequest } from 'next/server';
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ============================================
@@ -50,10 +50,7 @@ describe('scholarship visibility by education level', () => {
 
   // The ScholarshipFilters type must have an eligibleGradeLevels field
   it('includes eligibleGradeLevels in ScholarshipFilters type', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     expect(hooksSource).toContain('eligibleGradeLevels');
   });
@@ -65,10 +62,7 @@ describe('scholarship visibility by education level', () => {
 
 describe('scholarship mutation immediate UI updates', () => {
   it('forces immediate refetch on scholarship create', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     // Find the useCreateScholarship function and verify refetchType: 'all'
     const createFnStart = hooksSource.indexOf('export function useCreateScholarship');
@@ -81,10 +75,7 @@ describe('scholarship mutation immediate UI updates', () => {
   });
 
   it('forces immediate refetch on scholarship delete', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     // Find the useDeleteScholarship function
     const deleteFnStart = hooksSource.indexOf('export function useDeleteScholarship');
@@ -97,10 +88,7 @@ describe('scholarship mutation immediate UI updates', () => {
   });
 
   it('refetches dashboard statistics after scholarship mutations', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     // All three mutation hooks must invalidate dashboard queries
     const mutations = ['useCreateScholarship', 'useUpdateScholarship', 'useDeleteScholarship'];
@@ -108,9 +96,8 @@ describe('scholarship mutation immediate UI updates', () => {
     for (const mutationName of mutations) {
       const fnStart = hooksSource.indexOf(`export function ${mutationName}`);
       const fnEnd = hooksSource.indexOf('export function', fnStart + 10);
-      const fnBody = fnEnd > fnStart
-        ? hooksSource.slice(fnStart, fnEnd)
-        : hooksSource.slice(fnStart);
+      const fnBody =
+        fnEnd > fnStart ? hooksSource.slice(fnStart, fnEnd) : hooksSource.slice(fnStart);
 
       expect(fnBody).toContain('queryKeys.dashboard.all');
     }
@@ -135,18 +122,16 @@ const queryOptimizerMock = vi.hoisted(() => ({
 }));
 
 const buildSearchWhereMock = vi.hoisted(() =>
-  vi.fn(
-    (search: string, _fields: string[], additional: Record<string, unknown>) => ({
-      ...(search
-        ? {
-            OR: _fields.map((field: string) => ({
-              [field]: { contains: search, mode: 'insensitive' as const },
-            })),
-          }
-        : {}),
-      ...additional,
-    })
-  )
+  vi.fn((search: string, _fields: string[], additional: Record<string, unknown>) => ({
+    ...(search
+      ? {
+          OR: _fields.map((field: string) => ({
+            [field]: { contains: search, mode: 'insensitive' as const },
+          })),
+        }
+      : {}),
+    ...additional,
+  }))
 );
 
 const generateQueryKeyMock = vi.hoisted(() => vi.fn(() => 'mock-key'));
@@ -187,7 +172,9 @@ describe('scholarships API eligibleGradeLevels filter', () => {
 
     const { GET } = await import('@/app/api/scholarships/route');
     const response = await GET(
-      new NextRequest('http://localhost/api/scholarships?eligibleGradeLevels=COLLEGE&page=1&limit=10')
+      new NextRequest(
+        'http://localhost/api/scholarships?eligibleGradeLevels=COLLEGE&page=1&limit=10'
+      )
     );
 
     expect(response.status).toBe(200);
@@ -205,7 +192,9 @@ describe('scholarships API eligibleGradeLevels filter', () => {
 
     const { GET } = await import('@/app/api/scholarships/route');
     await GET(
-      new NextRequest('http://localhost/api/scholarships?eligibleGradeLevels=JUNIOR_HIGH&page=1&limit=10')
+      new NextRequest(
+        'http://localhost/api/scholarships?eligibleGradeLevels=JUNIOR_HIGH&page=1&limit=10'
+      )
     );
 
     const countCall = prismaMock.scholarship.count.mock.calls[0];
@@ -219,9 +208,7 @@ describe('scholarships API eligibleGradeLevels filter', () => {
     prismaMock.scholarship.count.mockResolvedValueOnce(0);
 
     const { GET } = await import('@/app/api/scholarships/route');
-    await GET(
-      new NextRequest('http://localhost/api/scholarships?page=1&limit=10')
-    );
+    await GET(new NextRequest('http://localhost/api/scholarships?page=1&limit=10'));
 
     const findManyCall = prismaMock.scholarship.findMany.mock.calls[0];
     const whereClause = findManyCall[0].where;

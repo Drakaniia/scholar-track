@@ -258,7 +258,9 @@ export function AuditLogViewer() {
                         <span className="font-medium">
                           {log.user.firstName} {log.user.lastName}
                           <br />
-                          <span className="text-xs text-muted-foreground">@{log.user.username}</span>
+                          <span className="text-xs text-muted-foreground">
+                            @{log.user.username}
+                          </span>
                         </span>
                       ) : (
                         <span className="text-muted-foreground">System</span>

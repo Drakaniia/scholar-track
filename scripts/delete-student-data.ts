@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-
 import { pathToFileURL } from 'node:url';
 
 import prisma from '../src/lib/prisma';
@@ -110,7 +109,9 @@ export async function countStudentData(client: StudentDataCounter): Promise<Stud
   };
 }
 
-export async function deleteStudentData(client: StudentDataPrisma): Promise<DeleteStudentDataResult> {
+export async function deleteStudentData(
+  client: StudentDataPrisma
+): Promise<DeleteStudentDataResult> {
   const [before, scholarshipsBefore] = await Promise.all([
     countStudentData(client),
     client.scholarship.count(),
@@ -226,7 +227,9 @@ async function main(args = process.argv.slice(2)) {
   console.log(`  Scholarships preserved: ${scholarshipCount}`);
 
   if (!options.confirm) {
-    console.log('\nDry run only. Re-run with --confirm to permanently delete these student records.');
+    console.log(
+      '\nDry run only. Re-run with --confirm to permanently delete these student records.'
+    );
     return;
   }
 

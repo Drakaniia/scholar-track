@@ -2,16 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-import {
-  Filter,
-  KeyRound,
-  Pencil,
-  Search,
-  Shield,
-  Trash2,
-  UserPlus,
-  Users,
-} from 'lucide-react';
+import { Filter, KeyRound, Pencil, Search, Shield, Trash2, UserPlus, Users } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +33,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@/types';
+
 import {
   useCreateUser,
   useDeleteUser,
@@ -51,14 +44,23 @@ import {
   useUpdateUserStatus,
   useUsers,
 } from '../hooks/use-settings-queries';
-import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@/types';
-
-import type { User, CreateUserFormData, EditUserFormData, ResetPasswordFormData } from '../settings-types';
+import type {
+  CreateUserFormData,
+  EditUserFormData,
+  ResetPasswordFormData,
+  User,
+} from '../settings-types';
 import { initialCreateUserFormData } from '../settings-types';
 import { UserManagementCardSkeleton } from './settings-table-skeleton';
 
 interface UserManagementProps {
-  currentUser: { id?: number; username?: string; firstName?: string; lastName?: string; role?: string } | null;
+  currentUser: {
+    id?: number;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+  } | null;
 }
 
 export function UserManagement({ currentUser }: UserManagementProps) {
@@ -357,7 +359,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 <DialogHeader>
                   <DialogTitle>Create New User</DialogTitle>
                   <DialogDescription>
-                    Add a new user to the system. The user will be able to login with the credentials you set.
+                    Add a new user to the system. The user will be able to login with the
+                    credentials you set.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -384,9 +387,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
                         className={errors.lastName ? 'border-red-500' : ''}
                       />
-                      {errors.lastName && (
-                        <p className="text-xs text-red-500">{errors.lastName}</p>
-                      )}
+                      {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
                     </div>
                   </div>
 
@@ -399,9 +400,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                       onChange={(e) => handleInputChange('username', e.target.value)}
                       className={errors.username ? 'border-red-500' : ''}
                     />
-                    {errors.username && (
-                      <p className="text-xs text-red-500">{errors.username}</p>
-                    )}
+                    {errors.username && <p className="text-xs text-red-500">{errors.username}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -428,9 +427,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         onChange={(e) => handleInputChange('password', e.target.value)}
                         className={errors.password ? 'border-red-500' : ''}
                       />
-                      {errors.password && (
-                        <p className="text-xs text-red-500">{errors.password}</p>
-                      )}
+                      {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm Password *</Label>
@@ -651,7 +648,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>{user.firstName} {user.lastName}</TableCell>
+                      <TableCell>
+                        {user.firstName} {user.lastName}
+                      </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
                         <Select
@@ -686,7 +685,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                           <SelectContent>
                             <SelectItem value="ACTIVE">{USER_STATUS_LABELS.ACTIVE}</SelectItem>
                             <SelectItem value="INACTIVE">{USER_STATUS_LABELS.INACTIVE}</SelectItem>
-                            <SelectItem value="SUSPENDED">{USER_STATUS_LABELS.SUSPENDED}</SelectItem>
+                            <SelectItem value="SUSPENDED">
+                              {USER_STATUS_LABELS.SUSPENDED}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -744,7 +745,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information for {editingUser?.username}</DialogDescription>
+            <DialogDescription>
+              Update user information for {editingUser?.username}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -759,7 +762,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                   }}
                   className={editErrors.firstName ? 'border-red-500' : ''}
                 />
-                {editErrors.firstName && <p className="text-xs text-red-500">{editErrors.firstName}</p>}
+                {editErrors.firstName && (
+                  <p className="text-xs text-red-500">{editErrors.firstName}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-lastName">Last Name *</Label>
@@ -772,7 +777,9 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                   }}
                   className={editErrors.lastName ? 'border-red-500' : ''}
                 />
-                {editErrors.lastName && <p className="text-xs text-red-500">{editErrors.lastName}</p>}
+                {editErrors.lastName && (
+                  <p className="text-xs text-red-500">{editErrors.lastName}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -791,7 +798,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isEditing}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isEditing}
+            >
               Cancel
             </Button>
             <Button
@@ -821,11 +832,16 @@ export function UserManagement({ currentUser }: UserManagementProps) {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete user <strong>{deletingUser?.username}</strong>? This action cannot be undone.
+              Are you sure you want to delete user <strong>{deletingUser?.username}</strong>? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
               Cancel
             </Button>
             <Button
@@ -885,7 +901,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 placeholder="Confirm new password"
                 value={resetPasswordFormData.confirmPassword}
                 onChange={(e) => {
-                  setResetPasswordFormData((prev) => ({ ...prev, confirmPassword: e.target.value }));
+                  setResetPasswordFormData((prev) => ({
+                    ...prev,
+                    confirmPassword: e.target.value,
+                  }));
                   setResetPasswordErrors((prev) => ({ ...prev, confirmPassword: undefined }));
                 }}
                 className={resetPasswordErrors.confirmPassword ? 'border-red-500' : ''}

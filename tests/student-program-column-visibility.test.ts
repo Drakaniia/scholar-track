@@ -9,7 +9,6 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const studentPageSource = readFileSync(
@@ -28,9 +27,7 @@ describe('student list page - Program column visibility', () => {
     expect(studentPageSource).toContain('<TableHead>Program</TableHead>');
 
     // Verify the Program TableHead appears AFTER the gradeLevelFilter === 'COLLEGE' check
-    const gradeLevelFilterIndex = studentPageSource.indexOf(
-      "gradeLevelFilter === 'COLLEGE'"
-    );
+    const gradeLevelFilterIndex = studentPageSource.indexOf("gradeLevelFilter === 'COLLEGE'");
     const programHeadIndex = studentPageSource.indexOf(
       '<TableHead>Program</TableHead>',
       gradeLevelFilterIndex

@@ -5,6 +5,7 @@ Utility scripts for the ScholarTrack scholarship management system.
 ## Available Scripts
 
 ### `add-indexes.ts`
+
 Creates database indexes to optimize query performance for common access patterns.
 
 ```bash
@@ -12,6 +13,7 @@ pnpm run db:add-indexes
 ```
 
 ### `backup-data.ts`
+
 CLI tool to create, export, and restore data backups. Supports listing recent backups, creating table-level database backup records, exporting all/selected tables to local JSON files, and restoring from JSON exports with dry-run preview.
 
 ```bash
@@ -34,6 +36,7 @@ The `--restore <backup-dir>` flag imports data from a previously exported backup
 - `--tables <names>`: Comma-separated list of tables to export or restore (e.g. `students,scholarships`).
 
 ### `delete-student-data.ts`
+
 Deletes all student-related data while preserving scholarship definitions. Supports dry-run mode for preview.
 
 ```bash
@@ -42,6 +45,7 @@ pnpm run db:reset-students -- --confirm         # Permanently delete student dat
 ```
 
 ### `diagnose-academic-year-issue.ts`
+
 Diagnostic tool for investigating academic year-related data issues in the database.
 
 ```bash
@@ -49,6 +53,7 @@ pnpm exec tsx scripts/diagnose-academic-year-issue.ts
 ```
 
 ### `fix-paeb-data.ts`
+
 Utility to fix PAEB (Program of Assistance for Education and Bar) scholarship data discrepancies.
 
 ```bash
@@ -56,6 +61,7 @@ pnpm exec tsx scripts/fix-paeb-data.ts
 ```
 
 ### `test-scholarship-api.ts`
+
 Integration test script that makes real HTTP requests against the running API server.
 
 **Prerequisites:** Development server must be running (`pnpm run dev`), and `TEST_ADMIN_PASSWORD` must be set.

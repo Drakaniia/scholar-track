@@ -1,20 +1,14 @@
 import {
+  type DehydratedState,
   QueryClient,
+  type QueryKey,
   dehydrate,
   hydrate,
-  type DehydratedState,
-  type QueryKey,
 } from '@tanstack/react-query';
 
-import {
-  PRELOAD_CACHE_BUSTER,
-  getQueryCacheStorageKey,
-} from '@/lib/app-preload';
+import { PRELOAD_CACHE_BUSTER, getQueryCacheStorageKey } from '@/lib/app-preload';
 
-type QueryCacheStorage = Pick<
-  Storage,
-  'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'
->;
+type QueryCacheStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem' | 'key' | 'length'>;
 
 interface PersistedQueryCache {
   buster: string;

@@ -107,7 +107,10 @@ function KpiCard({
   return (
     <Card className="group relative overflow-hidden border-[0.5px] border-border/60 bg-card/85 backdrop-blur-xl py-0 shadow-sm">
       {/* Gradient background tint */}
-      <div aria-hidden="true" className={cn('pointer-events-none absolute inset-0', theme.gradient)} />
+      <div
+        aria-hidden="true"
+        className={cn('pointer-events-none absolute inset-0', theme.gradient)}
+      />
 
       {/* Top accent bar */}
       <div aria-hidden="true" className={cn('absolute inset-x-0 top-0 h-0.5', theme.accent)} />
@@ -116,12 +119,7 @@ function KpiCard({
         <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {title}
         </CardTitle>
-        <div
-          className={cn(
-            'flex size-7 items-center justify-center rounded-lg',
-            theme.iconBg
-          )}
-        >
+        <div className={cn('flex size-7 items-center justify-center rounded-lg', theme.iconBg)}>
           <Icon className="size-3.5" />
         </div>
       </CardHeader>

@@ -131,9 +131,10 @@ Always pair Neon with an ORM such as **Drizzle** for easy schema management and 
 **Neon Functions / Vercel / fluid compute — Drizzle + node-postgres:**
 
 ```typescript
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import * as schema from "./schema";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+
+import * as schema from './schema';
 
 // Created once at module scope; reused by every request the instance handles.
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
@@ -143,10 +144,11 @@ const db = drizzle({ client: pool, schema });
 On **Vercel** (Fluid compute) also attach the pool with `attachDatabasePool` from `@vercel/functions`, so the function runtime drains idle connections before an instance suspends:
 
 ```typescript
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { attachDatabasePool } from "@vercel/functions";
-import * as schema from "./schema";
+import { attachDatabasePool } from '@vercel/functions';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+
+import * as schema from './schema';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 attachDatabasePool(pool); // let the Vercel runtime manage the pooled connections
@@ -156,8 +158,8 @@ const db = drizzle({ client: pool, schema });
 **Netlify and other fully-isolated serverless — Drizzle + Neon serverless driver:**
 
 ```typescript
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle({ client: sql });
@@ -234,7 +236,7 @@ npm i @neondatabase/config
 
 ```typescript
 // neon.ts
-import { defineConfig } from "@neondatabase/config/v1";
+import { defineConfig } from '@neondatabase/config/v1';
 
 export default defineConfig({
   auth: true, // Neon Auth (adds NEON_AUTH_* env vars)
@@ -244,12 +246,12 @@ export default defineConfig({
     if (branch.exists) return {}; // leave existing branches untouched
     if (branch.isDefault) return { protected: true }; // prod keeps default compute
     return {
-      ttl: "7d", // non-prod branches auto-expire (max 30d)
+      ttl: '7d', // non-prod branches auto-expire (max 30d)
       postgres: {
         computeSettings: {
           autoscalingLimitMinCu: 0.25, // scale to zero
           autoscalingLimitMaxCu: 1, // keep dev/preview cheap
-          suspendTimeout: "5m",
+          suspendTimeout: '5m',
         },
       },
     };
@@ -273,8 +275,9 @@ Since `neon.ts` is TypeScript, invalid combinations fail to compile with an acti
 Read the resulting env back, typed and validated against the policy, with `parseEnv` from `@neondatabase/env`:
 
 ```typescript
-import { parseEnv } from "@neondatabase/env";
-import config from "./neon";
+import { parseEnv } from '@neondatabase/env';
+
+import config from './neon';
 
 const env = parseEnv(config);
 env.postgres.databaseUrl; // typed; enabling auth / dataApi above surfaces env.auth / env.dataApi

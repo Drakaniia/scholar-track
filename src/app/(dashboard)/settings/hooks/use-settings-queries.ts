@@ -39,7 +39,8 @@ export const settingsQueryKeys = {
     promotion: {
       all: () => [...settingsQueryKeys.academicYears.all(), 'promotion'] as const,
       preview: () => [...settingsQueryKeys.academicYears.promotion.all(), 'preview'] as const,
-      run: (id?: number) => [...settingsQueryKeys.academicYears.promotion.all(), 'run', id] as const,
+      run: (id?: number) =>
+        [...settingsQueryKeys.academicYears.promotion.all(), 'run', id] as const,
     },
   },
 };
@@ -152,8 +153,7 @@ export function useSessions() {
 export function useRevokeSession() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (sessionId: string) =>
-      fetchApi(`/api/sessions/${sessionId}`, { method: 'DELETE' }),
+    mutationFn: (sessionId: string) => fetchApi(`/api/sessions/${sessionId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsQueryKeys.sessions.all() });
       toast.success('Session revoked successfully');
@@ -168,7 +168,13 @@ export function useRevokeSession() {
 export function useUpdateUserInfo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, data }: { userId: number; data: { firstName: string; lastName: string; email: string } }) =>
+    mutationFn: ({
+      userId,
+      data,
+    }: {
+      userId: number;
+      data: { firstName: string; lastName: string; email: string };
+    }) =>
       fetchApi(`/api/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),

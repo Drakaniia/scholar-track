@@ -1,7 +1,7 @@
 name: ✨ Feature Request
 description: Suggest a new feature or enhancement for the project
-title: "[Feature]: "
-labels: ["enhancement"]
+title: '[Feature]: '
+labels: ['enhancement']
 assignees: []
 body:
   - type: markdown
@@ -14,7 +14,7 @@ body:
     attributes:
       label: Feature Title
       description: A short, descriptive name for the feature.
-      placeholder: "e.g. Bulk CSV export of student scholarship data with academic year breakdown"
+      placeholder: 'e.g. Bulk CSV export of student scholarship data with academic year breakdown'
     validations:
       required: true
 
@@ -95,7 +95,7 @@ body:
     attributes:
       label: User Role
       description: What role(s) would primarily use this feature?
-      placeholder: "e.g. ADMIN, STAFF, or VIEWER"
+      placeholder: 'e.g. ADMIN, STAFF, or VIEWER'
     validations:
       required: false
 

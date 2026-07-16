@@ -205,9 +205,7 @@ export async function GET(request: NextRequest) {
       prisma.studentScholarship.findMany({
         where: {
           ...studentScholarshipWindowWhere,
-          ...(gradeLevel
-            ? { student: { gradeLevel } }
-            : {}),
+          ...(gradeLevel ? { student: { gradeLevel } } : {}),
         },
         select: {
           studentId: true,
@@ -230,9 +228,7 @@ export async function GET(request: NextRequest) {
       prisma.disbursement.findMany({
         where: {
           ...disbursementWindowWhere,
-          ...(gradeLevel
-            ? { student: { gradeLevel } }
-            : {}),
+          ...(gradeLevel ? { student: { gradeLevel } } : {}),
         },
         select: {
           studentId: true,
@@ -253,9 +249,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.studentFees.findMany({
-        where: gradeLevel
-          ? { student: { gradeLevel } }
-          : undefined,
+        where: gradeLevel ? { student: { gradeLevel } } : undefined,
         select: {
           studentId: true,
           academicYear: true,
@@ -266,9 +260,7 @@ export async function GET(request: NextRequest) {
         where: {
           isArchived: false,
           status: 'Active',
-          ...(gradeLevel
-            ? { gradeLevel }
-            : {}),
+          ...(gradeLevel ? { gradeLevel } : {}),
         },
         select: {
           id: true,

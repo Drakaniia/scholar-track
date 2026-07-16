@@ -49,9 +49,7 @@ export function FilterCard({
   const hasActiveFilters = activeFilters.length > 0;
 
   return (
-    <Card
-      className={cn('mb-4 overflow-hidden border-border/60 bg-card py-0 shadow-sm', className)}
-    >
+    <Card className={cn('mb-4 overflow-hidden border-border/60 bg-card py-0 shadow-sm', className)}>
       <CardContent className="p-0">
         <div className="border-b border-border/60 bg-muted/80 px-4 py-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

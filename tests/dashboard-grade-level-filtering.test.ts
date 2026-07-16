@@ -4,10 +4,10 @@
  * RED phase: These tests should fail because the dashboard doesn't
  * yet support grade level filtering.
  */
+import { NextRequest } from 'next/server';
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ============================================
@@ -25,31 +25,21 @@ describe('dashboard page grade level filter', () => {
     expect(heroSource).toContain('GRADE_LEVELS');
   });
 
-
   it('has grade level state variable in dashboard page', () => {
-    const pageSource = readFileSync(
-      join(process.cwd(), 'src/app/(dashboard)/page.tsx'),
-      'utf8'
-    );
+    const pageSource = readFileSync(join(process.cwd(), 'src/app/(dashboard)/page.tsx'), 'utf8');
 
     expect(pageSource).toContain('gradeLevelFilter');
   });
 
   it('passes gradeLevelFilter to useDashboardStats hook', () => {
-    const pageSource = readFileSync(
-      join(process.cwd(), 'src/app/(dashboard)/page.tsx'),
-      'utf8'
-    );
+    const pageSource = readFileSync(join(process.cwd(), 'src/app/(dashboard)/page.tsx'), 'utf8');
 
     // The hook call is multi-line, so check for both params in sequence
     expect(pageSource).toContain('gradeLevelFilter');
   });
 
   it('passes gradeLevelFilter and onGradeLevelChange props to DashboardOverview', () => {
-    const pageSource = readFileSync(
-      join(process.cwd(), 'src/app/(dashboard)/page.tsx'),
-      'utf8'
-    );
+    const pageSource = readFileSync(join(process.cwd(), 'src/app/(dashboard)/page.tsx'), 'utf8');
 
     expect(pageSource).toContain('gradeLevelFilter={gradeLevelFilter}');
     expect(pageSource).toContain('onGradeLevelChange={setGradeLevelFilter}');
@@ -62,10 +52,7 @@ describe('dashboard page grade level filter', () => {
 
 describe('useDashboardStats hook grade level parameter', () => {
   it('accepts gradeLevel parameter in useDashboardStats', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     const statsFnStart = hooksSource.indexOf('export function useDashboardStats');
     const statsFnEnd = hooksSource.indexOf('export function useDashboardDetailed');
@@ -78,10 +65,7 @@ describe('useDashboardStats hook grade level parameter', () => {
   });
 
   it('includes gradeLevel in dashboard stats query key', () => {
-    const hooksSource = readFileSync(
-      join(process.cwd(), 'src/hooks/use-queries.ts'),
-      'utf8'
-    );
+    const hooksSource = readFileSync(join(process.cwd(), 'src/hooks/use-queries.ts'), 'utf8');
 
     // Query key must include gradeLevel
     const queryKeysSection = hooksSource.slice(
@@ -133,7 +117,9 @@ const batchQueriesMock = vi.hoisted(() =>
   })
 );
 
-const generateQueryKeyMock = vi.hoisted(() => vi.fn<(key: string, extra?: Record<string, unknown>) => string>(() => 'mock-dashboard-key'));
+const generateQueryKeyMock = vi.hoisted(() =>
+  vi.fn<(key: string, extra?: Record<string, unknown>) => string>(() => 'mock-dashboard-key')
+);
 
 vi.mock('@/lib/prisma', () => ({
   default: prismaMock,
@@ -163,9 +149,7 @@ describe('dashboard API grade level filter', () => {
 
   it('accepts gradeLevel query parameter', async () => {
     const { GET } = await import('@/app/api/dashboard/route');
-    await GET(
-      new NextRequest('http://localhost/api/dashboard?gradeLevel=COLLEGE')
-    );
+    await GET(new NextRequest('http://localhost/api/dashboard?gradeLevel=COLLEGE'));
 
     // Verify the cache key includes gradeLevel
     const cacheKeyCall = generateQueryKeyMock.mock.calls[0]!;
@@ -175,9 +159,7 @@ describe('dashboard API grade level filter', () => {
 
   it('includes gradeLevel in cache key', async () => {
     const { GET } = await import('@/app/api/dashboard/route');
-    await GET(
-      new NextRequest('http://localhost/api/dashboard?gradeLevel=GRADE_SCHOOL')
-    );
+    await GET(new NextRequest('http://localhost/api/dashboard?gradeLevel=GRADE_SCHOOL'));
 
     const cacheKeyCall = generateQueryKeyMock.mock.calls[0]!;
     expect(cacheKeyCall[1]!.gradeLevel).toBe('GRADE_SCHOOL');
@@ -185,9 +167,7 @@ describe('dashboard API grade level filter', () => {
 
   it('does not include gradeLevel filter when not provided', async () => {
     const { GET } = await import('@/app/api/dashboard/route');
-    await GET(
-      new NextRequest('http://localhost/api/dashboard')
-    );
+    await GET(new NextRequest('http://localhost/api/dashboard'));
 
     const cacheKeyCall = generateQueryKeyMock.mock.calls[0]!;
     expect(cacheKeyCall[1]!).not.toHaveProperty('gradeLevel');
