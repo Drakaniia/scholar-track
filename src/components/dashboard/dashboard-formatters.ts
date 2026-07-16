@@ -14,6 +14,7 @@ const DASHBOARD_SCHOLARSHIP_TYPE_LABELS = {
   PAEB: 'PAEB',
   CHED: 'CHED',
   LGU: 'LGU',
+  INDIVIDUAL: 'Individual',
   SCHOOL_GRANT: 'School Grant',
 } as const;
 

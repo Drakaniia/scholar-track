@@ -182,6 +182,7 @@ interface SelectedScholarship {
   grantAmount: number;
   grantType: GrantType;
   scholarshipStatus: string;
+  individualSponsor?: string | null;
 }
 
 export type StudentFormSubmissionResult =
@@ -442,7 +443,6 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
     const initialGradeLevel = defaultValues?.gradeLevel;
     fetchScholarships(initialGradeLevel || undefined);
   }, [defaultValues?.gradeLevel]);
-
 
   useEffect(() => {
     // Populate scholarship names for existing scholarships when editing
@@ -706,6 +706,7 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
           : scholarship.amount,
       grantType: scholarship.grantType as GrantType,
       scholarshipStatus: 'Active',
+      individualSponsor: scholarship.type === 'INDIVIDUAL' ? '' : null,
     };
     setSelectedScholarships([...selectedScholarships, newScholarship]);
   };
@@ -787,6 +788,7 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
                 grantAmount: scholarship.grantAmount,
                 grantType: scholarship.grantType,
                 scholarshipStatus: scholarship.scholarshipStatus,
+                individualSponsor: scholarship.individualSponsor || null,
               }))
             : undefined,
       };
@@ -1419,6 +1421,24 @@ export const StudentForm = forwardRef<StudentFormHandle, StudentFormProps>(funct
                             </div>
                           </div>
                         ) : null}
+                        {type === 'INDIVIDUAL' && (
+                          <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">Sponsor Name</Label>
+                            <Input
+                              type="text"
+                              placeholder="Enter sponsor name"
+                              value={scholarship.individualSponsor || ''}
+                              onChange={(e) =>
+                                updateScholarship(
+                                  scholarship.clientKey,
+                                  'individualSponsor',
+                                  e.target.value
+                                )
+                              }
+                              className="h-9 text-sm"
+                            />
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <Label className="text-xs text-muted-foreground">Status</Label>
                           <Select

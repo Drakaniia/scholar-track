@@ -362,6 +362,7 @@ function getStudentFormDefaultValues(
         grantAmount: ss.grantAmount,
         grantType: ss.grantType,
         scholarshipStatus: ss.scholarshipStatus,
+        individualSponsor: ss.individualSponsor ?? null,
       })) || [],
   };
 }
@@ -630,26 +631,32 @@ export default function StudentsPage() {
   const total: number = studentsData?.total || 0;
   const totalPages: number = studentsData?.totalPages || 1;
 
-  const filterData = filterOptionsData?.data as {
-    programs?: string[];
-    scholarships?: Array<{
-      id: number;
-      scholarshipName: string;
-      source: string;
-      _count?: { students: number };
-    }>;
-    studentsWithoutScholarship?: number;
-    gradeLevelCounts?: Record<string, number>;
-    programCounts?: Record<string, number>;
-    statusCounts?: Record<string, number>;
-    facetTotals?: { gradeLevel: number; program: number; status: number; scholarship: number };
-    dynamicScholarshipCounts?: Record<string, number>;
-    academicYearCounts?: Record<string, number>;
-  } | undefined;
+  const filterData = filterOptionsData?.data as
+    | {
+        programs?: string[];
+        scholarships?: Array<{
+          id: number;
+          scholarshipName: string;
+          source: string;
+          _count?: { students: number };
+        }>;
+        studentsWithoutScholarship?: number;
+        gradeLevelCounts?: Record<string, number>;
+        programCounts?: Record<string, number>;
+        statusCounts?: Record<string, number>;
+        facetTotals?: { gradeLevel: number; program: number; status: number; scholarship: number };
+        dynamicScholarshipCounts?: Record<string, number>;
+        academicYearCounts?: Record<string, number>;
+      }
+    | undefined;
 
   const programs: string[] = filterData?.programs ?? [];
-  const scholarships: Array<{ id: number; scholarshipName: string; source: string; _count?: { students: number } }> =
-    useMemo(() => filterData?.scholarships ?? [], [filterData?.scholarships]);
+  const scholarships: Array<{
+    id: number;
+    scholarshipName: string;
+    source: string;
+    _count?: { students: number };
+  }> = useMemo(() => filterData?.scholarships ?? [], [filterData?.scholarships]);
   const studentsWithoutScholarship = filterData?.studentsWithoutScholarship ?? 0;
   const gradeLevelCounts: Record<string, number> = filterData?.gradeLevelCounts ?? {};
   const programCounts: Record<string, number> = filterData?.programCounts ?? {};
@@ -660,7 +667,8 @@ export default function StudentsPage() {
     status: filterData?.facetTotals?.status ?? 0,
     scholarship: filterData?.facetTotals?.scholarship ?? 0,
   };
-  const dynamicScholarshipCounts: Record<string, number> = filterData?.dynamicScholarshipCounts ?? {};
+  const dynamicScholarshipCounts: Record<string, number> =
+    filterData?.dynamicScholarshipCounts ?? {};
   const academicYearCounts: Record<string, number> = filterData?.academicYearCounts ?? {};
 
   // Sync selectedStudent with detail query data (deferred to avoid set-state-in-effect lint)
@@ -713,9 +721,7 @@ export default function StudentsPage() {
       return;
     }
 
-    const matchedScholarship = scholarships.find(
-      (s) => s.id.toString() === scholarshipFilter
-    );
+    const matchedScholarship = scholarships.find((s) => s.id.toString() === scholarshipFilter);
 
     if (matchedScholarship && matchedScholarship.source !== scholarshipSourceFilter) {
       queueMicrotask(() => {
@@ -886,8 +892,7 @@ export default function StudentsPage() {
     setIsBulkArchiving(true);
     try {
       let payload:
-        | number[]
-        | { selectAll: true; filters: Record<string, string | boolean | undefined> };
+        number[] | { selectAll: true; filters: Record<string, string | boolean | undefined> };
 
       if (selectAllAcrossPages) {
         payload = {
@@ -1227,7 +1232,8 @@ export default function StudentsPage() {
               {academicYears.map((academicYear) => (
                 <SelectItem key={academicYear.id} value={String(academicYear.id)}>
                   {formatAcademicYearDisplay(academicYear.year)}
-                  {academicYear.isActive ? ' (Active)' : ''} ({academicYearCounts[String(academicYear.id)] ?? 0})
+                  {academicYear.isActive ? ' (Active)' : ''} (
+                  {academicYearCounts[String(academicYear.id)] ?? 0})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1344,9 +1350,7 @@ export default function StudentsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Grade Level</TableHead>
                     <TableHead>Year Level</TableHead>
-                    {gradeLevelFilter === 'COLLEGE' && (
-                      <TableHead>Program</TableHead>
-                    )}
+                    {gradeLevelFilter === 'COLLEGE' && <TableHead>Program</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>Scholarships</TableHead>
                     {canManageStudents && <TableHead className="text-right">Actions</TableHead>}
@@ -1381,9 +1385,7 @@ export default function StudentsPage() {
                         <Badge variant="outline">{GRADE_LEVEL_LABELS[student.gradeLevel]}</Badge>
                       </TableCell>
                       <TableCell>{student.yearLevel}</TableCell>
-                      {gradeLevelFilter === 'COLLEGE' && (
-                        <TableCell>{student.program}</TableCell>
-                      )}
+                      {gradeLevelFilter === 'COLLEGE' && <TableCell>{student.program}</TableCell>}
                       <TableCell>
                         <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
                           {student.status}
