@@ -58,6 +58,7 @@ const studentScholarshipAssignmentSchema = z.object({
   grantAmount: z.coerce.number().optional(),
   grantType: z.enum(['FULL', 'TUITION_ONLY', 'MISC_ONLY', 'LAB_ONLY', 'NONE']).optional(),
   scholarshipStatus: z.string().optional(),
+  individualSponsor: z.string().nullable().optional(),
 });
 
 const createStudentInputSchema = z.object({
@@ -79,6 +80,7 @@ const createStudentInputSchema = z.object({
   grantAmount: z.coerce.number().nullable().optional(),
   grantType: z.enum(['FULL', 'TUITION_ONLY', 'MISC_ONLY', 'LAB_ONLY', 'NONE']).optional(),
   scholarshipStatus: z.string().nullable().optional(),
+  individualSponsor: z.string().nullable().optional(),
   scholarships: z.array(studentScholarshipAssignmentSchema).optional(),
   fees: studentFeesInputSchema.optional(),
 });
@@ -607,6 +609,7 @@ async function createStudentRecord(client: StudentRouteClient, body: CreateStude
         grantType: scholarship.grantType || 'FULL',
         scholarshipStatus: scholarship.scholarshipStatus || 'Active',
         academicYearId: resolveAcademicYearId(scholarship.academicYearId),
+        individualSponsor: scholarship.individualSponsor ?? null,
       })),
     });
   } else if (body.scholarshipId) {
@@ -622,6 +625,7 @@ async function createStudentRecord(client: StudentRouteClient, body: CreateStude
         grantAmount: body.grantAmount || 0,
         grantType: body.grantType || 'FULL',
         scholarshipStatus: body.scholarshipStatus || 'Active',
+        individualSponsor: body.individualSponsor ?? null,
       },
     });
   }

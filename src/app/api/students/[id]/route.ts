@@ -357,6 +357,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
               startTerm: '',
               endTerm: '',
               grantAmount: scholarship.grantAmount || 0,
+              individualSponsor: scholarship.individualSponsor || null,
               grantType: scholarship.grantType || 'FULL',
               scholarshipStatus: scholarship.scholarshipStatus || 'Active',
               academicYearId: resolveAcademicYearId(scholarship.academicYearId),
@@ -540,7 +541,8 @@ async function updateStudentFees(
   const termCode = getAcademicTermCode(currentAcademicYear?.semester);
   const term = getAcademicTermLabel(termCode);
 
-  const academicYear = currentAcademicYear?.year || `${new Date().getFullYear() - 1}-${new Date().getFullYear()}`;
+  const academicYear =
+    currentAcademicYear?.year || `${new Date().getFullYear() - 1}-${new Date().getFullYear()}`;
   const academicYearId = currentAcademicYear?.id || null;
 
   // Calculate total fees

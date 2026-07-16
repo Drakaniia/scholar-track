@@ -109,6 +109,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       grantType,
       scholarshipStatus,
       academicYearId,
+      individualSponsor,
     } = body;
 
     // Validate required fields
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         startTerm: '',
         endTerm: '',
         grantAmount: actualGrantAmount,
+        individualSponsor: individualSponsor || null,
         grantType: actualGrantType,
         scholarshipStatus: scholarshipStatus || 'Active',
         academicYearId: assignmentAcademicYear?.id || null,
