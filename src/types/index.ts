@@ -57,6 +57,7 @@ export interface StudentScholarship {
   academicYearId?: number | null;
   awardDate: Date;
   grantAmount: number;
+  individualSponsor?: string | null;
   grantType: GrantType;
   scholarshipStatus: string;
   createdAt: Date;
@@ -110,6 +111,7 @@ export interface CreateStudentInput {
     academicYearId?: number | null;
     awardDate: Date;
     grantAmount: number;
+    individualSponsor?: string | null;
     grantType?: GrantType;
     scholarshipStatus: string;
   }>;
@@ -125,7 +127,7 @@ export type UpdateStudentInput = Partial<CreateStudentInput>;
 // ============================================
 // SCHOLARSHIP TYPES
 // ============================================
-export type ScholarshipType = 'PAEB' | 'CHED' | 'LGU';
+export type ScholarshipType = 'PAEB' | 'CHED' | 'LGU' | 'INDIVIDUAL';
 export type ScholarshipSource = 'INTERNAL' | 'EXTERNAL';
 export type GrantType = 'FULL' | 'TUITION_ONLY' | 'MISC_ONLY' | 'LAB_ONLY' | 'NONE';
 export type ScholarshipTerm = '1ST' | '2ND' | '3RD';
@@ -292,7 +294,8 @@ export interface StudentFeesInput {
 // ============================================
 // ENUM VALUES
 // ============================================
-export type GradeLevel = 'KINDERGARTEN' | 'GRADE_SCHOOL' | 'JUNIOR_HIGH' | 'SENIOR_HIGH' | 'COLLEGE';
+export type GradeLevel =
+  'KINDERGARTEN' | 'GRADE_SCHOOL' | 'JUNIOR_HIGH' | 'SENIOR_HIGH' | 'COLLEGE';
 
 export const GRADE_LEVELS: GradeLevel[] = [
   'KINDERGARTEN',
@@ -341,12 +344,13 @@ export const TERM_FORMATS = {
   },
 } as const;
 
-export const SCHOLARSHIP_TYPES: ScholarshipType[] = ['PAEB', 'CHED', 'LGU'] as const;
+export const SCHOLARSHIP_TYPES: ScholarshipType[] = ['PAEB', 'CHED', 'LGU', 'INDIVIDUAL'] as const;
 
 export const SCHOLARSHIP_TYPE_LABELS: Record<ScholarshipType, string> = {
   PAEB: 'PAEB Scholarship',
   CHED: 'CHED Scholarship',
   LGU: 'LGU Scholarship',
+  INDIVIDUAL: 'Individual Sponsorship',
 };
 
 export const SCHOLARSHIP_SOURCES: ScholarshipSource[] = ['INTERNAL', 'EXTERNAL'] as const;

@@ -133,6 +133,7 @@ model StudentScholarship {
   startTerm         String        @map("start_term")
   endTerm           String        @map("end_term")
   grantAmount       Decimal       @map("grant_amount") @db.Decimal(10, 2)
+  individualSponsor String?       @map("individual_sponsor")
   scholarshipStatus String        @map("scholarship_status")
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
