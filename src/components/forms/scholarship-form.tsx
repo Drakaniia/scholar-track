@@ -136,10 +136,12 @@ export function ScholarshipForm({
   loading = false,
 }: ScholarshipFormProps) {
   const [showCustomType, setShowCustomType] = useState(
-    defaultValues?.type && !['PAEB', 'CHED', 'LGU', 'SCHOOL_GRANT'].includes(defaultValues.type)
+    defaultValues?.type &&
+      !['PAEB', 'CHED', 'LGU', 'INDIVIDUAL', 'SCHOOL_GRANT'].includes(defaultValues.type)
   );
   const [customType, setCustomType] = useState(
-    defaultValues?.type && !['PAEB', 'CHED', 'LGU', 'SCHOOL_GRANT'].includes(defaultValues.type)
+    defaultValues?.type &&
+      !['PAEB', 'CHED', 'LGU', 'INDIVIDUAL', 'SCHOOL_GRANT'].includes(defaultValues.type)
       ? defaultValues.type
       : ''
   );
@@ -445,6 +447,7 @@ export function ScholarshipForm({
                       <SelectItem value="PAEB">PAEB</SelectItem>
                       <SelectItem value="CHED">CHED</SelectItem>
                       <SelectItem value="LGU">LGU</SelectItem>
+                      <SelectItem value="INDIVIDUAL">Individual Sponsorship</SelectItem>
                       <SelectItem value="SCHOOL_GRANT">School Grant</SelectItem>
                       <SelectItem value="OTHER">Other</SelectItem>
                     </SelectContent>
@@ -797,6 +800,12 @@ export function ScholarshipForm({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
+              {watchedValues.type === 'INDIVIDUAL' && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  This is the default grant amount. Each student&apos;s amount can be customized
+                  when assigning.
+                </p>
+              )}
               <Controller
                 name="amount"
                 control={form.control}

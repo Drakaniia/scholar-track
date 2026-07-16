@@ -5,12 +5,14 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { keepPreviousData } from '@tanstack/react-query';
 import {
   Archive,
+  Check,
   ChevronDown,
   ChevronUp,
   GraduationCap,
   Pencil,
   Plus,
   User,
+  X,
 } from 'lucide-react';
 
 import { useAuth } from '@/components/auth/auth-provider';
@@ -43,6 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -315,6 +318,9 @@ export default function ScholarshipsPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedScholarship, setSelectedScholarship] = useState<ScholarshipDetail | null>(null);
   const [showAllAssignedStudents, setShowAllAssignedStudents] = useState(false);
+  const [inlineEditingId, setInlineEditingId] = useState<number | null>(null);
+  const [editGrantAmount, setEditGrantAmount] = useState<number>(0);
+  const [editSponsor, setEditSponsor] = useState('');
 
   // TanStack Query hooks for data fetching
   const {
@@ -327,8 +333,7 @@ export default function ScholarshipsPage() {
       source: sourceFilter === 'all' ? undefined : sourceFilter,
       eligibleGradeLevels:
         eligibleGradeLevelsFilter === 'all' ? undefined : eligibleGradeLevelsFilter,
-      academicYearId:
-        academicYearFilter === 'all' ? undefined : academicYearFilter,
+      academicYearId: academicYearFilter === 'all' ? undefined : academicYearFilter,
       page,
       limit: 10,
     },
@@ -337,7 +342,9 @@ export default function ScholarshipsPage() {
 
   const { data: scholarshipDetail, isLoading: detailLoading } = useScholarship(
     selectedScholarship?.id || 0,
-    dialogAcademicYearIdFilter && dialogAcademicYearIdFilter !== 'all' ? Number(dialogAcademicYearIdFilter) : null,
+    dialogAcademicYearIdFilter && dialogAcademicYearIdFilter !== 'all'
+      ? Number(dialogAcademicYearIdFilter)
+      : null,
     { enabled: !!selectedScholarship?.id }
   );
 
@@ -369,11 +376,14 @@ export default function ScholarshipsPage() {
   // TanStack Query hook for filter options
   const { data: filterOptionsData } = useScholarshipFilterOptions({
     source: sourceFilter,
-    ...(academicYearFilter && academicYearFilter !== 'all' ? { academicYearId: academicYearFilter } : {}),
+    ...(academicYearFilter && academicYearFilter !== 'all'
+      ? { academicYearId: academicYearFilter }
+      : {}),
   });
 
   // Derive from query data instead of syncing via effects
-  const scholarships: ScholarshipWithCount[] = (scholarshipsData?.data || []) as ScholarshipWithCount[];
+  const scholarships: ScholarshipWithCount[] = (scholarshipsData?.data ||
+    []) as ScholarshipWithCount[];
   const total: number = scholarshipsData?.total || 0;
   const totalPages: number = scholarshipsData?.totalPages || 1;
   const filteredStudentCounts: Record<number, number> | null =
@@ -480,6 +490,68 @@ export default function ScholarshipsPage() {
     // useScholarship hook will fetch automatically due to enabled: !!selectedScholarship?.id
   };
 
+  const startInlineEdit = (
+    ss: StudentScholarship & {
+      student: {
+        firstName: string;
+        lastName: string;
+        middleInitial: string | null;
+        program: string;
+        gradeLevel: string;
+        yearLevel: string;
+        status: string;
+        fees: Array<{ percentSubsidy: number; amountSubsidy: number }>;
+      };
+    }
+  ) => {
+    setInlineEditingId(ss.id);
+    setEditGrantAmount(Number(ss.grantAmount || 0));
+    setEditSponsor(ss.individualSponsor ?? '');
+  };
+
+  const cancelInlineEdit = () => {
+    setInlineEditingId(null);
+    setEditGrantAmount(0);
+    setEditSponsor('');
+  };
+
+  const handleSaveInlineEdit = async (studentScholarshipId: number) => {
+    try {
+      const response = await fetch(
+        `/api/scholarships/${selectedScholarship?.id}/students/${studentScholarshipId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grantAmount: editGrantAmount,
+            individualSponsor: editSponsor || null,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (!result.success) {
+        console.error('Failed to save inline edit:', result.error);
+        return;
+      }
+      // Update the local state to reflect changes
+      if (selectedScholarship?.students) {
+        setSelectedScholarship({
+          ...selectedScholarship,
+          students: selectedScholarship.students.map((s) =>
+            s.id === studentScholarshipId
+              ? { ...s, grantAmount: editGrantAmount, individualSponsor: editSponsor || null }
+              : s
+          ),
+        });
+      }
+      setInlineEditingId(null);
+      setEditGrantAmount(0);
+      setEditSponsor('');
+    } catch (error) {
+      console.error('Error saving inline edit:', error);
+    }
+  };
+
   const listLoading = scholarshipsLoading || scholarshipsFetching;
   const showPagination = scholarships.length > 0;
   const scholarshipTableColumnWidths = canManageScholarships
@@ -520,9 +592,8 @@ export default function ScholarshipsPage() {
             key: 'eligibleGradeLevels',
             label: 'Education Level',
             value:
-              GRADE_LEVEL_LABELS[
-                eligibleGradeLevelsFilter as keyof typeof GRADE_LEVEL_LABELS
-              ] || eligibleGradeLevelsFilter,
+              GRADE_LEVEL_LABELS[eligibleGradeLevelsFilter as keyof typeof GRADE_LEVEL_LABELS] ||
+              eligibleGradeLevelsFilter,
             onRemove: () => setEligibleGradeLevelsFilter('all'),
           },
         ]
@@ -587,10 +658,7 @@ export default function ScholarshipsPage() {
         />
 
         <FilterField label="Education Level">
-          <Select
-            value={eligibleGradeLevelsFilter}
-            onValueChange={setEligibleGradeLevelsFilter}
-          >
+          <Select value={eligibleGradeLevelsFilter} onValueChange={setEligibleGradeLevelsFilter}>
             <SelectTrigger className="h-10 w-full justify-between bg-white text-sm">
               <SelectValue placeholder="Filter by education level" />
             </SelectTrigger>
@@ -635,21 +703,20 @@ export default function ScholarshipsPage() {
         </FilterField>
 
         <FilterField label="Academic Year">
-          <Select
-            value={academicYearFilter}
-            onValueChange={setAcademicYearFilter}
-          >
+          <Select value={academicYearFilter} onValueChange={setAcademicYearFilter}>
             <SelectTrigger className="h-10 w-full justify-between bg-white text-sm">
               <SelectValue placeholder="Filter by academic year" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Academic Years</SelectItem>
-              {(academicYearsData?.data || []).map((ay: { id: number; year: string; isActive?: boolean }) => (
-                <SelectItem key={ay.id} value={String(ay.id)}>
-                  {ay.year}
-                  {ay.isActive ? ' (Active)' : ''} ({academicYearCounts[String(ay.id)] ?? 0})
-                </SelectItem>
-              ))}
+              {(academicYearsData?.data || []).map(
+                (ay: { id: number; year: string; isActive?: boolean }) => (
+                  <SelectItem key={ay.id} value={String(ay.id)}>
+                    {ay.year}
+                    {ay.isActive ? ' (Active)' : ''} ({academicYearCounts[String(ay.id)] ?? 0})
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
         </FilterField>
@@ -667,7 +734,7 @@ export default function ScholarshipsPage() {
                 <Badge variant="outline" className="text-sm">
                   Total: {counts.total}
                 </Badge>
-                {(academicYearFilter !== 'all') && (
+                {academicYearFilter !== 'all' && (
                   <Badge variant="outline" className="text-sm text-amber-600 border-amber-300">
                     Filtered by year
                   </Badge>
@@ -701,7 +768,10 @@ export default function ScholarshipsPage() {
             <>
               <div className="grid gap-3 xl:hidden">
                 {scholarships.map((scholarship) => {
-                  const studentCount = getScholarshipStudentCount(scholarship, filteredStudentCounts);
+                  const studentCount = getScholarshipStudentCount(
+                    scholarship,
+                    filteredStudentCounts
+                  );
 
                   return (
                     <div
@@ -1332,29 +1402,102 @@ export default function ScholarshipsPage() {
                               </div>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="text-muted-foreground">Grant Amount</p>
-                                <p className="font-semibold">{formatCurrency(ss.grantAmount)}</p>
-                              </div>
-                              <div>
-                                <p className="text-muted-foreground">Award Date</p>
-                                <p>{new Date(ss.awardDate).toLocaleDateString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-muted-foreground">Term Period</p>
-                                <p>N/A</p>
-                              </div>
-                              <div>
-                                <p className="text-muted-foreground">Status</p>
-                                <Badge
-                                  variant={
-                                    ss.scholarshipStatus === 'Active' ? 'default' : 'secondary'
-                                  }
-                                  className="text-xs"
-                                >
-                                  {ss.scholarshipStatus}
-                                </Badge>
-                              </div>
+                              {inlineEditingId === ss.id ? (
+                                <>
+                                  <div>
+                                    <p className="text-muted-foreground">Grant Amount</p>
+                                    <Input
+                                      type="number"
+                                      value={editGrantAmount}
+                                      onChange={(e) =>
+                                        setEditGrantAmount(parseFloat(e.target.value) || 0)
+                                      }
+                                      className="h-8 text-sm mt-1"
+                                    />
+                                  </div>
+                                  {selectedScholarship?.type === 'INDIVIDUAL' && (
+                                    <div>
+                                      <p className="text-muted-foreground">Sponsor Name</p>
+                                      <Input
+                                        type="text"
+                                        value={editSponsor}
+                                        onChange={(e) => setEditSponsor(e.target.value)}
+                                        className="h-8 text-sm mt-1"
+                                        placeholder="Enter sponsor name"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="flex items-end gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="default"
+                                      size="sm"
+                                      className="h-8"
+                                      onClick={() => handleSaveInlineEdit(ss.id)}
+                                    >
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Save
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8"
+                                      onClick={cancelInlineEdit}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <p className="text-muted-foreground">Grant Amount</p>
+                                    <p className="font-semibold">
+                                      {formatCurrency(ss.grantAmount)}
+                                    </p>
+                                  </div>
+                                  {'individualSponsor' in ss && ss.individualSponsor && (
+                                    <div>
+                                      <p className="text-muted-foreground">Sponsor</p>
+                                      <p className="font-semibold">
+                                        {ss.individualSponsor as string}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-muted-foreground">Award Date</p>
+                                    <p>{new Date(ss.awardDate).toLocaleDateString()}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-muted-foreground">Status</p>
+                                    <div className="flex items-center gap-1">
+                                      <Badge
+                                        variant={
+                                          ss.scholarshipStatus === 'Active'
+                                            ? 'default'
+                                            : 'secondary'
+                                        }
+                                        className="text-xs"
+                                      >
+                                        {ss.scholarshipStatus}
+                                      </Badge>
+                                      {canManageScholarships && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6"
+                                          onClick={() => startInlineEdit(ss)}
+                                          title="Edit grant amount"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
