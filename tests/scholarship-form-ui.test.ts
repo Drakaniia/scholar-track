@@ -27,3 +27,20 @@ describe('scholarship form eligible programs', () => {
     expect(formSource).toContain('selectedPrograms');
   });
 });
+
+describe('scholarship form type dropdown includes INDIVIDUAL', () => {
+  it('has Individual Sponsorship as a selectable type option', () => {
+    // The type dropdown should include "Individual Sponsorship" for INDIVIDUAL scholarships
+    expect(formSource).toContain('Individual Sponsorship');
+    expect(formSource).toContain('value="INDIVIDUAL"');
+  });
+
+  it('shows a hint about per-student overrides when type is INDIVIDUAL', () => {
+    // When the type is INDIVIDUAL, the amount field should show a note
+    // that each student's amount can be customized
+    expect(formSource).toContain('default grant amount');
+    expect(formSource).toContain('Each student');
+    expect(formSource).toContain('customized');
+    expect(formSource).toContain('when assigning');
+  });
+});
