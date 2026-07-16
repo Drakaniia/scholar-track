@@ -50,6 +50,7 @@ type ScholarshipAssignment = {
     type: string;
     source: string;
   } | null;
+  individualSponsor?: string | null;
 };
 
 type StudentReportRecord = {
@@ -185,6 +186,16 @@ function getScholarshipNames(student: StudentReportRecord, scholarshipType: stri
     .join(', ');
 }
 
+function getScholarshipSponsors(student: StudentReportRecord, scholarshipType: string) {
+  if (scholarshipType === NO_SCHOLARSHIP) return '';
+
+  return getAssignments(student)
+    .filter((ss) => ss.scholarship?.type === scholarshipType && ss.individualSponsor)
+    .map((ss) => ss.individualSponsor)
+    .filter(Boolean)
+    .join(', ');
+}
+
 function getScholarshipNamesForGroup(students: StudentReportRecord[], scholarshipType: string) {
   if (scholarshipType === NO_SCHOLARSHIP) return [];
 
@@ -210,6 +221,7 @@ function buildStudentRow(student: StudentReportRecord, scholarshipType: string) 
     student.middleInitial || '-',
     student.yearLevel,
     getScholarshipNames(student, scholarshipType),
+    getScholarshipSponsors(student, scholarshipType),
     fees ? fees.tuitionFee : 0,
     fees ? fees.otherFee : 0,
     fees ? fees.miscellaneousFee : 0,
@@ -282,6 +294,7 @@ export async function GET(request: NextRequest) {
       'M.I.',
       'Year Level',
       'Scholarships',
+      'Sponsor',
       'Tuition Fee',
       'Other Fees',
       'Miscellaneous',
@@ -348,6 +361,7 @@ export async function GET(request: NextRequest) {
             '',
             '',
             'TOTAL:',
+            '',
             totals.tuition,
             totals.other,
             totals.misc,
@@ -488,6 +502,7 @@ export async function GET(request: NextRequest) {
               'M.I.',
               'Year',
               'Scholarships',
+              'Sponsor',
               'Tuition',
               'Other',
               'Misc.',
